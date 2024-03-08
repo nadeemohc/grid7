@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTP Verification</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+    }
+    .container {
+      margin-top: 100px;
+    }
+    .otp-input {
+      width: 20px;
+      text-align: center;
+      margin: 0 5px;
+    }
+    .resend-btn {
+      margin-top: 20px;
+    }
+    .timer {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container text-center">
+  <h2>OTP Verification</h2>
+  <p>Please enter the OTP sent to your email {{email}}.</p>
+  
+  <!-- OTP Input Fields -->
+  <form action="{% url 'accounts:otp_verification' %}" method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+    <!-- <input type="text" name="otp" class="form-control" > -->
+    <input type="text" class="form-control" name="otp" placeholder="Enter OTP" required>    
+    </div>
+    <button type="submit" class="btn btn-primary resend-btn">Verify</button>
+  </form>
+  
+  <!-- Resend Button and Timer -->
+  <button class="btn btn-primary resend-btn">Resend OTP</button>
+  <div class="timer">Resend in <span id="countdown">60</span> seconds</div>
+</div>
+
+<script>
+  // Dummy timer countdown
+  var countdownElement = document.getElementById('countdown');
+  var countdown = 60;
+
+  var timer = setInterval(function() {
+    countdown--;
+    countdownElement.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      countdownElement.textContent = "Expired";
+      // Disable resend button or do any other action
+    }
+  }, 1000);
+</script>
+
+</body>
+</html>
