@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -7,4 +8,5 @@ urlpatterns = [
     path('', include('store.urls')),
     path('accounts/', include('allauth.urls')),
     path('accounts/', include('allauth.socialaccount.urls')),
+    path('home', TemplateView.as_view(template_name='dashboard/home.html'), name='home')
 ]
