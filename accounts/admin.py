@@ -1,5 +1,9 @@
 from django.contrib import admin
+<<<<<<< HEAD
 
+=======
+# from django_allauth import sites
+>>>>>>> main
 from accounts.models import User
 
 # Register your models here.

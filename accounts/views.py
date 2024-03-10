@@ -31,7 +31,11 @@ def perform_signup(request):
             request.session["user_id"] = user.id
 
             sent_otp(request)
+<<<<<<< HEAD
             return render(request,'accounts/otp.html',{"email":email})
+=======
+            return render(request,'account/otp.html',{"email":email})
+>>>>>>> main
 
           
         
@@ -40,7 +44,11 @@ def perform_signup(request):
     context = {
         'form':form
         }
+<<<<<<< HEAD
     return render(request,'accounts/signup.html',context)
+=======
+    return render(request,'account/signup.html',context)
+>>>>>>> main
 
 
 @never_cache
@@ -63,7 +71,11 @@ def perform_login(request):
             return redirect('store:home')
         else:
             messages.warning(request, 'Incorrect email or password')
+<<<<<<< HEAD
     return render(request, 'accounts/login.html')
+=======
+    return render(request, 'account/login.html')
+>>>>>>> main
 
 
 
@@ -76,7 +88,11 @@ def sent_otp(request):
     request.session["otp"] = s
     email = request.POST.get('email') 
     send_mail("otp for sign up", s, "mn8697865@gmail.com", [email], fail_silently=False)
+<<<<<<< HEAD
     return render(request, 'accounts/otp.html')
+=======
+    return render(request, 'account/otp.html')
+>>>>>>> main
 
 
 def otp_verification(request):
@@ -95,7 +111,11 @@ def otp_verification(request):
             messages.error(request, "Invalid OTP. Please try again.")
             return redirect('otp_verification')  
     else:
+<<<<<<< HEAD
         return render(request, 'accounts/otp.html')
+=======
+        return render(request, 'account/otp.html')
+>>>>>>> main
 
 
 
