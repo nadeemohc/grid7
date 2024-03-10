@@ -175,7 +175,6 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-<<<<<<< HEAD
 # SOCIALACCOUNT_PROVIDERS = {
 #     'google': {
 #         'APP': {
@@ -192,7 +191,6 @@ AUTHENTICATION_BACKENDS = [
 #         }
 #     }
 # }
-=======
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
@@ -242,4 +240,3 @@ LOGOUT_REDIRECT_URL = 'login'
 #         'GRAPH_API_URL': 'https://graph.facebook.com/v13.0',
 #     }
 # }
->>>>>>> main
