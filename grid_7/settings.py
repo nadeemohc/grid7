@@ -86,11 +86,23 @@ WSGI_APPLICATION = 'grid_7.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'mydb',
+#         'USER': 'user1',
+#         'PASSWORD': 'password',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+        
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydb',
-        'USER': 'user1',
+        'NAME': 'project_1',
+        'USER': 'db_manager',
         'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432',
