@@ -26,9 +26,10 @@ SECRET_KEY = 'django-insecure-yj8z$a2d3kpxg75)u&x4ky_uc)-iu+ddpsoe6z*9tz&1-)&+_e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+SITE_ID = 1
 
 # Application definition
 
@@ -39,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'django.contrib.sites',
+    'django.contrib.sites',
     'accounts',
     'store',
     'allauth',
@@ -197,28 +198,30 @@ AUTHENTICATION_BACKENDS = [
 #         }
 #     }
 # }
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': '671886154046-29uc84f1dgrtsms2bckn6m88i80ueida.apps.googleusercontent.com',
-            'secret': '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',
-            'key': ''
-        },
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
-    }
+# SOCIALACCOUNT_PROVIDERS = {
+#     'google': {
+#         'APP': {
+#             'client_id': '',
+#             'secret': '',
+#             'key': ''
+#         },
+#         'SCOPE': [
+#             'profile',
+#             'email',
+#         ],
+#         'AUTH_PARAMS': {
+#             'access_type': 'online',
+#         }
+#     }
     
-}
+# }
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
+
+SOCIALACCOUNT_QUERY_EMAIL = True
 
 # ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
