@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 # from django_allauth import sites
 from accounts.models import User
 
