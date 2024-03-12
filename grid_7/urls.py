@@ -7,6 +7,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('accounts.urls')),
     path('', include('store.urls')),
+    path('', include('cust_admin.urls')),
+    path('', include('cust_auth_admin.urls')),
     path('accounts/', include('allauth.urls')),
     path('accounts/', include('allauth.socialaccount.urls')),
     # path('accounts/google/login/' TemplateView.as_view(template_name='')))

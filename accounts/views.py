@@ -61,6 +61,9 @@ def perform_login(request):
             request.session['user_logged_in'] = True
             messages.success(request, 'You have logged in')
             return redirect('store:home')
+        elif user.verified == False:
+            messages.danger(request, 'Please verify your account using otp')
+            return redirect('account:otp_verification')
         else:
             messages.warning(request, 'Incorrect email or password')
     return render(request, 'account/login.html')
