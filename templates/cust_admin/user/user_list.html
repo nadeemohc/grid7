@@ -1,0 +1,99 @@
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block content %}
+    
+    
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">User List </h2>
+                    <p>Registered Users to the App.</p>
+                </div>
+                <div>
+                    <input type="text" placeholder="Search order ID" class="form-control bg-white">
+                </div>
+            </div>
+            <div class="card mb-4">
+                <header class="card-header">
+                    <div class="row gx-3">
+                        <div class="col-lg-4 col-md-6 me-auto">
+                            <input type="text" placeholder="Search..." class="form-control">
+                        </div>
+                        <div class="col-lg-2 col-6 col-md-3">
+                            <select class="form-select">
+                                <option>Status</option>
+                                <option>Active</option>
+                                <option>Blockd</option>
+                                <option>Show all</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-6 col-md-3">
+                            <select class="form-select">
+                                <option>Show 20</option>
+                                <option>Show 30</option>
+                                <option>Show 40</option>
+                            </select>
+                        </div>
+                    </div>
+                </header> <!-- card-header end// -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#ID</th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col">First Name</th>
+                                    <th scope="col">Last Name</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Verified</th>
+                                    <th scope="col" class="text-end"> Action </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+            {% for message in messages %} {{message}} {%endfor%}
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td><b>{{ user.username }}</b></td>
+                                    <td>{{ user.first_name }}</td>
+                                    <td>{{ user.last_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{% if user.verified %}
+                                        <span class="badge rounded-pill alert-success">Verified</span>
+                                        {% else %}
+                                        <span class="badge rounded-pill alert-danger">Not Verified</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        
+                                        {% if user.is_active %}
+                                        <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Block</a>&nbsp;&nbsp;
+                                        {% else %}
+                                        <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Unblock</a>&nbsp;&nbsp;
+                                        {% endif %}
+                                        <a href="{% url 'cust_admin:user_view' user.username %}" class="btn btn-md rounded font-sm">Details</a>&nbsp;&nbsp;
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> <!-- table-responsive //end -->
+                </div> <!-- card-body end// -->
+            </div> <!-- card end// -->
+            <div class="pagination-area mt-15 mb-50">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-start">
+                        <li class="page-item active"><a class="page-link" href="#">01</a></li>
+                        <li class="page-item"><a class="page-link" href="#">02</a></li>
+                        <li class="page-item"><a class="page-link" href="#">03</a></li>
+                        <li class="page-item"><a class="page-link dot" href="#">...</a></li>
+                        <li class="page-item"><a class="page-link" href="#">16</a></li>
+                        <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
+                    </ul>
+                </nav>
+            </div>
+        </section> <!-- content-main end// -->
+        
+{% endblock content %}
