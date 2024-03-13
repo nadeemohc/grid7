@@ -43,6 +43,31 @@ def perform_signup(request):
     return render(request,'account/signup.html',context)
 
 
+# @never_cache
+# def perform_login(request):
+#     if request.user.is_authenticated:
+#         messages.warning(request, 'You are already logged in')
+#         return redirect("store:home")
+    
+#     if request.method == 'POST':
+#         email = request.POST['email']
+#         password = request.POST['password']
+#         print(email, password)
+#         user = authenticate(request, username=email, password=password)
+#         # user=User.objects.get(email=email)
+#         print(user)
+#         if user is not None:
+#             login(request, user)
+#             request.session['user_logged_in'] = True
+#             messages.success(request, f'You have logged in as {user.username}')
+#             return redirect('store:home')
+#         if user.verified == False:
+#             messages.danger(request, 'Please verify your account using otp')
+#             return redirect('account:otp_verification')
+#         else:
+#             messages.warning(request, 'Incorrect email or password')
+#     return render(request, 'account/login.html')
+
 @never_cache
 def perform_login(request):
     if request.user.is_authenticated:
@@ -50,22 +75,24 @@ def perform_login(request):
         return redirect("store:home")
     
     if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-        print(email, password)
+        email = request.POST.get('email')
+        password = request.POST.get('password')
         user = authenticate(request, username=email, password=password)
-        # user=User.objects.get(email=email)
-        print(user)
+        
         if user is not None:
-            login(request, user)
-            request.session['user_logged_in'] = True
-            messages.success(request, 'You have logged in')
-            return redirect('store:home')
-        elif user.verified == False:
-            messages.danger(request, 'Please verify your account using otp')
-            return redirect('account:otp_verification')
+            if user.verified:
+                login(request, user)
+                request.session['user_logged_in'] = True
+                messages.success(request, f'You have logged in as {user.username}')
+                return redirect('store:home')
+            else:
+                messages.error(request, 'Please verify your account using OTP')
+                request.session["user_id"] = user.id
+                sent_otp(request)
+                return redirect('accounts:otp_verification')
         else:
             messages.warning(request, 'Incorrect email or password')
+    
     return render(request, 'account/login.html')
 
 
@@ -81,6 +108,17 @@ def sent_otp(request):
     send_mail("otp for sign up", s, "mn8697865@gmail.com", [email], fail_silently=False)
     return render(request, 'account/otp.html')
 
+def resend_otp(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        user = User.objects.filter(email=email).first()
+        if user:
+            send_mail("otp for sign up", s, "mn8697865@gmail.com", [email], fail_silently=False)
+            messages.success(request, 'OTP has been resent successfully!')
+        else:
+            messages.error(request, 'User with this email does not exist!')
+        return redirect('account:otp_verification')  # Redirect to the OTP verification page
+    return render(request, 'account/resend_otp.html')
 
 def otp_verification(request):
     if request.method=='POST':
@@ -93,6 +131,7 @@ def otp_verification(request):
             user.save()
             request.session.flush()
             messages.success(request, "OTP verified successfully.")
+            login(request, user)
             return redirect('store:home')  
         else:
             messages.error(request, "Invalid OTP. Please try again.")

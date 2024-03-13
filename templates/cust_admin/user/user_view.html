@@ -1,0 +1,53 @@
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block content %}
+<section class="content-main">
+    <div class="card mb-4">
+        <header class="card-header">
+            <h2 class="content-title card-title">User Details</h2>
+        </header>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>First Name:</strong> {{ user.first_name }}</p>
+                    <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Phone Number:</strong> {{ user.phone_number }}</p>
+                    <p><strong>Verified:</strong> {% if user.verified %}
+                        <span class="badge rounded-pill alert-success">Yes</span>
+                        {% else %}
+                        <span class="badge rounded-pill alert-danger">No</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Is Admin:</strong> {% if user.is_admin %}
+                        <span class="badge rounded-pill alert-success">Yes</span>
+                        {% else %}
+                        <span class="badge rounded-pill alert-danger">No</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Is Staff:</strong> {% if user.is_staff %}
+                        <span class="badge rounded-pill alert-success">Yes</span>
+                        {% else %}
+                        <span class="badge rounded-pill alert-danger">No</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Blocked:</strong> {% if user.is_active %}
+                        <span class="badge rounded-pill alert-danger">No</span>
+                        {% else %}
+                        <span class="badge rounded-pill alert-success">Yes</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Is Super Admin:</strong> {% if user.is_superadmin %}
+                        <span class="badge rounded-pill alert-success">Yes</span>
+                        {% else %}
+                        <span class="badge rounded-pill alert-danger">No</span>
+                        {% endif %}
+                    </p>
+                    <!-- Add more user details here as needed -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

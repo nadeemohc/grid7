@@ -51,6 +51,8 @@
                                 </tr>
                             </thead>
                             <tbody>
+
+            {% for message in messages %} {{message}} {%endfor%}
                                 {% for user in users %}
                                 <tr>
                                     <td>{{ user.id }}</td>
@@ -65,14 +67,13 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
-                                        <a href="#" class="btn btn-md rounded font-sm">Block</a>&nbsp;&nbsp;
-                                        <div class="dropdown">
-                                            <a href="#" data-bs-toggle="dropdown" class="btn btn-md rounded font-sm">More</a>
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="#">View Detail</a>
-                                                <a class="dropdown-item" href="#">Edit info</a>
-                                            </div>
-                                        </div> <!-- dropdown //end -->
+                                        
+                                        {% if user.is_active %}
+                                        <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Block</a>&nbsp;&nbsp;
+                                        {% else %}
+                                        <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Unblock</a>&nbsp;&nbsp;
+                                        {% endif %}
+                                        <a href="{% url 'cust_admin:user_view' user.username %}" class="btn btn-md rounded font-sm">Details</a>&nbsp;&nbsp;
                                     </td>
                                 </tr>
                                 {% endfor %}
