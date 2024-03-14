@@ -25,7 +25,7 @@
     <aside class="navbar-aside" id="offcanvas_aside">
         <div class="aside-top">
             <a href="index.html" class="brand-wrap">
-                <img src="{% static 'admin_side/imgs/theme/logo.svg' %}" class="logo" alt="Evara Dashboard">
+                <img src="{% static 'admin_side/imgs/theme/logo.png' %}" class="logo" alt="Evara Dashboard">
             </a>
             <div>
                 <button class="btn btn-icon btn-aside-minimize"> <i class="text-muted material-icons md-menu_open"></i> </button>
@@ -55,9 +55,9 @@
                     </a>
                     <div class="submenu">
                         <a href="{% url 'cust_admin:add_product' %}">Add Product</a>
-                        <a href="page-products-grid.html">Product List</a>
+                        <a href="{% url 'cust_admin:prod_list' %}">Product List</a>
                         <a href="page-products-grid-2.html">Product grid 2</a>
-                        <a href="page-categories.html">Categories</a>
+                        <a href="{% url 'cust_admin:category_list' %}">Categories</a>
                     </div>
                 </li>
                 <li class="menu-item has-submenu">

@@ -33,3 +33,6 @@ def add_product(request):
 
 def prod_list(request):
     return render(request, 'cust_admin/product/product_list.html', {'title':'Product List'})
+
+def category_list(request):
+    return render(request, 'cust_admin/category/category_list.html', {'title':'Category List'})

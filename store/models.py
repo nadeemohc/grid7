@@ -3,9 +3,9 @@ from django.utils.safestring import mark_safe
 # Create your models here.
 
 class Category(models.Model):
-    cid = models.BigAutoField(unique=True, primary_key=True)
-    cname = models.CharField(max_length = 50)
-    image = models.ImageField(upload_to='category',default='category.jpg')
+    c_id = models.BigAutoField(unique=True, primary_key=True)
+    c_name = models.CharField(max_length = 50)
+    c_image = models.ImageField(upload_to='category',default='category.jpg')
     is_blocked = models.BooleanField(default=False)
     class Meta:
         verbose_name_plural = "Categories"

@@ -10,4 +10,5 @@ urlpatterns = [
     path('user_block/<str:username>/', views.user_block_unblock, name='user_block'),
     path('add_product/', views.add_product, name='add_product'),
     path('prod_list/', views.prod_list, name='prod_list'),
+    path('category_list', views.category_list, name='category_list'),
 ]
