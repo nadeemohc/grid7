@@ -6,5 +6,4 @@ app_name = 'store'
 urlpatterns = [
     path('', views.home, name='home'),
     # path('logout/', views.perform_logout, name='logout'),
-    # path('signup/', views.perform_signup, name='signup'),
 ]

@@ -9,7 +9,7 @@
                     <h2 class="content-title card-title">Category List </h2>
                 </div>
                 <div>
-                    <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Add New Category</a>
+                    <a href="{% url 'cust_admin:add_category' %}" class="btn btn-md rounded font-sm">Add New Category</a>
                 </div>
             </div>
             <div class="card mb-4">
@@ -43,16 +43,25 @@
                                     <th>ID</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Image</th>
+                                    <th scope="col">Status</th>
+                                    <!-- <th scope="col" class="text-end">Action</th> -->
                                 </tr>
                             </thead>
                             <tbody>
-
-            {% for message in messages %} {{message}} {%endfor%}
+                            {% for message in messages %} {{message}} {%endfor%}
                                 {% for category in categories %}
                                 <tr>
                                     <td>{{ category.c_id }}</td>
                                     <td><b>{{ category.c_name }}</b></td>
                                     <td>{{ category.c_image }}</td>
+                                    <!-- <td><img src="{{ category.image.c_image }}" alt="{{ category.cname }}" style="max-width: 100px;"></td> -->
+                                    <td>
+                                        {% if category.is_blocked %}
+                                        <a href="{% url 'cust_admin:category_unlist' category.c_id%}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
+                                        {% else %}
+                                        <a href="{% url 'cust_admin:category_unlist' category.c_id%}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

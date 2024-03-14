@@ -1,0 +1,42 @@
+{% extends "cust_admin/base.html" %}
+{% load static%}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Categories </h2>
+            <p>Add, edit or delete a category</p>
+        </div>
+        <div>
+            <input type="text" placeholder="Search Categories" class="form-control bg-white">
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <form method='post' action="{% url 'cust_admin:add_category' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="cname" class="form-label">Name</label>
+                            <input type="text" placeholder="Type here" class="form-control" name="cname" />
+                        </div>
+                        <div class="mb-4">
+                            <label for="image" class="form-label">Image</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                        </div>
+                        <!-- <div class="mb-4">
+                            <input type="checkbox" name="blocked">
+                            <label class="form-label" for="blocked">Blocked</label>
+                        </div> -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Create category</button>
+                        </div>
+                    </form>
+                    
+                </div>
+                
+        </div> <!-- card body .// -->
+    </div> <!-- card .// -->
+</section> <!-- content-main end// -->
+{% endblock %}
