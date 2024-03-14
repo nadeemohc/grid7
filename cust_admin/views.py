@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
 from accounts.models import User
+from store.models import Category
 from django.contrib import messages
 
 def dashboard(request):
@@ -12,9 +13,6 @@ def user_list(request):
 
 def user_view(request, username):
     user = get_object_or_404(User, username=username)
-    # context = {
-    #     'user
-    # }
     return render(request, 'cust_admin/user/user_view.html', {'title': 'View User', 'user': user})
 
 User = get_user_model()
@@ -35,4 +33,24 @@ def prod_list(request):
     return render(request, 'cust_admin/product/product_list.html', {'title':'Product List'})
 
 def category_list(request):
-    return render(request, 'cust_admin/category/category_list.html', {'title':'Category List'})
+    categories = Category.objects.all().order_by('c_id')
+    return render(request, 'cust_admin/category/category_list.html', {'title':'Category List','categories':categories})
+
+def add_category(request):
+    if request.method == 'POST':
+        c_name = request.POST.get('cname')
+        c_image = request.FILES.get('image')
+        # is_blocked = request.POST.get('blocked')
+        c_data = Category(c_name = c_name, c_image = c_image)
+        c_data.save()
+        return redirect('cust_admin:category_list')
+          
+    return render(request, 'cust_admin/category/add_category.html', {'title':'Add Category'})
+
+def category_list_unlist(request, c_id):
+    category = get_object_or_404(Category, c_id = c_id)
+    category.is_blocked = not category.is_blocked
+    category.save()
+    action = 'unblocked' if not category.is_blocked else 'blocked'
+    messages.success(request, f"The category with ID {category.c_id} has been {action} successfully.")
+    return redirect('cust_admin:category_list')
