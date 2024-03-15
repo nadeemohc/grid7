@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
 from accounts.models import User
-from store.models import Category
+from store.models import Category, Product
 from django.contrib import messages
 
 def dashboard(request):
@@ -29,9 +29,6 @@ def user_block_unblock(request, username):
 def add_product(request):
     return render(request, 'cust_admin/product/product_add.html', {'title':'Add Product'})
 
-def prod_list(request):
-    return render(request, 'cust_admin/product/product_list.html', {'title':'Product List'})
-
 def category_list(request):
     categories = Category.objects.all().order_by('c_id')
     return render(request, 'cust_admin/category/category_list.html', {'title':'Category List','categories':categories})
@@ -54,3 +51,16 @@ def category_list_unlist(request, c_id):
     action = 'unblocked' if not category.is_blocked else 'blocked'
     messages.success(request, f"The category with ID {category.c_id} has been {action} successfully.")
     return redirect('cust_admin:category_list')
+
+def add_sub(request):
+    return render(request, 'cust_admin/category/add_sub_cat.html')
+
+# def product_list(request):
+
+#     products = Product.objects.all()
+
+#     return render(request,'appadmin/product/admin_product_list.html',{'title':'Product List', 'products':products})
+
+def prod_list(request):
+    products = Product.objects.all()
+    return render(request, 'cust_admin/product/product_list.html', {'title':'Product List', 'products':products})

@@ -1,0 +1,80 @@
+{% extends 'cust_admin/base.html' %}
+
+{% block content %}
+  <h2 class="mb-4">Add New Product</h2>
+  
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+      <label for="title" class="form-label">Title:</label>
+      <input type="text" id="title" name="title" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="image" class="form-label">Image:</label>
+      <input type="file" id="image" name="image" class="form-control" accept="image/*" multiple required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description:</label>
+      <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="price" class="form-label">Price:</label>
+      <input type="number" id="price" name="price" class="form-control" step="0.01" required>
+    </div>
+
+    <!-- List box for selecting category -->
+    <div class="mb-3">
+      <label for="category" class="form-label">Category:</label>
+      <select id="category" name="category" class="form-select" required>
+        <option value="" disabled selected>Select Category</option>
+        {% for category in categories %}
+          <option value="{{ category.cid }}">{{ category.cname }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- List box for selecting subcategory -->
+    <div class="mb-3">
+      <label for="subcategory" class="form-label">Subcategory:</label>
+      <select id="subcategory" name="subcategory" class="form-select" required>
+        <option value="" disabled selected>Select Subcategory</option>
+        {% for subcategory in subcategories %}
+          <option value="{{ subcategory.sid }}">{{ subcategory.sub_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="stock" class="form-label">Stock:</label>
+      <input type="number" id="stock" name="stock" class="form-control" required>
+    </div>
+
+    <!-- Checkboxes for options -->
+    <div class="mb-3 form-check">
+      <input type="checkbox" id="featured" name="featured" class="form-check-input">
+      <label for="featured" class="form-check-label">Featured</label>
+    </div>
+
+    <div class="mb-3 form-check">
+      <input type="checkbox" id="latest" name="latest" class="form-check-input">
+      <label for="latest" class="form-check-label">Latest</label>
+    </div>
+
+    <div class="mb-3 form-check">
+      <input type="checkbox" id="in_stock" name="in_stock" class="form-check-input" checked>
+      <label for="in_stock" class="form-check-label">In Stock</label>
+    </div>
+
+    <div class="mb-3 form-check">
+      <input type="checkbox" id="status" name="status" class="form-check-input" checked>
+      <label for="status" class="form-check-label">Status</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Product</button>
+    <a href="{% url 'cust_admin:prod_list' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+{% endblock %}

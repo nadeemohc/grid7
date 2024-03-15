@@ -8,8 +8,8 @@
                     <div class="content-header">
                         <h2 class="content-title">Add New Product</h2>
                         <div>
-                            <button class="btn btn-light rounded font-sm mr-5 text-body hover-up">Save to draft</button>
-                            <button class="btn btn-md rounded font-sm hover-up">Publich</button>
+                            <button class="btn btn-md rounded font-sm hover-up">Add Product</button>
+                            <button class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -22,48 +22,40 @@
                             <form>
                                 <div class="mb-4">
                                     <label for="product_name" class="form-label">Product title</label>
-                                    <input type="text" placeholder="Type here" class="form-control" id="product_name">
+                                    <input type="text" name="title" placeholder="Type here" class="form-control" id="product_name" required>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Full description</label>
-                                    <textarea placeholder="Type here" class="form-control" rows="4"></textarea>
+                                    <textarea placeholder="Type here" name="description" class="form-control" rows="4" required ></textarea>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-4">
                                         <div class="mb-4">
                                             <label class="form-label">Regular price</label>
                                             <div class="row gx-2">
-                                                <input placeholder="$" type="text" class="form-control">
+                                                <input placeholder="&#8377;" type="number" name="old_price" class="form-control" required>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div class="mb-4">
-                                            <label class="form-label">Promotional price</label>
-                                            <input placeholder="$" type="text" class="form-control">
+                                            <label class="form-label">Discount price</label>
+                                            <input placeholder="&#8377;" type="number" name="price" class="form-control" required>
                                         </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <label class="form-label">Currency</label>
-                                        <select class="form-select">
-                                            <option> USD </option>
-                                            <option> EUR </option>
-                                            <option> RUBL </option>
-                                        </select>
                                     </div>
                                 </div>
                                 <div class="mb-4">
-                                    <label class="form-label">Tax rate</label>
-                                    <input type="text" placeholder="%" class="form-control" id="product_name">
+                                    <label class="form-label">Discount rate</label>
+                                    <input type="number" placeholder="%" class="form-control" id="product_name" required>
                                 </div>
-                                <label class="form-check mb-4">
+                                <!-- <label class="form-check mb-4">
                                     <input class="form-check-input" type="checkbox" value="">
                                     <span class="form-check-label"> Make a template </span>
-                                </label>
+                                </label> -->
                             </form>
                         </div>
                     </div> <!-- card end// -->
-                    <div class="card mb-4">
+                    <!-- <div class="card mb-4">
                         <div class="card-header">
                             <h4>Shipping</h4>
                         </div>
@@ -93,7 +85,7 @@
                                 </div>
                             </form>
                         </div>
-                    </div> <!-- card end// -->
+                    </div> card end// -->
                 </div>
                 <div class="col-lg-3">
                     <div class="card mb-4">
@@ -109,34 +101,52 @@
                     </div> <!-- card end// -->
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h4>Organization</h4>
+                            <h4>Categorization</h4>
                         </div>
                         <div class="card-body">
                             <div class="row gx-2">
                                 <div class="col-sm-6 mb-3">
                                     <label class="form-label">Category</label>
-                                    <select class="form-select">
-                                        <option> Automobiles </option>
-                                        <option> Home items </option>
-                                        <option> Electronics </option>
-                                        <option> Smartphones </option>
-                                        <option> Sport items </option>
-                                        <option> Baby and Tous </option>
+                                    <select class="form-select" name="category" required>
+                                        <option> Select </option>
+                                        {% for category in categories %}
+                                        <option value="{{category.c_id}}">{{category.c_name}}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-sm-6 mb-3">
                                     <label class="form-label">Sub-category</label>
                                     <select class="form-select">
-                                        <option> Nissan </option>
-                                        <option> Honda </option>
-                                        <option> Mercedes </option>
-                                        <option> Chevrolet </option>
+                                        <option> Select </option>
+                                        
+                                        {% for subcategory in subcategories %}
+                                        <option value="{{ subcategory.sid }}">{{ subcategory.sub_name }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="mb-4">
-                                    <label for="product_name" class="form-label">Tags</label>
-                                    <input type="text" class="form-control">
+                                    <label for="product_name" class="form-label">Stock</label>
+                                    <input type="number" name="stock" class="form-control" required>
                                 </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" name="featured" class="form-check-input">
+                                    <label for="featured" class="form-check-label">Featured</label>
+                                  </div>
+                              
+                                  <div class="mb-3 form-check">
+                                    <input type="checkbox" name="latest" class="form-check-input">
+                                    <label for="latest" class="form-check-label">Latest</label>
+                                  </div>
+                              
+                                  <div class="mb-3 form-check">
+                                    <input type="checkbox" name="in_stock" class="form-check-input" checked>
+                                    <label for="in_stock" class="form-check-label">In Stock</label>
+                                  </div>
+                              
+                                  <div class="mb-3 form-check">
+                                    <input type="checkbox" name="status" class="form-check-input" checked>
+                                    <label for="status" class="form-check-label">Status</label>
+                                  </div>
                             </div> <!-- row.// -->
                         </div>
                     </div> <!-- card end// -->

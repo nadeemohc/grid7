@@ -25,7 +25,6 @@ def perform_signup(request):
                                            password = encryptedpassword,
                                            first_name = first_name,
                                            last_name = last_name)
-                                        #    verified = False)
 
 
             request.session["user_id"] = user.id
