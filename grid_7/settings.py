@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-yj8z$a2d3kpxg75)u&x4ky_uc)-iu+ddpsoe6z*9tz&1-)&+_e
 DEBUG = True
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost']
 
 SITE_ID = 1
 
@@ -92,8 +92,8 @@ WSGI_APPLICATION = 'grid_7.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'project_1',
-        'USER': 'db_manager',
+        'NAME': 'grid7',
+        'USER': 'user_x',
         'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432',
@@ -137,7 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  
@@ -172,22 +172,51 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         'APP': {
-#             'client_id': '',
-#             'secret': '',
-#             'key': ''
-#         },
-#         'SCOPE': [
-#             'profile',
-#             'email',
-#         ],
-#         'AUTH_PARAMS': {
-#             'access_type': 'online',
-#         }
-#     }
-# }
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': '671886154046-29uc84f1dgrtsms2bckn6m88i80ueida.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'facebook': {
+        'METHOD': 'oauth2',  
+        'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'name',
+            'name_format',
+            'picture',
+            'short_name'
+        ],
+        'EXCHANGE_TOKEN': True,
+        'VERIFIED_EMAIL': True,
+        'VERSION': 'v13.0',
+        'GRAPH_API_URL': 'https://graph.facebook.com/v13.0',
+        'APP': {
+            'client_id': '282464524874441',
+            'secret': '2fa1ec61e486094d6dd9ca2da8ad215c',
+            'key': ''
+        },
+    }
+}
+
+# ... Remaining settings ...
+
 # SOCIALACCOUNT_PROVIDERS = {
 #     'google': {
 #         'APP': {

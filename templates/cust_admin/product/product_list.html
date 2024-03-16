@@ -10,7 +10,7 @@
                     <p></p>
                 </div>
                 <div>
-                    <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Add New Product</a>
+                    <a href="{% url 'cust_admin:add_product' %}" class="btn btn-md rounded font-sm">Add New Product</a>
                 </div>
             </div>
             <div class="card mb-4">
@@ -41,44 +41,65 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Image</th>
-                                    <th scope="col">Price</th>
-                                    <th scope="col">Category</th>
-                                    <th scope="col">Sub Category</th>
-                                    <th scope="col">Featured</th>
-                                    <th scope="col">Latest</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Stock</th>
-                                    <th scope="col" class="text-end"> Action </th>
+                                    <th>id</th>
+                                    <th>Name</th>
+                                    <th>Image</th>
+                                    <th>Price</th>
+                                    <th>Old Price</th>
+                                    <th>Category</th>
+                                    <th>Sub Category</th>
+                                    <th>Featured</th>
+                                    <th>Latest</th>
+                                    <th>Status</th>
+                                    <th>Stock</th>
+                                    <th class="col-md-1">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
 
             {% for message in messages %} {{message}} {%endfor%}
-                                {% for user in users %}
+                                {% for product in products %}
                                 <tr>
-                                    <td>{{ user.id }}</td>
-                                    <td><b>{{ user.username }}</b></td>
-                                    <td>{{ user.first_name }}</td>
-                                    <td>{{ user.last_name }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>{% if user.verified %}
-                                        <span class="badge rounded-pill alert-success">Verified</span>
+                                    <td>{{ product.p_id }}</td>
+                                    <td><b>{{ product.title }}</b></td>
+                                    <td>
+                                        {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-sm img-thumbnail" alt="">
                                         {% else %}
-                                        <span class="badge rounded-pill alert-danger">Not Verified</span>
+                                        <p>No image available</p>
                                         {% endif %}
+                                       
                                     </td>
-                                    <td class="text-end">
-                                        
-                                        {% if user.is_active %}
-                                        <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Block</a>&nbsp;&nbsp;
-                                        {% else %}
-                                        <a href="{% url 'cust_admin:user_block' user.username%}" class="btn btn-md rounded font-sm">Unblock</a>&nbsp;&nbsp;
-                                        {% endif %}
-                                        <a href="{% url 'cust_admin:user_view' user.username %}" class="btn btn-md rounded font-sm">Details</a>&nbsp;&nbsp;
-                                    </td>
+                                        <td>{{ product.price }}</td>
+                                        <td>{{ product.old_price }}</td>
+                                        <td>{{ product.category }}</td>
+                                        <td>{{ product.sub_category.sub_name }}</td>
+                                        <td>{{ product.featured }}</td>
+                                        <td>{{ product.latest }}</td>
+                                        <td>{{product.status}}</td>
+                                        <td>{% if product.stock != 0 %}
+                                            {{ product.stock }}
+                                            {% else %}
+                                            out of stock
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if product.is_blocked %}
+                                            <a href="{% url 'cust_admin:product_unlist' product.p_id%}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
+                                            {% else %}
+                                            <a href="{% url 'cust_admin:product_unlist' product.p_id%}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
+                                            {% endif %}
+                                            <a href="{% url 'cust_admin:product_edit' product.p_id %}"class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
+                                        </td>
+                                        <!-- <td class="text-center align-middle col-md-3">
+                                            <div class="d-flex gap-2">
+                                                <div class="btn-group">
+                                                    
+                                                </div>
+                                                <div class="btn-group">
+                                                </div>
+                                            </div>
+                                        </td> -->
                                 </tr>
                                 {% endfor %}
                             </tbody>

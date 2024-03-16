@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('p_id', models.BigAutoField(primary_key=True, serialize=False, unique=True)),
                 ('title', models.CharField(default='product', max_length=100)),
-                ('image', models.ImageField(default='product.jpg', upload_to=store.models.user_directory_path)),
+                ('image', models.ImageField(default='product.jpg', upload_to=store.models.generic_directory_path)),
                 ('description', models.TextField(blank=True, default='This is the product', null=True)),
                 ('price', models.DecimalField(decimal_places=2, default=1.99, max_digits=10)),
                 ('old_price', models.DecimalField(decimal_places=2, default=2.99, max_digits=10)),

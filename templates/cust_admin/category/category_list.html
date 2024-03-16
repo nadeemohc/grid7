@@ -9,6 +9,7 @@
                     <h2 class="content-title card-title">Category List </h2>
                 </div>
                 <div>
+                    <a href="{% url 'cust_admin:add_subcat' %}" class="btn btn-md rounded font-sm">Add Sub Category</a>
                     <a href="{% url 'cust_admin:add_category' %}" class="btn btn-md rounded font-sm">Add New Category</a>
                 </div>
             </div>
@@ -53,7 +54,15 @@
                                 <tr>
                                     <td>{{ category.c_id }}</td>
                                     <td><b>{{ category.c_name }}</b></td>
-                                    <td>{{ category.c_image }}</td>
+                                    <!-- <td>{{ category.c_image }}</td> -->
+                                    <td>
+                                        {% if category.c_image %}
+                                        <img src="{{ category.c_image.url }}" alt="{{ category.c_name }}" class="img-sm img-thumbnail" alt="">
+                                        {% else %}
+                                        <p>No image available</p>
+                                        {% endif %}
+                                       
+                                    </td>
                                     <!-- <td><img src="{{ category.image.c_image }}" alt="{{ category.cname }}" style="max-width: 100px;"></td> -->
                                     <td>
                                         {% if category.is_blocked %}

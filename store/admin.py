@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # from django_allauth import sites
-from store.models import Category, Product
+from store.models import Category, Product, Subcategory
 
 # Register your models here.
 
@@ -12,6 +12,11 @@ class CategoryAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['p_id', 'user', 'category', 'sub_category', 'title', 'image', 'description', 'price', 'old_price', 'stock','specifications']
+    list_display = ['p_id', 'category', 'sub_category', 'title', 'image', 'description', 'price', 'old_price', 'stock','specifications']
 
 admin.site.register(Product, ProductAdmin)
+
+class SubcategoryAdmin(admin.ModelAdmin):
+    list_display = ['sid', 'sub_name', 'category']
+
+admin.site.register(Subcategory, SubcategoryAdmin)
