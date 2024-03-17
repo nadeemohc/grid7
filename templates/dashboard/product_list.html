@@ -1,0 +1,104 @@
+<!-- all_products.html -->
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block content %}
+
+<section class="product spad">
+    <div class='container'>
+        <div class="row">
+            <div class="col-lg-3 col-md-5">
+                <div class="sidebar__item">
+                    <h4>Category</h4>
+                    <ul>
+                        {% for category in categories %}
+                            <li>
+                                <a href="#">
+                                    {{ category.cname }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="sidebar__item">
+                    <h4>Price Range</h4>
+                    <div class="price-range-wrap">
+                        <form id="price-range-form">
+                            <div class="radio">
+                                <label><input type="radio" name="price_range" value="0-50"> 0 - 50</label>
+                            </div>
+                            <div class="radio">
+                                <label><input type="radio" name="price_range" value="50-200"> 50 - 200</label>
+                            </div>
+                            <div class="radio">
+                                <label><input type="radio" name="price_range" value="200-500"> 200 - 500</label>
+                            </div>
+                            <div class="radio">
+                                <label><input type="radio" name="price_range" value="500-1000"> 500 - 1000</label>
+                            </div>
+                            <div class="radio">
+                                <label><input type="radio" name="price_range" value="more than 1000"> more than 1000</label>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-9 col-md-7">
+                <!-- Product listing -->
+                <div class="row" id="product-listing">
+                    {% for product in products %}
+                        <div class="col-lg-4 col-md-6 col-sm-6"  style="cursor: pointer;">
+                            <div class="product__item" onclick="window.location='{% url 'core:product_detail' product_pid=product.pid %}';">
+                                <div class="product__item__pic set-bg" data-setbg="{{ product.image.url }}">
+                                    <ul class="product__item__pic__hover">
+                                        <li><a href="#"><i class="fa fa-heart"></i></a></li>
+                                        <li><a href="#"><i id="add-to-cart-btn" class="fa fa-shopping-cart"></i></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6>{{ product.title }}</h6>
+                                    <h5>{{ product.price }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Pagination (if needed) goes here -->
+                <div class="product__pagination">
+                    <a href="#">1</a>
+                    <a href="#">2</a>
+                    <a href="#">3</a>
+                    <a href="#"><i class="fa fa-long-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const priceRangeForm = document.getElementById('price-range-form');
+        const productListing = document.getElementById('product-listing');
+
+        priceRangeForm.addEventListener('change', function(event) {
+            event.preventDefault();
+            const selectedPriceRange = event.target.value;
+            filterProductsByPrice(selectedPriceRange);
+        });
+
+        function filterProductsByPrice(priceRange) {
+            // Send AJAX request to filter products by price range
+            const url = window.location.pathname + '?min_price=' + priceRange.split('-')[0] + '&max_price=' + priceRange.split('-')[1];
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the product listing with the filtered products
+                    productListing.innerHTML = data.products_html;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    });
+</script>
+
+
+{% endblock %}

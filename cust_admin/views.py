@@ -133,6 +133,7 @@ def add_product(request):
         image = request.FILES.getlist('image')
         description = request.POST.get('description')
         price = request.POST.get('price')
+        old_price = request.POST.get('old_price')
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
         stock = request.POST.get('stock')
@@ -154,6 +155,7 @@ def add_product(request):
                 image=image[0],
                 description=description,
                 price=price,
+                old_price=old_price,
                 category=category,
                 sub_category=subcategory,
                 stock=stock,
