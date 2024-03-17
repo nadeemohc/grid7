@@ -17,12 +17,9 @@ def home(request):
                    'categories':categories,
                    'products':Products})
 
-def user_prod_list(request):
-    return render(request, 'dashboard/product_list.html')
 
-
-def product_detail(request,product_pid):
-    product = get_object_or_404(Product, pid=product_pid)
+def product_detail(request,product_pid):    
+    product = get_object_or_404(Product, p_id=product_pid)
     product_images = ProductImages.objects.filter(product=product)
     print(product_images)
 
@@ -45,7 +42,7 @@ def product_detail(request,product_pid):
 
 
 def product_detailed_view(request,product_pid):
-    product = get_object_or_404(Product, pid=product_pid)
+    product = get_object_or_404(Product, p_id=product_pid)
     product_images = ProductImages.objects.filter(product=product)
     print(product_images)
 
@@ -55,4 +52,4 @@ def product_detailed_view(request,product_pid):
    
     }
 
-    return render(request, 'core/product_detail.html',context)
+    return render(request, 'dashboard/product_detailed_view.html',context)

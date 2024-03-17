@@ -3,7 +3,7 @@
 
 {% block content %}
     
-<main class="main">
+
     <div class="page-header breadcrumb-wrap">
         <div class="container">
             <div class="breadcrumb">
@@ -25,17 +25,14 @@
                                     <!-- MAIN SLIDES -->
                                     <div class="product-image-slider">
                                         
-                                        {% for image in product_images %}
+                                        
                                             
                                         <figure class="border-radius-10">
                                             <img src="{{product.image.url}}" alt="{{product.title}}">
                                         </figure>
 
-                                        {% endfor %}
-                                        
-                                        {% comment %}
-                                            
-                                        <figure class="border-radius-10">
+                                       
+                                        <!-- <figure class="border-radius-10">
                                             <img src="assets/imgs/shop/product-16-1.jpg" alt="product image">
                                         </figure>
                                         <figure class="border-radius-10">
@@ -52,36 +49,29 @@
                                         </figure>
                                         <figure class="border-radius-10">
                                             <img src="assets/imgs/shop/product-16-7.jpg" alt="product image">
-                                        </figure>
-
-                                        {% endcomment %}
+                                        </figure> -->
                                     </div>
                                     <!-- THUMBNAILS -->
+                                    
+                                    {% comment %}
+                                        
                                     <div class="slider-nav-thumbnails pl-15 pr-15">
-                                        
-                                        {% for images in in product_images %}
-                                            
-                                        <div><img src="{{product.image.url}}" alt="{{product.title}}"></div>
-                                        
-                                        {% endfor %}
-                                        
-                                        {% comment %}
-                                            
+                                        <div><img src="assets/imgs/shop/thumbnail-3.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-4.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-5.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-6.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-7.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-8.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-9.jpg" alt="product image"></div>
-
-                                        {% endcomment %}
                                     </div>
+
+                                    {% endcomment %}                                        
                                 </div>
                                 <!-- End Gallery -->
                             </div>
                             <div class="col-md-6 col-sm-12 col-xs-12">
                                 <div class="detail-info">
-                                    <h2 class="title-detail">{{Product.title}}</h2>
+                                    <h2 class="title-detail">{{product.title}}</h2>
                                     <div class="product-detail-rating">
                                         <div class="pro-details-brand">
                                             <span> Brands: <a href="shop-grid-right.html">{{product.category}}</a></span>
@@ -112,23 +102,6 @@
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                         </ul>
                                     </div>
-                                    
-                                    {% comment %}
-                                        
-                                    <div class="attr-detail attr-color mb-15">
-                                        <strong class="mr-10">Color</strong>
-                                        <ul class="list-filter color-filter">
-                                            <li><a href="#" data-color="Red"><span class="product-color-red"></span></a></li>
-                                            <li><a href="#" data-color="Yellow"><span class="product-color-yellow"></span></a></li>
-                                            <li class="active"><a href="#" data-color="White"><span class="product-color-white"></span></a></li>
-                                            <li><a href="#" data-color="Orange"><span class="product-color-orange"></span></a></li>
-                                            <li><a href="#" data-color="Cyan"><span class="product-color-cyan"></span></a></li>
-                                            <li><a href="#" data-color="Green"><span class="product-color-green"></span></a></li>
-                                            <li><a href="#" data-color="Purple"><span class="product-color-purple"></span></a></li>
-                                        </ul>
-                                    </div>
-
-                                    {% endcomment %}
                                     <div class="attr-detail attr-size">
                                         <strong class="mr-10">Size</strong>
                                         <ul class="list-filter size-filter font-small">
@@ -154,7 +127,7 @@
                                     </div>
                                     <ul class="product-meta font-xs color-grey mt-50">
                                         <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
-                                        <li class="mb-5">Tags: <a href="#" rel="tag">{{product.sub_category}}</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
+                                        <li class="mb-5">Tags: <a href="#" rel="tag">Cloth</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
                                         <li>Availability:<span class="in-stock text-success ml-5">8 Items In Stock</span></li>
                                     </ul>
                                 </div>
@@ -190,12 +163,110 @@
                                         dachshund.
                                     </p>
                                 </div>
-                             </div>
+                                <h3 class="section-title style-1 mb-30">Additional info</h3>
+                                <table class="font-md mb-30">
+                                    <tbody>
+                                        <tr class="stand-up">
+                                            <th>Stand Up</th>
+                                            <td>
+                                                <p>35″L x 24″W x 37-45″H(front to back wheel)</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="folded-wo-wheels">
+                                            <th>Folded (w/o wheels)</th>
+                                            <td>
+                                                <p>32.5″L x 18.5″W x 16.5″H</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="folded-w-wheels">
+                                            <th>Folded (w/ wheels)</th>
+                                            <td>
+                                                <p>32.5″L x 24″W x 18.5″H</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="door-pass-through">
+                                            <th>Door Pass Through</th>
+                                            <td>
+                                                <p>24</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="frame">
+                                            <th>Frame</th>
+                                            <td>
+                                                <p>Aluminum</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="weight-wo-wheels">
+                                            <th>Weight (w/o wheels)</th>
+                                            <td>
+                                                <p>20 LBS</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="weight-capacity">
+                                            <th>Weight Capacity</th>
+                                            <td>
+                                                <p>60 LBS</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="width">
+                                            <th>Width</th>
+                                            <td>
+                                                <p>24″</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="handle-height-ground-to-handle">
+                                            <th>Handle height (ground to handle)</th>
+                                            <td>
+                                                <p>37-45″</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="wheels">
+                                            <th>Wheels</th>
+                                            <td>
+                                                <p>12″ air / wide track slick tread</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="seat-back-height">
+                                            <th>Seat back height</th>
+                                            <td>
+                                                <p>21.5″</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="head-room-inside-canopy">
+                                            <th>Head room (inside canopy)</th>
+                                            <td>
+                                                <p>25″</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="pa_color">
+                                            <th>Color</th>
+                                            <td>
+                                                <p>Black, Blue, Red, White</p>
+                                            </td>
+                                        </tr>
+                                        <tr class="pa_size">
+                                            <th>Size</th>
+                                            <td>
+                                                <p>M, S</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="social-icons single-share">
+                                    <ul class="text-grey-5 d-inline-block">
+                                        <li><strong class="mr-10">Share this:</strong></li>
+                                        <li class="social-facebook"><a href="#"><img src="assets/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
+                                        <li class="social-twitter"> <a href="#"><img src="assets/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
+                                        <li class="social-instagram"><a href="#"><img src="assets/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
+                                        <li class="social-linkedin"><a href="#"><img src="assets/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
-        </main>
+
 
 {% endblock content %}
-    
+            
