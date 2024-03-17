@@ -70,6 +70,7 @@
                                         {% else %}
                                         <a href="{% url 'cust_admin:category_unlist' category.c_id%}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
                                         {% endif %}
+                                        <a href="{% url 'cust_admin:category_edit' category.c_id %}"class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
                                     </td>
                                 </tr>
                                 {% endfor %}

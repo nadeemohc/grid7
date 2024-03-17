@@ -4,8 +4,8 @@
 <section class="content-main">
     <div class="content-header">
         <div>
-            <h2 class="content-title card-title">Categories </h2>
-            <p>Add, edit or delete a category</p>
+            <h2 class="content-title card-title">Edit Categories </h2>
+            <!-- <p>Add, edit or delete a category</p> -->
         </div>
         <div>
             <input type="text" placeholder="Search Categories" class="form-control bg-white">
@@ -15,7 +15,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <form method='post' action="{% url 'cust_admin:edit_category' %}" enctype="multipart/form-data">
+                    <form method='post' enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-4">
                             <label for="cname" class="form-label">Name</label>

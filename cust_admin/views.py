@@ -237,3 +237,15 @@ def prod_list(request):
                   {'title':'Product List',
                    'products':products})
 
+
+def edit_category(request, c_id):
+    category = get_object_or_404(Category, c_id=c_id)
+    if request.method == 'POST':
+        category.c_name = request.POST.get('cname')
+        category.c_image = request.FILES.get('image')
+        # is_blocked = request.POST.get('blocked')
+        
+        category.save()
+        return redirect('cust_admin:category_list')
+          
+    return render(request, 'cust_admin/category/category_edit.html', {'title':'Add Category'})

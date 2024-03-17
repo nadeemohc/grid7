@@ -17,4 +17,5 @@ urlpatterns = [
     path('category_unlist/<int:c_id>/', views.category_list_unlist, name='category_unlist'),
     path('add_subcat/', views.add_subcat, name='add_subcat'),
     path('subcategory_list/', views.subcategory_list, name='subcategory_list'),
+    path('category_edit/<int:c_id>', views.edit_category, name='category_edit'),
 ]
