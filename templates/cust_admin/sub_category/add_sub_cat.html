@@ -1,0 +1,46 @@
+{% extends "cust_admin/base.html" %}
+{% load static%}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Sub Categories </h2>
+        </div>
+        <div>
+            <input type="text" placeholder="Search Categories" class="form-control bg-white">
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <form method='post' action="{% url 'cust_admin:add_subcat' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="cname" class="form-label">Name</label>
+                            <input type="text" placeholder="Type here" class="form-control" name="sub_name" />
+                        </div>
+                        <!-- <div class="mb-3">
+                          <label for="category" class="form-label">Category:</label>
+                          <select id="category" name="category" class="form-select" required>
+                            <option value="" selected disabled>Please select a Category</option>
+                            {% for category in categories %}
+                              <option value="{{ category.c_id }}">{{ category.c_name }}</option>
+                            {% endfor %}
+                          </select>
+                        </div> -->
+                        <!-- <div class="mb-4">
+                            <input type="checkbox" name="blocked">
+                            <label class="form-label" for="blocked">Blocked</label>
+                        </div> -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Create Sub Category</button>
+                        </div>
+                    </form>
+                    
+                </div>
+                
+        </div> <!-- card body .// -->
+    </div> <!-- card .// -->
+</section> <!-- content-main end// -->
+{% endblock %}

@@ -25,7 +25,6 @@ def perform_signup(request):
                                            password = encryptedpassword,
                                            first_name = first_name,
                                            last_name = last_name)
-                                        #    verified = False)
 
 
             request.session["user_id"] = user.id
@@ -120,9 +119,30 @@ def resend_otp(request):
         return redirect('account:otp_verification')  # Redirect to the OTP verification page
     return render(request, 'account/resend_otp.html')
 
+# def otp_verification(request):
+#     if request.method=='POST':
+#         otp_=request.POST.get("otp")
+#         user_id = request.session.get('user_id')
+
+#         if otp_ == request.session["otp"]:
+#             user = User.objects.get(id=user_id)
+#             user.verified = True
+#             user.save()
+#             request.session.flush()
+#             messages.success(request, "OTP verified successfully.")
+#             login(request, user)
+#             return redirect('store:home')  
+#         else:
+#             messages.error(request, "Invalid OTP. Please try again.")
+#             return redirect('otp_verification')  
+#     else:
+#         return render(request, 'account/otp.html')
+
+
+
 def otp_verification(request):
-    if request.method=='POST':
-        otp_=request.POST.get("otp")
+    if request.method == 'POST':
+        otp_ = request.POST.get("otp")
         user_id = request.session.get('user_id')
 
         if otp_ == request.session["otp"]:
@@ -131,15 +151,22 @@ def otp_verification(request):
             user.save()
             request.session.flush()
             messages.success(request, "OTP verified successfully.")
-            login(request, user)
-            return redirect('store:home')  
+            
+            # Authenticate the user
+            user = authenticate(request, user=user)
+            
+            if user is not None:
+                # Log in the user
+                login(request, user)
+                return redirect('store:home')
+            else:
+                # messages.error(request, "Failed to log in. Please try again.")
+                return redirect('accounts:login')  # Redirect to login page or any other appropriate URL
         else:
             messages.error(request, "Invalid OTP. Please try again.")
             return redirect('otp_verification')  
     else:
         return render(request, 'account/otp.html')
-
-
 
 
 def perform_logout(request):
