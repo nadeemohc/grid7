@@ -3,8 +3,10 @@ from django.contrib.auth import get_user_model
 from accounts.models import User
 from store.models import Category, Product, Subcategory, ProductImages
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def dashboard(request):
     return render(request, 'cust_admin/index.html', {'title':'Admin Dashboard'})
 
@@ -41,22 +43,42 @@ def add_category(request):
     if request.method == 'POST':
         c_name = request.POST.get('cname')
         c_image = request.FILES.get('image')
-        # is_blocked = request.POST.get('blocked')
-        c_data = Category(c_name = c_name, c_image = c_image)
-        c_data.save()
-        return redirect('cust_admin:category_list')
-          
-    return render(request, 'cust_admin/category/add_category.html', {'title':'Add Category'})
 
+        # Check if a category with the same name already exists
+        existing_category = Category.objects.filter(c_name=c_name).exists()
+        if existing_category:
+            messages.error(request, f"Category {c_name} with this name already exists.")
+        else:
+            # Create and save the new category
+            c_data = Category(c_name=c_name, c_image=c_image)
+            c_data.save()
+            messages.success(request, "Category added successfully.")
+
+            return redirect('cust_admin:category_list')
+
+    return render(request, 'cust_admin/category/add_category.html', {'title': 'Add Category'})
 
 def category_list_unlist(request, c_id):
     category = get_object_or_404(Category, c_id = c_id)
-    category.is_blocked = not category.is_blocked
+    category.is_blocked = not category.is_blocked    
     category.save()
     action = 'unblocked' if not category.is_blocked else 'blocked'
     messages.success(request, f"The category with ID {category.c_id} has been {action} successfully.")
     return redirect('cust_admin:category_list')
 
+
+def edit_category(request, c_id):
+    category = get_object_or_404(Category, c_id=c_id)
+    if request.method == 'POST':
+        category.c_name = request.POST.get('cname')
+        category.c_image = request.FILES.get('image')
+        # is_blocked = request.POST.get('blocked')
+
+
+        category.save()
+        return redirect('cust_admin:category_list')
+          
+    return render(request, 'cust_admin/category/category_edit.html', {'title':'Add Category'})
 
 def subcategory_list(request):
     sub_cat = Subcategory.objects.all()
@@ -73,59 +95,6 @@ def add_subcat(request):
     # categories = Category.objects.all()
     return render(request, 'cust_admin/sub_category/add_sub_cat.html', {'title':'Add Sub Category'})
 
-# def add_product(request):
-#     if request.method == 'POST':
-#         title = request.POST.get('title')
-#         image = request.FILES.getlist('image')
-#         description = request.POST.get('description')
-#         price = request.POST.get('price')
-#         old_price = request.POST.get('old_price')
-#         category_id = request.POST.get('category')
-#         subcategory_id = request.POST.get('subcategory')
-#         stock = request.POST.get('stock')
-        
-#         # Checkboxes
-#         featured = request.POST.get('featured') == 'on'
-#         latest = request.POST.get('latest') == 'on'
-#         in_stock = request.POST.get('in_stock') == 'on'
-#         status = request.POST.get('status') == 'on'
-
-#         # Get the category and subcategory objects
-#         category = get_object_or_404(Category, c_id=category_id)
-#         subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
-
-#         # Create the product
-        
-#         product = Product.objects.create(
-#                 title=title,
-#                 description=description,
-#                 price=price,
-#                 old_price=old_price,
-#                 category=category,
-#                 sub_category=subcategory,
-#                 stock=stock,
-#                 featured=featured,
-#                 latest=latest,
-#                 in_stock=in_stock,
-#                 status=status,  
-#             )
-       
-#         additional_image_count = 5  # Change this to the desired count of additional images
-#         for i in range(1, additional_image_count + 1):
-#             image_field_name = f'product_image{i}'
-#             image = request.FILES.get(image_field_name)
-#             if image:
-#                 ProductImages.objects.create(product=product,images=image)
-                
-#         messages.success(request, 'Product added successfully!')
-#         return redirect('cust_admin:prod_list')
-    
-#     # Fetch categories and subcategories for dropdowns
-#     categories = Category.objects.all()
-#     subcategories = Subcategory.objects.all()
-#     return render(request, 'cust_admin/product/product_add.html', 
-#                   {'title':'Add Product', 'categories': categories,
-#                     'subcategories':subcategories})
 
 def add_product(request):
     if request.method == 'POST':
@@ -167,7 +136,7 @@ def add_product(request):
        
         for i in image:
                 try:
-                    ProductImages.objects.create(product=product, Image=i)
+                    ProductImages.objects.create(product=product, images=i)
                 except Exception as e:
                     print(e)
 
@@ -238,14 +207,3 @@ def prod_list(request):
                    'products':products})
 
 
-def edit_category(request, c_id):
-    category = get_object_or_404(Category, c_id=c_id)
-    if request.method == 'POST':
-        category.c_name = request.POST.get('cname')
-        category.c_image = request.FILES.get('image')
-        # is_blocked = request.POST.get('blocked')
-        
-        category.save()
-        return redirect('cust_admin:category_list')
-          
-    return render(request, 'cust_admin/category/category_edit.html', {'title':'Add Category'})

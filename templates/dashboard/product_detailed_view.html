@@ -9,7 +9,7 @@
             <div class="breadcrumb">
                 <a href="index.html" rel="nofollow">Home</a>
                 <span></span> Fashion
-                <span></span> Abstract Print Patchwork Dress
+                <span></span> {{breadcrumb}}
             </div>
         </div>
     </div>
@@ -26,11 +26,14 @@
                                     <div class="product-image-slider">
                                         
                                         
+                                        {% for image in product_images %}
+                                                                                     
                                             
                                         <figure class="border-radius-10">
                                             <img src="{{product.image.url}}" alt="{{product.title}}">
                                         </figure>
 
+                                        {% endfor %}
                                        
                                         <!-- <figure class="border-radius-10">
                                             <img src="assets/imgs/shop/product-16-1.jpg" alt="product image">
@@ -53,19 +56,20 @@
                                     </div>
                                     <!-- THUMBNAILS -->
                                     
-                                    {% comment %}
-                                        
+                                    
+                                    {% for image in product_images %}
+                                         
                                     <div class="slider-nav-thumbnails pl-15 pr-15">
-                                        <div><img src="assets/imgs/shop/thumbnail-3.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-4.jpg" alt="product image"></div>
+                                        <div><img src="{{product.image.url}}" alt="product image"></div>
+                                        <!-- <div><img src="assets/imgs/shop/thumbnail-4.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-5.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-6.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-7.jpg" alt="product image"></div>
                                         <div><img src="assets/imgs/shop/thumbnail-8.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-9.jpg" alt="product image"></div>
+                                        <div><img src="assets/imgs/shop/thumbnail-9.jpg" alt="product image"></div> -->
                                     </div>
+                                    {% endfor %}
 
-                                    {% endcomment %}                                        
                                 </div>
                                 <!-- End Gallery -->
                             </div>

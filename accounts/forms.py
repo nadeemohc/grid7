@@ -12,17 +12,17 @@ from accounts.models import User
 User = get_user_model()
 
 class SignUpForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "First Name"}),
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "First Name", 'class':'form-control'}),
                                  required=True, help_text='Required. 30 characters or fewer.')
-    last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Last Name"}),
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Last Name", 'class':'form-control'}),
                                 required=True, help_text='Required. 30 characters or fewer.')
-    email = forms.EmailField(max_length=254, widget=forms.EmailInput(attrs={"placeholder": "Email"}), required=True,
+    email = forms.EmailField(max_length=254, widget=forms.EmailInput(attrs={"placeholder": "Email", 'class':'form-control'}), required=True,
                              help_text='Required. Enter a valid email address.')
-    password1 = forms.CharField(max_length=30, widget=forms.PasswordInput(attrs={"placeholder": "Password"}),
+    password1 = forms.CharField(max_length=30, widget=forms.PasswordInput(attrs={"placeholder": "Password", 'class':'form-control'}),
                                 required=True, help_text='Required. 30 characters or fewer.')
-    password2 = forms.CharField(max_length=30, widget=forms.PasswordInput(attrs={"placeholder": "Confirm Password"}),
+    password2 = forms.CharField(max_length=30, widget=forms.PasswordInput(attrs={"placeholder": "Confirm Password", 'class':'form-control'}),
                                 required=True, help_text='Required. 30 characters or fewer.')
-    username = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Username"}), required=True,
+    username = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Username", 'class':'form-control'}), required=True,
                                help_text='Required. 30 characters or fewer.')
 
     class Meta:
