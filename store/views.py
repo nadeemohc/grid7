@@ -49,6 +49,7 @@ def product_detailed_view(request,product_pid):
     context = {
         'product': product,
         'product_images': product_images,
+        'breadcrumb': product.title,
    
     }
 
