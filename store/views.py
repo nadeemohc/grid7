@@ -18,6 +18,10 @@ def home(request):
                    'products':Products})
 
 
+def handler404(request, exception):
+    return render(request, '404.html', status=404)
+
+
 def product_detail(request,product_pid):    
     product = get_object_or_404(Product, p_id=product_pid)
     product_images = ProductImages.objects.filter(product=product)

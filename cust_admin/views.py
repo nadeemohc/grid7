@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
 from accounts.models import User
+from cust_auth_admin.views import admin_required
 from store.models import Category, Product, Subcategory, ProductImages
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -11,11 +12,13 @@ def dashboard(request):
     return render(request, 'cust_admin/index.html', {'title':'Admin Dashboard'})
 
 
+@admin_required
 def user_list(request):
     users = User.objects.all().order_by('id')
     return render(request, 'cust_admin/user/user_list.html', {'title':'User List', 'users': users})
 
 
+@admin_required
 def user_view(request, username):
     user = get_object_or_404(User, username=username)
     return render(request, 'cust_admin/user/user_view.html', {'title': 'View User', 'user': user})
@@ -23,6 +26,7 @@ def user_view(request, username):
 User = get_user_model()
 
 
+@admin_required
 def user_block_unblock(request, username):
     user = get_object_or_404(User, username = username)
     user.is_active = not user.is_active
@@ -32,6 +36,7 @@ def user_block_unblock(request, username):
     return redirect('cust_admin:user_list')
 
 
+@admin_required
 def category_list(request):
     categories = Category.objects.all().order_by('c_id')
     return render(request, 'cust_admin/category/category_list.html',
@@ -39,6 +44,7 @@ def category_list(request):
                     'categories':categories})
 
 
+@admin_required
 def add_category(request):
     if request.method == 'POST':
         c_name = request.POST.get('cname')
@@ -58,6 +64,8 @@ def add_category(request):
 
     return render(request, 'cust_admin/category/add_category.html', {'title': 'Add Category'})
 
+
+@admin_required
 def category_list_unlist(request, c_id):
     category = get_object_or_404(Category, c_id = c_id)
     category.is_blocked = not category.is_blocked    
@@ -67,6 +75,7 @@ def category_list_unlist(request, c_id):
     return redirect('cust_admin:category_list')
 
 
+@admin_required
 def edit_category(request, c_id):
     category = get_object_or_404(Category, c_id=c_id)
     if request.method == 'POST':
@@ -80,11 +89,14 @@ def edit_category(request, c_id):
           
     return render(request, 'cust_admin/category/category_edit.html', {'title':'Add Category'})
 
+
+@admin_required
 def subcategory_list(request):
     sub_cat = Subcategory.objects.all()
     return render(request,'cust_admin/sub_category/sub_cat_list.html', {'title':'Sub Category', 'sub_cat':sub_cat})
 
 
+@admin_required
 def add_subcat(request):
     if request.method == 'POST':
         sub_name = request.POST.get('sub_name')
@@ -96,6 +108,7 @@ def add_subcat(request):
     return render(request, 'cust_admin/sub_category/add_sub_cat.html', {'title':'Add Sub Category'})
 
 
+@admin_required
 def add_product(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -157,6 +170,7 @@ def add_product(request):
     return render(request, 'cust_admin/product/product_add.html', context)
 
 
+@admin_required
 def prod_edit(request, p_id):
     product = get_object_or_404(Product, p_id=p_id)
     product_images = ProductImages.objects.filter(product=product)
@@ -191,6 +205,7 @@ def prod_edit(request, p_id):
     return render (request, 'cust_admin/product/product_edit.html',context)
 
 
+@admin_required
 def product_list_unlist(request, p_id):
     product = get_object_or_404(Product, pk = p_id)
     product.is_blocked = not product.is_blocked
@@ -200,6 +215,7 @@ def product_list_unlist(request, p_id):
     return redirect('cust_admin:prod_list')
 
 
+@admin_required
 def prod_list(request):
     products = Product.objects.all().order_by('p_id')
     return render(request, 'cust_admin/product/product_list.html', 
