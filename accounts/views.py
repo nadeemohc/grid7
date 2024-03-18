@@ -15,32 +15,38 @@ def perform_signup(request):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
+            password1 = form.cleaned_data('password1')
+            password2 = form.cleaned_data('password2')
             encryptedpassword = make_password(form.cleaned_data.get('password1'))
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
 
-            print(username, email, encryptedpassword, first_name, last_name)
-            user = User.objects.create(username= username,
-                                           email = email,
-                                           password = encryptedpassword,
-                                           first_name = first_name,
-                                           last_name = last_name)
+            try:
+                user_with_email = User.objects.get(email=email)
+                messages.info(request, 'Email already used!')
+                return redirect('accounts:perform_signup')
+            except User.DoesNotExist:
+                pass  # Email is not in use, continue with registration
 
+            if password1 != password2:
+                messages.info(request, "Entered passwords don't match")
+                return redirect('accounts:perform_signup')
+
+            user = User.objects.create(username=username,
+                                       email=email,
+                                       password=encryptedpassword,
+                                       first_name=first_name,
+                                       last_name=last_name)
 
             request.session["user_id"] = user.id
-
             sent_otp(request)
-            return render(request,'account/otp.html',{"email":email})
+            return render(request, 'account/otp.html', {"email": email})
 
-          
-        
     else: 
         form = SignUpForm()
-    context = {
-        'form':form
-        }
-    return render(request,'account/signup.html',context)
 
+    context = {'form': form}
+    return render(request, 'account/signup.html', context)
 
 # @never_cache
 # def perform_login(request):

@@ -17,6 +17,15 @@
               {% endif %}
               <form method="POST" action="{% url 'accounts:login' %}">
                   {% csrf_token %}
+                  {% if messages %}
+                  {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                          {{ message }}
+                          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                  {% endfor %}
+              {% endif %}
+  
                 <div class="mb-3">
                     <input class="form-control" placeholder="Username or email" type="text" name="email">
                 </div> <!-- form-group// -->
@@ -34,7 +43,8 @@
                     <button type="submit" class="btn btn-primary w-100"> Login </button>
                 </div> <!-- form-group// -->
             </form>
-            {% for message in messages %} {{message}} {%endfor%}
+<!-- my_template.html -->
+
             <p class="text-center small text-muted mb-15">or sign up with</p>
             <div class="d-grid gap-3 mb-4">
                 <a href="{% provider_login_url 'google' %}" class="btn w-100 btn-light font-sm">
