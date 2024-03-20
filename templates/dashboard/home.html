@@ -142,12 +142,15 @@
                     <div class="slider-arrow slider-arrow-2 carausel-6-columns-arrow" id="carausel-6-columns-arrows"></div>
                     <div class="carausel-6-columns" id="carausel-6-columns">
                         {% for category in categories %}
+                        {% if category.is_blocked != True %}
                             <div class="card-1">
+                                
                                 <figure class=" img-hover-scale overflow-hidden">
                                     <a href="shop-grid-right.html"><img src="{{ category.c_image.url }}" alt="{{ category.c_name }}"></a>
                                 </figure>
                                 <h5><a href="shop-grid-right.html">{{ category.c_name }}</a></h5>
                             </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -183,6 +186,9 @@
                         <!-- Product Grid for Featured Products -->
                         <div class="row product-grid-4">
                             {% for product in products %}
+                            
+                            {% if product.is_blocked != True %}
+                                
                             <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
@@ -221,6 +227,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                             {% endfor %}
                         </div>
                         <!-- End Product Grid for Featured Products -->

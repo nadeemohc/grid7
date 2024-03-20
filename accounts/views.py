@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import SignUpForm
 from accounts.backends import EmailBackend
@@ -101,7 +101,9 @@ def perform_login(request):
     return render(request, 'account/login.html')
 
 
-
+def edit_info(request):
+    user = get_object_or_404(User, )
+    return render(request, 'dashboard/edit_profile.html')
 
 
 def sent_otp(request):

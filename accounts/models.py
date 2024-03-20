@@ -91,3 +91,11 @@ class Userform(models.Model):
 
   def _str_(self):
     return self.username
+  
+# class user_profile(models.Models):
+#   full_name = models.CharField()
+#   bio = models.CharField()
+#   bio = models.CharField()
+
+#   def __str__(self):
+#     return self.full_name

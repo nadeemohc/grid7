@@ -16,9 +16,11 @@ urlpatterns = [
     path('', include('cust_auth_admin.urls')),
     path('accounts/', include('allauth.urls')),
     path('accounts/', include('allauth.socialaccount.urls')),
-    # path('accounts/google/login/' TemplateView.as_view(template_name='')))
     path('home', TemplateView.as_view(template_name='dashboard/home.html'), name='home'),
-    # path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),
+    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/,', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]
 
 
