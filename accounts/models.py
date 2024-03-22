@@ -43,7 +43,7 @@ class User(AbstractBaseUser,PermissionsMixin):
   last_name = models.CharField(max_length=50)
   username = models.CharField(max_length=100, unique=True)
   email = models.EmailField(max_length=100, unique=True)
-  phone_number = models.CharField(max_length=12,blank=True)
+  phone_number = models.CharField(max_length=15,blank=True)
   verified = models.BooleanField(default=False)
   
 
@@ -92,10 +92,24 @@ class Userform(models.Model):
   def _str_(self):
     return self.username
   
-# class user_profile(models.Models):
-#   full_name = models.CharField()
-#   bio = models.CharField()
-#   bio = models.CharField()
 
-#   def __str__(self):
-#     return self.full_name
+class Profile(models.Model):
+  user = models.OneToOneField(User, on_delete=models.CASCADE)
+  dp_img = models.ImageField(upload_to='image', blank=True, null=True)
+  bio = models.CharField(max_length=220, blank=True, null=True)
+
+  def __str__(self):
+    return f"Profile of {self.user.username}"
+
+
+class Address(models.Model):
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  street_address = models.CharField(max_length=200)
+  city = models.CharField(max_length=100)
+  state = models.CharField(max_length=100)
+  postal_code = models.CharField(max_length=20)
+  country = models.CharField(max_length=100)
+  is_default = models.BooleanField(default=False) 
+    
+  def __str__(self):
+      return f"{self.street_address}, {self.city}, {self.state} - {self.postal_code}"

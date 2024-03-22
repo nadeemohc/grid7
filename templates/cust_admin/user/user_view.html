@@ -44,6 +44,12 @@
                         <span class="badge rounded-pill alert-danger">No</span>
                         {% endif %}
                     </p>
+                    <p><strong>Is Active:</strong> {% if user.is_active %}
+                        <span class="badge rounded-pill alert-success">Yes</span>
+                        {% else %}
+                        <span class="badge rounded-pill alert-danger">No</span>
+                        {% endif %}
+                    </p>
                     <!-- Add more user details here as needed -->
                 </div>
             </div>

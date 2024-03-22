@@ -151,11 +151,10 @@ def add_product(request):
             )
        
         for i in image:
-                i = Image.open(image)
-                try:
-                    ProductImages.objects.create(product=product, images=i)
-                except Exception as e:
-                    print(e)
+            try:
+                ProductImages.objects.create(product=product, images=i)
+            except Exception as e:
+                print(e)
 
         messages.success(request, 'Product added successfully!')
         return redirect('cust_admin:prod_list')

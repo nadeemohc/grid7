@@ -36,7 +36,7 @@
                                         <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab" href="#account-detail" role="tab" aria-controls="account-detail" aria-selected="true"><i class="fi-rs-user mr-10"></i>Account details</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="page-login-register.html"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
+                                        <a class="nav-link" href="{% url 'accounts:logout' %}"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
                                     </li>
                                 </ul>
                             </div>
@@ -154,48 +154,96 @@
                                 </div>
                                 <div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
                                     <div class="card">
-                                        <div class="card-header">
-                                            <h5>Account Details</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p>Already have an account? <a href="page-login-register.html">Log in instead!</a></p>
-                                            <form method="post" name="enq">
-                                                <div class="row">
-                                                    <div class="form-group col-md-6">
-                                                        <label>First Name <span class="required">{{user.first_name}}</span></label>
-                                                        <input required="" class="form-control square" name="name" type="text">
+                                        
+                                        <section style="background-color: #eee;">
+                                            <div class="container py-5">
+                                              <div class="row">
+                                                    <div>
+                                                        <h5>Account Details:-</h5><br>
                                                     </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label>Last Name <span class="required">{{user.last_name}}</span></label>
-                                                        <input type="text" name="last_name" placeholder="Type here" class="form-control" required value="{{product.title}}">
-                                                        <input required="" class="form-control square" name="phone">
+                                              </div>
+                                              <div class="row">
+                                                <div class="col-lg-4">
+                                                  <div class="card mb-4">
+                                                    <div class="card-body text-center mb-20 mt-20">
+                                                      <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp" alt="avatar"
+                                                        class="rounded-circle img-fluid" style="width: 150px;">
+                                                      <h5 class="my-3">{{user.first_name}} {{user.last_name}}</h5>
+                                                      <p class="text-muted mb-1">{{user.bio}}</p>
+                                                      <p class="text-muted mb-4">{{address.user_address}}</p>
+                                                      <div class="d-flex justify-content-center mb-2">
+                                                        <!-- <button type="button" class="btn btn-light rounded btn-sm font-sm">Follow</button>&nbsp;&nbsp; -->
+                                                        <!-- <button type="button" class="btn btn-light rounded btn-sm font-sm">Change Password</button> -->
+                                                        {% include 'dashboard/modal/edit_profile.html' %}
+                                                      </div>
+                                                      <!-- <div class="d-flex justify-content-center mb-2"></div>
+                                                      <button type="button" class="btn btn-light rounded btn-sm font-sm">Change Password</button>
+                                                      </div> -->
                                                     </div>
-                                                    <div class="form-group col-md-12">
-                                                        <label>Display Name <span class="required">{{user.username}}</span></label>
-                                                        <input required="" class="form-control square" name="dname" type="text">
-                                                    </div>
-                                                    <div class="form-group col-md-12">
-                                                        <label>Email Address <span class="required">{{user.email}}</span></label>
-                                                        <input required="" class="form-control square" name="email" type="email">
-                                                    </div>
-                                                    <div class="form-group col-md-12">
-                                                        <label>Current Password <span class="required"></span></label>
-                                                        <input required="" class="form-control square" name="password" type="password">
-                                                    </div>
-                                                    <div class="form-group col-md-12">
-                                                        <label>New Password <span class="required">*</span></label>
-                                                        <input required="" class="form-control square" name="npassword" type="password">
-                                                    </div>
-                                                    <div class="form-group col-md-12">
-                                                        <label>Confirm Password <span class="required">*</span></label>
-                                                        <input required="" class="form-control square" name="cpassword" type="password">
-                                                    </div>
-                                                    <div class="col-md-12">
-                                                        <button type="submit" class="btn btn-fill-out submit" name="submit" value="Submit">Save</button>
-                                                    </div>
+                                                  </div>
                                                 </div>
-                                            </form>
-                                        </div>
+                                                <div class="col-lg-8">
+                                                  <div class="card mb-4">
+                                                    <div class="card-body">
+                                                      <div class="row">
+                                                        <div class="col-sm-3">
+                                                          <p class="text-muted mb-0">Full Name</p>
+                                                        </div>
+                                                        <div class="col-sm-9">
+                                                          <p class=" mb-0">{{user.first_name}} {{user.last_name}}</p>
+                                                        </div>
+                                                      </div>
+                                                      <hr>
+                                                      <div class="row">
+                                                        <div class="col-sm-3">
+                                                          <p class="text-muted mb-0">First Name</p>
+                                                        </div>
+                                                        <div class="col-sm-9">
+                                                          <p class="mb-0">{{user.first_name}}</p>
+                                                        </div>
+                                                      </div>
+                                                      <hr>
+                                                      <div class="row">
+                                                        <div class="col-sm-3">
+                                                          <p class="text-muted mb-0">Last Name</p>
+                                                        </div>
+                                                        <div class="col-sm-9">
+                                                          <p class="mb-0">{{user.last_name}}</p>
+                                                        </div>
+                                                      </div>
+                                                      <hr>
+                                                      <div class="row">
+                                                        <div class="col-sm-3">
+                                                          <p class="text-muted mb-0">Email</p>
+                                                        </div>
+                                                        <div class="col-sm-9">
+                                                          <p class="mb-0">{{user.email}}</p>
+                                                        </div>
+                                                      </div>
+                                                      <hr>
+                                                      <div class="row">
+                                                        <div class="col-sm-3">
+                                                          <p class="text-muted mb-0">Phone</p>
+                                                        </div>
+                                                        <div class="col-sm-9">
+                                                          <p class="mb-0">{{user.phone_number}}</p>
+                                                        </div>
+                                                      </div>
+                                                      <hr>
+                                                      <div class="row">
+                                                        <div class="col-sm-12">
+                                                          <!-- <a href="#" class="btn btn-light rounded btn-sm font-sm">Add New Address</a> -->
+                                                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{% include 'dashboard/modal/address.html' %}&nbsp;
+                                                          <a href="#" class="btn btn-light rounded btn-sm font-sm col-lg-5">Change Password</a>
+                                                        </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </section>
                                     </div>
                                 </div>
                             </div>
