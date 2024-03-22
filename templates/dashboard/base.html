@@ -19,6 +19,7 @@
     <!-- Template CSS -->
     <link rel="stylesheet" href="{% static 'store/css/main.css' %}">
    
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
     
 </head>
 
@@ -586,7 +587,7 @@
                                         <ul class="sub-menu">
                                             <li><a href="page-about.html">About Us</a></li>
                                             <li><a href="page-contact.html">Contact</a></li>
-                                            <li><a href="page-account.html">My Account</a></li>
+                                            <li><a href="{% url 'store:user_profile' %}">My Account</a></li>
                                             <li><a href="page-login-register.html">login/register</a></li>
                                             <li><a href="page-purchase-guide.html">Purchase Guide</a></li>
                                             <li><a href="page-privacy-policy.html">Privacy Policy</a></li>
@@ -995,6 +996,8 @@
     <!-- Template  JS -->
     <script src="{% static 'store/js/main.js' %}"></script>
     <script src="{% static 'store/js/shop.js' %}"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
    
 </body>

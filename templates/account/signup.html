@@ -12,10 +12,17 @@
                     <h4 class="card-title mb-4">Create an Account</h4>
                     <form method="post" action="">
                         {% csrf_token %}
-                        
+                        {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                         {% if form.errors %}
-                        <div class="alert alert-warning">
-                            <strong>
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            
                                 {% for field_name, error_list in form.errors.items %}
                                     {% if field_name == 'password1' %}
                                         Password: {{ error_list|join:", " }}
@@ -25,7 +32,7 @@
                                         {{ error_list|join:", " }}
                                     {% endif %}
                                 {% endfor %}
-                            </strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         {% endif %}
                         
@@ -38,6 +45,9 @@
                         </div> <!-- form-group// -->
                         <div class="mb-3">
                             <input class="form-control" placeholder="Username" type="text" name="username" >
+                        </div> <!-- form-group// -->
+                        <div class="mb-3">
+                            <input class="form-control" placeholder="Phone" type="text" name="phone_number" >
                         </div> <!-- form-group// -->
                         <div class="mb-3">
                             <input class="form-control" placeholder="Email" type="email" name="email" >

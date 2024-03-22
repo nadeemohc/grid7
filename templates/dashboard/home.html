@@ -2,7 +2,19 @@
 {% load static %}
     
     {% block content %}
-        
+    {% if messages %}
+    <script>
+    {% for message in messages %}
+        Swal.fire({
+            title: "{{ message.tags }}",
+            text: "{{ message }}",
+            icon: "{{ message.tags }}"
+        });
+    {% endfor %}
+    </script>
+{% endif %}
+
+
     <div class="modal fade custom-modal" id="onloadModal" tabindex="-1" aria-labelledby="onloadModalLabel" aria-hidden="true">
         <div class="modal-dialog">
         <div class="modal-content">              
@@ -44,7 +56,7 @@
                             </div>
                             <div class="col-lg-7 col-md-6">
                                 <div class="single-slider-img single-slider-img-1">
-                                    <img class="animated slider-1-1" src="{% static 'store/imgs/slider/slider-1.png' %}" alt="">
+                                    <img class="animated slider-1-1" src="{% static 'store/imgs/slider/slider-2.png' %}" alt="">
                                 </div>
                             </div>
                         </div>
@@ -55,8 +67,8 @@
                         <div class="row align-items-center slider-animated-1">
                             <div class="col-lg-5 col-md-6">
                                 <div class="hero-slider-content-2">
-                                    <h4 class="animated">Hot promotions</h4>
-                                    <h2 class="animated fw-900">Fashion Trending</h2>
+                                    <h4 class="animated">Vintage collections</h4>
+                                    <h2 class="animated fw-900">Stylish Bomber Jackets</h2>
                                     <h1 class="animated fw-900 text-7">Great Collection</h1>
                                     <p class="animated">Save more with coupons & up to 20% off</p>
                                     <a class="animated btn btn-brush btn-brush-2" href="shop-product-right.html"> Discover Now </a>
@@ -64,7 +76,7 @@
                             </div>
                             <div class="col-lg-7 col-md-6">
                                 <div class="single-slider-img single-slider-img-1">
-                                    <img class="animated slider-1-2" src="{% static 'store/imgs/slider/slider-2.png' %}" alt="">
+                                    <img class="animated slider-1-2" src="{% static 'store/imgs/slider/slider-1.png' %}" alt="">
                                 </div>
                             </div>
                         </div>
@@ -142,12 +154,15 @@
                     <div class="slider-arrow slider-arrow-2 carausel-6-columns-arrow" id="carausel-6-columns-arrows"></div>
                     <div class="carausel-6-columns" id="carausel-6-columns">
                         {% for category in categories %}
+                        {% if category.is_blocked != True %}
                             <div class="card-1">
+                                
                                 <figure class=" img-hover-scale overflow-hidden">
                                     <a href="shop-grid-right.html"><img src="{{ category.c_image.url }}" alt="{{ category.c_name }}"></a>
                                 </figure>
                                 <h5><a href="shop-grid-right.html">{{ category.c_name }}</a></h5>
                             </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -183,6 +198,9 @@
                         <!-- Product Grid for Featured Products -->
                         <div class="row product-grid-4">
                             {% for product in products %}
+                            
+                            {% if product.is_blocked != True %}
+                                
                             <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
@@ -221,6 +239,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                             {% endfor %}
                         </div>
                         <!-- End Product Grid for Featured Products -->

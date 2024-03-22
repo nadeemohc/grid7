@@ -1,15 +1,14 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
-
 {% block content %}
     
-
+<main class="main">
     <div class="page-header breadcrumb-wrap">
         <div class="container">
             <div class="breadcrumb">
                 <a href="index.html" rel="nofollow">Home</a>
                 <span></span> Fashion
-                <span></span> {{breadcrumb}}
+                <span></span> Abstract Print Patchwork Dress
             </div>
         </div>
     </div>
@@ -23,62 +22,32 @@
                                 <div class="detail-gallery">
                                     <span class="zoom-icon"><i class="fi-rs-search"></i></span>
                                     <!-- MAIN SLIDES -->
-                                    <div class="product-image-slider">
                                         
-                                        
+                                    <div class="product-image-slider ">
                                         {% for image in product_images %}
-                                                                                     
-                                            
                                         <figure class="border-radius-10">
-                                            <img src="{{product.image.url}}" alt="{{product.title}}">
+                                            <img src="{{image.images.url}}" alt="{{product.title}}">
                                         </figure>
-
                                         {% endfor %}
-                                       
-                                        <!-- <figure class="border-radius-10">
-                                            <img src="assets/imgs/shop/product-16-1.jpg" alt="product image">
-                                        </figure>
-                                        <figure class="border-radius-10">
-                                            <img src="assets/imgs/shop/product-16-3.jpg" alt="product image">
-                                        </figure>
-                                        <figure class="border-radius-10">
-                                            <img src="assets/imgs/shop/product-16-4.jpg" alt="product image">
-                                        </figure>
-                                        <figure class="border-radius-10">
-                                            <img src="assets/imgs/shop/product-16-5.jpg" alt="product image">
-                                        </figure>
-                                        <figure class="border-radius-10">
-                                            <img src="assets/imgs/shop/product-16-6.jpg" alt="product image">
-                                        </figure>
-                                        <figure class="border-radius-10">
-                                            <img src="assets/imgs/shop/product-16-7.jpg" alt="product image">
-                                        </figure> -->
                                     </div>
+
                                     <!-- THUMBNAILS -->
                                     
-                                    
-                                    {% for image in product_images %}
-                                         
                                     <div class="slider-nav-thumbnails pl-15 pr-15">
-                                        <div><img src="{{product.image.url}}" alt="product image"></div>
-                                        <!-- <div><img src="assets/imgs/shop/thumbnail-4.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-5.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-6.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-7.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-8.jpg" alt="product image"></div>
-                                        <div><img src="assets/imgs/shop/thumbnail-9.jpg" alt="product image"></div> -->
+                                        {% for image in product_images %}
+                                        <div><img src="{{image.images.url}}" alt="{{product.title}}"></div>
+                                        {% endfor %}
                                     </div>
-                                    {% endfor %}
 
                                 </div>
                                 <!-- End Gallery -->
                             </div>
                             <div class="col-md-6 col-sm-12 col-xs-12">
                                 <div class="detail-info">
-                                    <h2 class="title-detail">{{product.title}}</h2>
+                                    <h2 class="title-detail">{{ product.title }}</h2>
                                     <div class="product-detail-rating">
                                         <div class="pro-details-brand">
-                                            <span> Brands: <a href="shop-grid-right.html">{{product.category}}</a></span>
+                                            <span> Brands: <a href="shop-grid-right.html">{{ product.category }}</a></span>
                                         </div>
                                         <div class="product-rate-cover text-end">
                                             <div class="product-rate d-inline-block">
@@ -90,20 +59,32 @@
                                     </div>
                                     <div class="clearfix product-price-cover">
                                         <div class="product-price primary-color float-left">
-                                            <ins><span class="text-brand">{{product.price}}</span></ins>
-                                            <ins><span class="old-price font-md ml-15">{{product.old_price}}</span></ins>
+                                            <ins><span class="text-brand">{{ product.price }}</span></ins>
+                                            <ins><span class="old-price font-md ml-15">{{ product.old_price }}</span></ins>
                                             <span class="save-price  font-md color3 ml-15">25% Off</span>
                                         </div>
                                     </div>
                                     <div class="bt-1 border-color-1 mt-15 mb-15"></div>
                                     <div class="short-desc mb-30">
-                                        <p>{{product.description}}</p>
+                                        <p>{{ product.description }}</p>
                                     </div>
                                     <div class="product_sort_info font-xs mb-30">
                                         <ul>
-                                            <li class="mb-10"><i class="fi-rs-crown mr-5"></i> 1 Year {{product.category}} Brand Warranty</li>
+                                            <li class="mb-10"><i class="fi-rs-crown mr-5"></i> 1 Year {{ product.category }} Brand Warranty</li>
                                             <li class="mb-10"><i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy</li>
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
+                                        </ul>
+                                    </div>
+                                    <div class="attr-detail attr-color mb-15">
+                                        <strong class="mr-10">Color</strong>
+                                        <ul class="list-filter color-filter">
+                                            <li><a href="#" data-color="Red"><span class="product-color-red"></span></a></li>
+                                            <li><a href="#" data-color="Yellow"><span class="product-color-yellow"></span></a></li>
+                                            <li class="active"><a href="#" data-color="White"><span class="product-color-white"></span></a></li>
+                                            <li><a href="#" data-color="Orange"><span class="product-color-orange"></span></a></li>
+                                            <li><a href="#" data-color="Cyan"><span class="product-color-cyan"></span></a></li>
+                                            <li><a href="#" data-color="Green"><span class="product-color-green"></span></a></li>
+                                            <li><a href="#" data-color="Purple"><span class="product-color-purple"></span></a></li>
                                         </ul>
                                     </div>
                                     <div class="attr-detail attr-size">
@@ -259,18 +240,16 @@
                                 <div class="social-icons single-share">
                                     <ul class="text-grey-5 d-inline-block">
                                         <li><strong class="mr-10">Share this:</strong></li>
-                                        <li class="social-facebook"><a href="#"><img src="assets/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
-                                        <li class="social-twitter"> <a href="#"><img src="assets/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
-                                        <li class="social-instagram"><a href="#"><img src="assets/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
-                                        <li class="social-linkedin"><a href="#"><img src="assets/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
+                                        <li class="social-facebook"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
+                                        <li class="social-twitter"> <a href="#"><img src="{% static 'store/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
+                                        <li class="social-instagram"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
+                                        <li class="social-linkedin"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
-
-
+        </section>
+    
 {% endblock content %}
-            

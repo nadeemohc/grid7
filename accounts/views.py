@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import SignUpForm
 from accounts.backends import EmailBackend
@@ -15,8 +15,9 @@ def perform_signup(request):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
-            password1 = form.cleaned_data('password1')
-            password2 = form.cleaned_data('password2')
+            phone_number = request.POST.get('phone_number')
+            password1 = form.cleaned_data['password1']
+            password2 = form.cleaned_data['password2']
             encryptedpassword = make_password(form.cleaned_data.get('password1'))
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
@@ -34,6 +35,7 @@ def perform_signup(request):
 
             user = User.objects.create(username=username,
                                        email=email,
+                                       phone_number=phone_number,
                                        password=encryptedpassword,
                                        first_name=first_name,
                                        last_name=last_name)
@@ -73,6 +75,42 @@ def perform_signup(request):
 #             messages.warning(request, 'Incorrect email or password')
 #     return render(request, 'account/login.html')
 
+# @never_cache
+# def perform_login(request):
+#     if request.user.is_authenticated:
+#         messages.warning(request, 'You are already logged in')
+#         return redirect("store:home")
+    
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
+#         user = authenticate(request, username=email, password=password)
+        
+#         if user.is_active == False:
+#                 messages.warning(request, "Access restricted!")
+#                 return redirect('accounts:login')
+        
+#         if user is not None:
+#             if user.verified:
+#                 login(request, user)
+#                 request.session['user_logged_in'] = True
+#                 messages.success(request, f'You have logged in as {user.username}')
+#                 return redirect('store:home')
+#             else:
+#                 messages.error(request, 'Please verify your account using OTP')
+#                 request.session["user_id"] = user.id
+#                 sent_otp(request)
+#                 return redirect('accounts:otp_verification')
+            
+#         else:
+#             messages.warning(request, 'Incorrect email or password')
+        
+#     return render(request, 'account/login.html')
+
+
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
 @never_cache
 def perform_login(request):
     if request.user.is_authenticated:
@@ -82,6 +120,18 @@ def perform_login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
+        
+        # Check if the user exists and is active
+        try:
+            user = User.objects.get(email=email)
+            if not user.is_active:
+                messages.warning(request, "Access restricted!")
+                return redirect('accounts:login')
+        except User.DoesNotExist:
+            messages.warning(request, 'Incorrect email or password')
+            return redirect('accounts:login')
+        
+        # Authenticate the user with the provided credentials
         user = authenticate(request, username=email, password=password)
         
         if user is not None:
@@ -95,13 +145,14 @@ def perform_login(request):
                 request.session["user_id"] = user.id
                 sent_otp(request)
                 return redirect('accounts:otp_verification')
-        else:
-            messages.warning(request, 'Incorrect email or password')
-    
+        
     return render(request, 'account/login.html')
 
 
 
+def edit_info(request):
+    user = get_object_or_404(User, )
+    return render(request, 'dashboard/edit_profile.html')
 
 
 def sent_otp(request):
@@ -174,7 +225,7 @@ def otp_verification(request):
     else:
         return render(request, 'account/otp.html')
 
-
+@never_cache
 def perform_logout(request):
     logout(request)
     messages.success(request, 'You have logged out')

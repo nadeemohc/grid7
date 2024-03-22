@@ -5,6 +5,9 @@ from cust_auth_admin.views import admin_required
 from store.models import Category, Product, Subcategory, ProductImages
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from PIL import Image
 
 
 @login_required
@@ -148,10 +151,10 @@ def add_product(request):
             )
        
         for i in image:
-                try:
-                    ProductImages.objects.create(product=product, images=i)
-                except Exception as e:
-                    print(e)
+            try:
+                ProductImages.objects.create(product=product, images=i)
+            except Exception as e:
+                print(e)
 
         messages.success(request, 'Product added successfully!')
         return redirect('cust_admin:prod_list')

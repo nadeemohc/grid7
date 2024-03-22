@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
 from store.models import Category, Product, ProductImages
+from accounts.models import User
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 
 # Create your views here.
 
-# @never_cache
+@never_cache
 def home(request):
     categories = Category.objects.all()
     Products = Product.objects.all()
@@ -21,7 +22,7 @@ def home(request):
 def handler404(request, exception):
     return render(request, '404.html', status=404)
 
-
+@never_cache
 def product_detail(request,product_pid):    
     product = get_object_or_404(Product, p_id=product_pid)
     product_images = ProductImages.objects.filter(product=product)
@@ -58,3 +59,17 @@ def product_detailed_view(request,product_pid):
     }
 
     return render(request, 'dashboard/product_detailed_view.html',context)
+
+# def prod_det_view(request, product_id):
+#     # Assuming you have a Product model with an id field
+#     product = Product.objects.get(id=product_id)
+    
+#     # Fetch all the images associated with the product
+#     product_images = ProductImages.objects.filter(product_id=product_id)
+#     print(product_images)
+    
+#     return render(request, 'product_detail.html', {'product': product, 'product_images': product_images})
+
+def user_profile(request):
+    User = request.user
+    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User})
