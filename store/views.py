@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 # from accounts.forms import UserProfileForm, AddressForm
 
 # Create your views here.
@@ -57,7 +59,8 @@ def product_detailed_view(request,product_pid):
 
 def user_profile(request):
     User = request.user
-    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User})
+    address = Address.objects.all()
+    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User, 'address':address})
 
 
 def add_address(request):
@@ -66,21 +69,23 @@ def add_address(request):
         street_address = request.POST.get('street_address')
         city = request.POST.get('city')
         state = request.POST.get('state')
-        postal_code = request.POSt.get('postal_code')
+        postal_code = request.POST.get('postal_code')
         country = request.POST.get('country')
-
-        user = get_object_or_404(User)
+        
         address = Address.objects.create(
+            user = request.user,
             street_address = street_address,
             city = city,
             state = state,
             postal_code = postal_code,
             country = country,
         )
-        messages.success(request, "Address Added successfully")
+        print(address)
+        messages.success(request, """Address Added successfully
+                         Check the My Address Tab""")
         return redirect('store:user_profile')
     
-    users = User.objects.all()
+    return render(request, 'dashboard/user_profil.html',{'address': address})
 
 
 
@@ -107,3 +112,18 @@ def edit_profile(request):
         return redirect('store:user_profile')
 
     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User})
+
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important to maintain the user's session
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('store:user_profile')  # Redirect to a success page
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'dashboard/change_password.html', {'form': form})

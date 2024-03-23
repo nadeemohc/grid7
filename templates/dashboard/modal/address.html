@@ -11,7 +11,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <form method="POST" action="">
+            <form method="POST" action="{% url 'store:add_address' %}">
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="street_address">Street Address</label>
