@@ -112,4 +112,4 @@ class Address(models.Model):
   is_default = models.BooleanField(default=False) 
     
   def __str__(self):
-      return f"{self.street_address}, {self.city}, {self.state} - {self.postal_code}"
+      return f"{self.street_address}, {self.city}, {self.state} - {self.postal_code}" 
