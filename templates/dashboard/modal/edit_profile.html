@@ -11,39 +11,31 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3" style="text-align: left;">
-            <label for="first_name">First Name:</label>
-            <input type="text" id="first_name" name="first_name" placeholder="Firstname" class="form-control" required value="{{user.first_name}}">
-        </div> <!-- form-group// -->
-        <div class="mb-3" style="text-align: left;">
-            <label for="last_name">Last Name:</label>
-            <input type="text" id="last_name" name="last_name" placeholder="Lastname" class="form-control" required value="{{user.last_name}}">
-        </div> <!-- form-group// -->
-        <div class="mb-3" style="text-align: left;">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" placeholder="Username" class="form-control" required value="{{user.username}}">
-        </div> <!-- form-group// -->
-        <div class="mb-3" style="text-align: left;">
-            <label for="phone_number">Phone:</label>
-            <input type="text" id="phone_number" name="phone_number" placeholder="Phone" class="form-control" required value="{{user.phone_number}}">
-        </div> <!-- form-group// -->
-        <div class="mb-3" style="text-align: left;">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Email" class="form-control" required value="{{user.email}}">
-        </div> <!-- form-group// -->
-        <div class="mb-3" style="text-align: left;">
-            <label for="password1">Password:</label>
-            <input type="password" id="password1" name="password1" placeholder="  " class="form-control" required>
-        </div> <!-- form-group// -->
-        <div class="mb-3" style="text-align: left;">
-            <label for="password2">Confirm Password:</label>
-            <input type="password" id="password2" name="password2" placeholder="" class="form-control" required>
-        </div> <!-- form-group// -->
-         <!-- form-group// -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-light">Submit</button>
+            <form method="POST" action="{% url 'store:edit_profile' %}">
+                {% csrf_token %}
+                <div class="mb-3" style="text-align: left;">
+                    <label for="first_name">First Name:</label>
+                    <input type="text" id="first_name" name="first_name" placeholder="Firstname" class="form-control" required value="{{user.first_name}}">
+                </div> <!-- form-group// -->
+                <div class="mb-3" style="text-align: left;">
+                    <label for="last_name">Last Name:</label>
+                    <input type="text" id="last_name" name="last_name" placeholder="Lastname" class="form-control" required value="{{user.last_name}}">
+                </div> <!-- form-group// -->
+                <div class="mb-3" style="text-align: left;">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" placeholder="Username" class="form-control" required value="{{user.username}}">
+                </div> <!-- form-group// -->
+                <div class="mb-3" style="text-align: left;">
+                    <label for="phone_number">Phone:</label>
+                    <input type="text" id="phone_number" name="phone_number" placeholder="Phone" class="form-control" required value="{{user.phone_number}}">
+                </div> <!-- form-group// -->
+                <div class="mb-3" style="text-align: left;">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" placeholder="Email" class="form-control" required value="{{user.email}}">
+                </div> <!-- form-group// -->
+                <button type="submit" class="btn btn-primary rounded btn-sm font-sm">Submit</button>
+                <button type="button" class="btn btn-secondary rounded btn-sm font-sm" data-bs-dismiss="modal">Cancel</button>
+            </form>
         </div>
       </div>
     </div>
