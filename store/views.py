@@ -56,11 +56,16 @@ def product_detailed_view(request,product_pid):
 
     return render(request, 'dashboard/product_detailed_view.html',context)
 
-
 def user_profile(request):
     user = request.user
-    address = Address.objects.filter(user=user.id)
-    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':user, 'address':address})
+    address = Address.objects.filter(user=user)
+    return render(request, 'dashboard/user_profile.html', {'title': 'User Profile', 'user': user, 'address': address})
+
+
+# def user_profile(request):
+#     user = request.user
+#     address = Address.objects.filter(user=user.id)
+#     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':user, 'address':address})
 
 
 def add_address(request):
@@ -86,6 +91,25 @@ def add_address(request):
         return redirect('store:user_profile')
     
     return render(request, 'dashboard/user_profil.html',{'address': address})
+
+
+@login_required
+def edit_address(request, address_id):
+    address = get_object_or_404(Address, id=address_id)
+    
+    if request.method == 'POST':
+        address.street_address = request.POST.get('street_address')
+        address.city = request.POST.get('city')
+        address.state = request.POST.get('state')
+        address.postal_code = request.POST.get('postal_code')
+        address.country = request.POST.get('country')
+        address.save()
+        
+        messages.success(request, "Address updated successfully")
+        return redirect('store:user_profile')
+    
+    return render(request, 'dashboard/user_profile.html', {'address': address})
+
 
 
 def delete_address(request, pk):
