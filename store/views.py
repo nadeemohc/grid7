@@ -58,9 +58,9 @@ def product_detailed_view(request,product_pid):
 
 
 def user_profile(request):
-    User = request.user
-    address = Address.objects.all()
-    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User, 'address':address})
+    user = request.user
+    address = Address.objects.filter(user=user.id)
+    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':user, 'address':address})
 
 
 def add_address(request):
@@ -88,7 +88,12 @@ def add_address(request):
     return render(request, 'dashboard/user_profil.html',{'address': address})
 
 
-
+def delete_address(request, pk):
+    address = get_object_or_404(Address, pk=pk)
+    # Check if the logged-in user is the owner of the address
+    if request.user == address.user:
+        address.delete()
+    return redirect('store:user_profile')
 
 
 @login_required
@@ -113,7 +118,7 @@ def edit_profile(request):
 
     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User})
 
-
+@login_required
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
