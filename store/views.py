@@ -1,12 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from store.models import Category, Product, ProductImages
 from accounts.models import User, Address
+from django.core.mail import send_mail
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+
 # from accounts.forms import UserProfileForm, AddressForm
 
 # Create your views here.
@@ -85,7 +86,6 @@ def add_address(request):
             postal_code = postal_code,
             country = country,
         )
-        print(address)
         messages.success(request, """Address Added successfully
                          Check the My Address Tab""")
         return redirect('store:user_profile')
@@ -123,6 +123,7 @@ def delete_address(request, pk):
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
+        # Retrieve user details from the request
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         username = request.POST.get('username')
@@ -130,6 +131,7 @@ def edit_profile(request):
         phone_number = request.POST.get('phone_number')
         user = request.user
 
+        # Update user details
         user.first_name = first_name
         user.last_name = last_name
         user.username = username
@@ -137,10 +139,16 @@ def edit_profile(request):
         user.phone_number = phone_number
         user.save()
 
+        # Send email to the user
+        subject = 'Profile Updated'
+        message = 'Your profile has been successfully updated.'
+        send_mail(subject, message, None, [user.email])
+
+        # Redirect to user profile page
         messages.success(request, "Profile Updated Successfully")
         return redirect('store:user_profile')
 
-    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':User})
+    return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':request.user})
 
 @login_required
 def change_password(request):
@@ -148,14 +156,24 @@ def change_password(request):
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important to maintain the user's session
+            update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated!')
-            return redirect('store:user_profile')  # Redirect to a success page
+            # Send email verification
+            send_email_verification(request.user.email)
+            return redirect('accounts:logout')  # Redirect to a success page
         else:
             messages.error(request, 'Please correct the error below.')
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'dashboard/change_password.html', {'form': form})
+
+
+def send_email_verification(email):
+    subject = 'Password Change Verification'
+    message = 'Your password has been successfully changed. If you did not make this change, please contact us immediately.'
+    from_email = 'mn8697865@gmail.com'  # Use your email
+    recipient_list = [email]
+    send_mail(subject, message, from_email, recipient_list)
 
 
 def cart_view(request):
