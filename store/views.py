@@ -156,3 +156,7 @@ def change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'dashboard/change_password.html', {'form': form})
+
+
+def cart_view(request):
+    return render(request, 'dashboard/cart.html')
