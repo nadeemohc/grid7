@@ -2,17 +2,6 @@
 {% load static %}
     
     {% block content %}
-    {% if messages %}
-    <script>
-    {% for message in messages %}
-        Swal.fire({
-            title: "{{ message.tags }}",
-            text: "{{ message }}",
-            icon: "{{ message.tags }}"
-        });
-    {% endfor %}
-    </script>
-{% endif %}
 
 
     <div class="modal fade custom-modal" id="onloadModal" tabindex="-1" aria-labelledby="onloadModalLabel" aria-hidden="true">

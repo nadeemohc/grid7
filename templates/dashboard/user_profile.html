@@ -124,7 +124,8 @@
                                                             <address>{{ a.street_address }}<br>
                                                                 {{ a.city }} - {{ a.postal_code }} <br>{{ a.state }} <br></address>
                                                             <p>{{ a.country }}</p>
-                                                            <a href="#" class="btn btn-light rounded btn-sm font-sm mr-5">Edit</a>
+                                                            <!-- <a href="#" class="btn btn-light rounded btn-sm font-sm mr-5">Edit</a> -->
+                                                            {% include 'dashboard/modal/edit_address.html' %}
                                                             <a href="{% url 'store:delete_address' a.id %}" class="btn btn-light rounded btn-sm font-sm">Delete</a>
                                                         </div>
                                                     </div>

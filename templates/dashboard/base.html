@@ -715,7 +715,15 @@
 
     {% endblock content %}
 
-
+    <script>
+    {% for message in messages %}
+        Swal.fire({
+            title: "{{ message.tags }}",
+            text: "{{ message }}",
+            icon: "{{ message.tags }}"
+        });
+    {% endfor %}
+    </script>
 
     <footer class="main">
         <section class="newsletter p-30 text-white wow fadeIn animated">
