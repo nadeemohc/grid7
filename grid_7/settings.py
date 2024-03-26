@@ -215,56 +215,8 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# ... Remaining settings ...
 
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         'APP': {
-#             'client_id': '',
-#             'secret': '',
-#             'key': ''
-#         },
-#         'SCOPE': [
-#             'profile',
-#             'email',
-#         ],
-#         'AUTH_PARAMS': {
-#             'access_type': 'online',
-#         }
-#     }
-    
-# }
-
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_URL = 'logout'
-LOGOUT_REDIRECT_URL = 'login'
-
-# SOCIALACCOUNT_QUERY_EMAIL = True
-
-# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-
-# SOCIALACCOUNT_PROVIDERS = {
-#     'facebook': {
-#         'METHOD': 'oauth2',  # Set to 'js_sdk' to use the Facebook connect SDK
-#         # 'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
-#         'SCOPE': ['email', 'public_profile'],
-#         'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-#         'INIT_PARAMS': {'cookie': True},
-#         'FIELDS': [
-#             'id',
-#             'first_name',
-#             'last_name',
-#             'middle_name',
-#             'name',
-#             'name_format',
-#             'picture',
-#             'short_name'
-#         ],
-#         'EXCHANGE_TOKEN': True,
-#         # 'LOCALE_FUNC': 'path.to.callable',
-#         'VERIFIED_EMAIL': False,
-#         'VERSION': 'v13.0',
-#         'GRAPH_API_URL': 'https://graph.facebook.com/v13.0',
-#     }
-# }
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'store:home'
+LOGOUT_URL = 'accounts:logout'
+LOGOUT_REDIRECT_URL = 'accounts:login'

@@ -1,0 +1,44 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load socialaccount %}
+{% block content %}
+    
+    
+<section class="content-main mt-80">
+    <div class="card mx-auto card-login">
+        <div class="card-body">
+            {% if validlink %}
+  <h4 class="card-title ">Enter your New Password</h4><hr>
+              <form method="POST">
+                {% csrf_token %}
+                <p style="font-weight: bold;">Please enter your new password twice so we can verify you typed it in correctly.</p>
+                <hr>
+                <u><h5>Note:</h5></u>
+                <div class="mb-3">
+                <li>Your password can't be too similar to your other personal information.</li>
+                <li>Your password must contain atleast 8 characters.</li>
+                <li>Your password can't be a commonly used password.</li>
+                <li>Your password can't be entirely numeric.</li>
+                </div><hr>
+                <div class="mb-3">
+                    <input class="form-control" placeholder="New Password" type="password" id="new_password_1" name="new_password1">
+                </div> <!-- form-group// -->
+                <div class="mb-3">
+                    <input class="form-control" placeholder="Confirm Password" type="password" id="new_password_2" name="new_password2">
+                </div> <!-- form-group// -->
+                <div class="mb-4">
+                    <button type="submit" class="btn btn-primary w-100"> Change My Password </button>
+                </div> <!-- form-group// -->
+            </form>
+            {% else %}
+            <p>
+                The password link was invalid, possibly because it has already been used.
+                Please request a new password reset
+            </p>    
+        </div>
+    </div>
+</section>
+        
+
+{% endif %}
+{% endblock content %}

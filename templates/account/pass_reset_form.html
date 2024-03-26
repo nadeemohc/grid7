@@ -1,0 +1,26 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load socialaccount %}
+{% block content %}
+    
+    
+<section class="content-main mt-80">
+    <div class="card mx-auto card-login">
+        <div class="card-body">
+            
+                
+  <h4 class="card-title">Forgot Password</h4><hr>
+              <form method="POST" class="mt-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <input class="form-control" placeholder="Email" type="text" name="email">
+                </div> <!-- form-group// -->
+                <div class="mb-4">
+                    <button type="submit" class="btn btn-primary w-100"> Reset My Password </button>
+                </div> <!-- form-group// -->
+            </form>
+        </div>
+    </div>
+</section>
+        
+{% endblock content %}
