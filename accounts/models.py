@@ -45,6 +45,7 @@ class User(AbstractBaseUser,PermissionsMixin):
   email = models.EmailField(max_length=100, unique=True)
   phone_number = models.CharField(max_length=15,blank=True)
   verified = models.BooleanField(default=False)
+  email_verified = models.BooleanField(default = False)
   
 
 

@@ -50,66 +50,6 @@ def perform_signup(request):
     context = {'form': form}
     return render(request, 'account/signup.html', context)
 
-# @never_cache
-# def perform_login(request):
-#     if request.user.is_authenticated:
-#         messages.warning(request, 'You are already logged in')
-#         return redirect("store:home")
-    
-#     if request.method == 'POST':
-#         email = request.POST['email']
-#         password = request.POST['password']
-#         print(email, password)
-#         user = authenticate(request, username=email, password=password)
-#         # user=User.objects.get(email=email)
-#         print(user)
-#         if user is not None:
-#             login(request, user)
-#             request.session['user_logged_in'] = True
-#             messages.success(request, f'You have logged in as {user.username}')
-#             return redirect('store:home')
-#         if user.verified == False:
-#             messages.danger(request, 'Please verify your account using otp')
-#             return redirect('account:otp_verification')
-#         else:
-#             messages.warning(request, 'Incorrect email or password')
-#     return render(request, 'account/login.html')
-
-# @never_cache
-# def perform_login(request):
-#     if request.user.is_authenticated:
-#         messages.warning(request, 'You are already logged in')
-#         return redirect("store:home")
-    
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-#         user = authenticate(request, username=email, password=password)
-        
-#         if user.is_active == False:
-#                 messages.warning(request, "Access restricted!")
-#                 return redirect('accounts:login')
-        
-#         if user is not None:
-#             if user.verified:
-#                 login(request, user)
-#                 request.session['user_logged_in'] = True
-#                 messages.success(request, f'You have logged in as {user.username}')
-#                 return redirect('store:home')
-#             else:
-#                 messages.error(request, 'Please verify your account using OTP')
-#                 request.session["user_id"] = user.id
-#                 sent_otp(request)
-#                 return redirect('accounts:otp_verification')
-            
-#         else:
-#             messages.warning(request, 'Incorrect email or password')
-        
-#     return render(request, 'account/login.html')
-
-
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
 
 @never_cache
 def perform_login(request):

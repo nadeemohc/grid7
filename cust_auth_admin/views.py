@@ -14,7 +14,7 @@ def admin_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         if not is_admin(request.user):
             # Redirect the user to a login page or display an error message
-            return redirect('login')  # Adjust the URL name as per your project
+            return redirect('accounts:login')  # Adjust the URL name as per your project
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
