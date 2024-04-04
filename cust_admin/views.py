@@ -2,29 +2,44 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
 from accounts.models import User
 from cust_auth_admin.views import admin_required
-from store.models import Category, Product, Subcategory, ProductImages
+from store.models import *
+from cust_admin.forms import ProductVariantForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from PIL import Image
 
-
-@login_required
+@admin_required
 def dashboard(request):
-    return render(request, 'cust_admin/index.html', {'title':'Admin Dashboard'})
+    product_count = Product.objects.count()
+    cat_count = Category.objects.count()
+    context = {
+        'title': 'Admin Dashboard',
+        'product_count': product_count,
+        'cat_count': cat_count,
+    }
+    return render(request, 'cust_admin/index.html', context)
 
 
 @admin_required
 def user_list(request):
     users = User.objects.all().order_by('id')
-    return render(request, 'cust_admin/user/user_list.html', {'title':'User List', 'users': users})
+    context={
+        'title':'User List',
+         'users': users,
+         }
+    return render(request, 'cust_admin/user/user_list.html', context)
 
 
 @admin_required
 def user_view(request, username):
     user = get_object_or_404(User, username=username)
-    return render(request, 'cust_admin/user/user_view.html', {'title': 'View User', 'user': user})
+    context = {
+        'title': 'View User',
+        'user': user
+        }
+    return render(request, 'cust_admin/user/user_view.html', )
 
 User = get_user_model()
 
@@ -42,9 +57,11 @@ def user_block_unblock(request, username):
 @admin_required
 def category_list(request):
     categories = Category.objects.all().order_by('c_id')
-    return render(request, 'cust_admin/category/category_list.html',
-                   {'title':'Category List',
-                    'categories':categories})
+    context = {
+        'title':'Category List',
+        'categories':categories,
+        }
+    return render(request, 'cust_admin/category/category_list.html', context)
 
 
 @admin_required
@@ -62,10 +79,12 @@ def add_category(request):
             c_data = Category(c_name=c_name, c_image=c_image)
             c_data.save()
             messages.success(request, "Category added successfully.")
-
+            context = {
+                'title': 'Add Category'
+                }
             return redirect('cust_admin:category_list')
 
-    return render(request, 'cust_admin/category/add_category.html', {'title': 'Add Category'})
+    return render(request, 'cust_admin/category/add_category.html', context)
 
 
 @admin_required
@@ -86,17 +105,24 @@ def edit_category(request, c_id):
         category.c_image = request.FILES.get('image')
         # is_blocked = request.POST.get('blocked')
 
-
+        
         category.save()
+        context = {
+            'title':'Add Category'
+            }
         return redirect('cust_admin:category_list')
           
-    return render(request, 'cust_admin/category/category_edit.html', {'title':'Add Category'})
+    return render(request, 'cust_admin/category/category_edit.html', context)
 
 
 @admin_required
 def subcategory_list(request):
     sub_cat = Subcategory.objects.all()
-    return render(request,'cust_admin/sub_category/sub_cat_list.html', {'title':'Sub Category', 'sub_cat':sub_cat})
+    context = {
+        'title':'Sub Category',
+        'sub_cat':sub_cat,
+               }
+    return render(request,'cust_admin/sub_category/sub_cat_list.html')
 
 
 @admin_required
@@ -124,6 +150,7 @@ def add_product(request):
         stock = request.POST.get('stock')
         
         # Checkboxes
+        popular = request.POST.get('popular') == 'on'
         featured = request.POST.get('featured') == 'on'
         latest = request.POST.get('latest') == 'on'
         in_stock = request.POST.get('in_stock') == 'on'
@@ -144,6 +171,7 @@ def add_product(request):
                 category=category,
                 sub_category=subcategory,
                 stock=stock,
+                popular=popular,
                 featured=featured,
                 latest=latest,
                 in_stock=in_stock,
@@ -226,3 +254,44 @@ def prod_list(request):
                    'products':products})
 
 
+
+def variant_add(request):
+    additional_image_count = 3  # Define the count of additional images here
+
+    if request.method == 'POST':
+        variant_form = ProductVariantForm(request.POST, request.FILES)
+        if variant_form.is_valid():
+            variant_instance = variant_form.save(commit=False)
+            variant_instance.save()
+            product_image=variant_instance.product.images.all()
+            for product_image in product_image:
+                VariantImages.objects.create(productvariant=variant_instance, image = product_image.image)
+
+            # Handling additional images
+            for i in range(1, additional_image_count + 1):
+                image_field_name = f'additional_image_{i}'
+                image = request.FILES.get(image_field_name)
+                if image:
+                    VariantImages.objects.create(productvariant=variant_instance, image=image)
+
+
+            return redirect('cust_admin:variant_list')  # Adjust the redirect URL as needed
+    else:
+        variant_form = ProductVariantForm()
+
+    context = {
+        'variant_form': variant_form,
+        'additional_image_count': range(1, additional_image_count + 1),
+    }
+
+    return render(request, 'cust_admin/variant/variant_add.html', context)
+
+
+def variant_list(request):
+    product_variations = ProductVariant.objects.all()
+    form = ProductVariantForm()
+    context = {
+        'product_variant': product_variations,
+        'form':form
+        }
+    return render(request, 'cust_admin/variant/variant_list.html', context)

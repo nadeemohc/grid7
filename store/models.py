@@ -47,6 +47,13 @@ class Subcategory(models.Model):
     def __str__(self):
         return self.sub_name
 
+class Size(models.Model):
+    size = models.CharField(max_length=6, default=None)
+
+    def __str__(self):
+        return self.size
+
+
 class Product(models.Model):    
     p_id = models.BigAutoField(unique=True, primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
@@ -63,6 +70,7 @@ class Product(models.Model):
     in_stock = models.BooleanField(default=True)
     featured = models.BooleanField(default=False)
     latest = models.BooleanField(default=False)  
+    popular = models.BooleanField(default=True)
     related = models.ManyToManyField('self', blank=True)
     date = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(null=True, blank=True)
@@ -80,11 +88,6 @@ class Product(models.Model):
         new_price = (self.price / self.old_price) * 100
         return new_price
 
-# class ProductImages(models.Model):
-#     image = models.ImageField(upload_to='generic_directory_path', default="product.jpg")
-#     product = models.ForeignKey(Product, related_name="p_images", on_delete=models.SET_NULL, null=True)
-#     date = models.DateField(auto_now_add=True)
-
 class ProductImages(models.Model):
     images = models.ImageField(upload_to='product_images',default='product.jpg')
     product = models.ForeignKey(Product,related_name='images', on_delete=models.SET_NULL, null=True)
@@ -93,13 +96,38 @@ class ProductImages(models.Model):
     class Meta:
       verbose_name_plural = 'Product Images'
 
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variant')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    old_price = models.ForeignKey(Product, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock_count = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    image = models.ForeignKey(ProductImages, on_delete=models.CASCADE)
+
+    class Meta:
+      verbose_name_plural = 'Product variants'
+
+    def variant_image(self):
+      return mark_safe("<img src='%s' width ='50' height='50' />" % (self.image.url))
+   
+    def __str__(self):
+      return self.product.title
+  
+    def get_percentage(self):
+      new_price = (self.price / self.old_price) * 100
+      return new_price
+    
+class VariantImages(models.Model):
+    images = models.ForeignKey(Product, on_delete = models.CASCADE)
+
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Cart for {self.user.username}"
-    
+
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

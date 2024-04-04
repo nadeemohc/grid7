@@ -185,15 +185,13 @@
                     <div class="tab-pane fade show active" id="tab-one" role="tabpanel" aria-labelledby="tab-one">
                         <!-- Product Grid for Featured Products -->
                         <div class="row product-grid-4">
-                            {% for product in products %}
-                            
-                            {% if product.is_blocked != True %}
+                           
                                 
                             <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
                                         <div class="product-img product-img-zoom">
-                                            <a href="{% url 'store:product_view' product.p_id %}">
+                                            <a href="">
                                                 <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                                 <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                             </a>
@@ -208,9 +206,9 @@
                                     </div>
                                     <div class="product-content-wrap">
                                         <div class="product-category">
-                                            <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a>
+                                            <a href="">{{ product.sub_category }}</a>
                                         </div>
-                                        <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title }}</a></h2>
+                                        <h2><a href="">{{ product.title }}</a></h2>
                                         <div class="rating-result" title="90%">
                                             <span>
                                                 <span>95%</span>
@@ -226,8 +224,6 @@
                                     </div>
                                 </div>
                             </div>
-                            {% endif %}
-                            {% endfor %}
                         </div>
                         <!-- End Product Grid for Featured Products -->
                     </div>

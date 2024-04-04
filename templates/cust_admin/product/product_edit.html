@@ -84,11 +84,16 @@
                         </div>
                         <div class="col-sm-6 mb-3">
                             <label for="product_name" class="form-label">Stock</label>
-                            <input type="number" name="stock" class="form-control" required>
+                            <input type="number" name="stock" class="form-control" required value="{{product.stock}}">
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" name="featured" class="form-check-input">
                             <label for="featured" class="form-check-label">Featured</label>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="popular" class="form-check-input">
+                            <label for="featured" class="form-check-label">Popular</label>
                         </div>
 
                         <div class="mb-3 form-check">
