@@ -168,7 +168,7 @@
                 <div class="tab-header">
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
-                        <li class="nav-item" role="presentation">
+                            <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="nav-tab-one" data-bs-toggle="tab" data-bs-target="#tab-one" type="button" role="tab" aria-controls="tab-one" aria-selected="true">Featured</button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -182,16 +182,20 @@
                 </div>
                 <!-- End nav-tabs -->
                 <div class="tab-content wow fadeIn animated" id="myTabContent">
+                    
+                    <!-- TAB_ONE -->
+                    
                     <div class="tab-pane fade show active" id="tab-one" role="tabpanel" aria-labelledby="tab-one">
                         <!-- Product Grid for Featured Products -->
                         <div class="row product-grid-4">
                            
+                           {% for product in featured_products %}
                                 
                             <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
                                         <div class="product-img product-img-zoom">
-                                            <a href="">
+                                            <a href="{% url 'store:product_view' product.p_id %}">
                                                 <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                                 <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                             </a>
@@ -200,15 +204,33 @@
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
                                             <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                         </div>
+
+                                        
+                                        {% if product.featured == True %}
                                         <div class="product-badges product-badges-position product-badges-mrg">
                                             <span class="best">Best Sell</span>
                                         </div>
+                                        {% elif product.popular == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div>
+                                        {% elif product.latest == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="new">New</span>
+                                        </div>
+                                        {% endif %}
+<!-- 
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div> -->
+
+
                                     </div>
                                     <div class="product-content-wrap">
                                         <div class="product-category">
-                                            <a href="">{{ product.sub_category }}</a>
+                                            <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a>
                                         </div>
-                                        <h2><a href="">{{ product.title }}</a></h2>
+                                        <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title }}</a></h2>
                                         <div class="rating-result" title="90%">
                                             <span>
                                                 <span>95%</span>
@@ -224,6 +246,152 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                           {% endfor %}
+                            
+                        </div>
+                        <!-- End Product Grid for Featured Products -->
+                    </div>
+
+                    <!-- TAB_TWO -->
+
+                    <div class="tab-pane fade show active" id="tab-two" role="tabpanel" aria-labelledby="tab-two">
+                        <!-- Product Grid for Featured Products -->
+                        <div class="row product-grid-4">
+                           
+                           {% for product in popular_products %}
+                                
+                            <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+                                <div class="product-cart-wrap mb-30">
+                                    <div class="product-img-action-wrap">
+                                        <div class="product-img product-img-zoom">
+                                            <a href="{% url 'store:product_view' product.p_id %}">
+                                                <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
+                                                <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
+                                            </a>
+                                        </div>
+                                        <div class="product-action-1">
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
+                                            <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                                        </div>
+
+                                        
+                                        {% if product.featured == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="best">Best Sell</span>
+                                        </div>
+                                        {% elif product.popular == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div>
+                                        {% elif product.latest == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="new">New</span>
+                                        </div>
+                                        {% endif %}
+<!-- 
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div> -->
+
+
+                                    </div>
+                                    <div class="product-content-wrap">
+                                        <div class="product-category">
+                                            <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a>
+                                        </div>
+                                        <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title }}</a></h2>
+                                        <div class="rating-result" title="90%">
+                                            <span>
+                                                <span>95%</span>
+                                            </span>
+                                        </div>
+                                        <div class="product-price">
+                                            <span>&#8377;{{ product.price }} </span>
+                                            <span class="old-price">&#8377;{{ product.old_price }}</span>
+                                        </div>
+                                        <div class="product-action-1 show">
+                                            <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                           {% endfor %}
+                            
+                        </div>
+                        <!-- End Product Grid for Featured Products -->
+                    </div>
+
+                    <!-- TAB_THREE -->                    
+
+
+                    <div class="tab-pane fade show active" id="tab-three" role="tabpanel" aria-labelledby="tab-three">
+                        <!-- Product Grid for Featured Products -->
+                        <div class="row product-grid-4">
+                           
+                            
+                           {% for product in new_added_products %}
+                                
+                            <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+                                <div class="product-cart-wrap mb-30">
+                                    <div class="product-img-action-wrap">
+                                        <div class="product-img product-img-zoom">
+                                            <a href="{% url 'store:product_view' product.p_id %}">
+                                                <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
+                                                <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
+                                            </a>
+                                        </div>
+                                        <div class="product-action-1">
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
+                                            <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                                        </div>
+
+                                        
+                                        {% if product.featured == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="best">Best Sell</span>
+                                        </div>
+                                        {% elif product.popular == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div>
+                                        {% elif product.latest == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="new">New</span>
+                                        </div>
+                                        {% endif %}
+<!-- 
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div> -->
+
+
+                                    </div>
+                                    <div class="product-content-wrap">
+                                        <div class="product-category">
+                                            <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a>
+                                        </div>
+                                        <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title }}</a></h2>
+                                        <div class="rating-result" title="90%">
+                                            <span>
+                                                <span>95%</span>
+                                            </span>
+                                        </div>
+                                        <div class="product-price">
+                                            <span>&#8377;{{ product.price }} </span>
+                                            <span class="old-price">&#8377;{{ product.old_price }}</span>
+                                        </div>
+                                        <div class="product-action-1 show">
+                                            <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                           {% endfor %}
+                           
+                            
                         </div>
                         <!-- End Product Grid for Featured Products -->
                     </div>

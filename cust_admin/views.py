@@ -66,6 +66,10 @@ def category_list(request):
 
 @admin_required
 def add_category(request):
+    context = {
+        'title': 'Add Category'
+    }
+
     if request.method == 'POST':
         c_name = request.POST.get('cname')
         c_image = request.FILES.get('image')
@@ -79,12 +83,10 @@ def add_category(request):
             c_data = Category(c_name=c_name, c_image=c_image)
             c_data.save()
             messages.success(request, "Category added successfully.")
-            context = {
-                'title': 'Add Category'
-                }
             return redirect('cust_admin:category_list')
 
     return render(request, 'cust_admin/category/add_category.html', context)
+
 
 
 @admin_required
@@ -122,7 +124,7 @@ def subcategory_list(request):
         'title':'Sub Category',
         'sub_cat':sub_cat,
                }
-    return render(request,'cust_admin/sub_category/sub_cat_list.html')
+    return render(request,'cust_admin/sub_category/sub_cat_list.html', context)
 
 
 @admin_required
@@ -148,6 +150,8 @@ def add_product(request):
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
         stock = request.POST.get('stock')
+        shipping  = request.POST.get('ship')
+        specifications = request.POST.get('add_det')
         
         # Checkboxes
         popular = request.POST.get('popular') == 'on'
@@ -171,6 +175,8 @@ def add_product(request):
                 category=category,
                 sub_category=subcategory,
                 stock=stock,
+                shipping=shipping,
+                specifications=specifications,
                 popular=popular,
                 featured=featured,
                 latest=latest,
@@ -214,8 +220,8 @@ def prod_edit(request, p_id):
         product.old_price = request.POST.get('old_price', product.old_price)
         product.stock = request.POST.get('stock', product.stock)
         product.specifications = request.POST.get('specifications', product.specifications)
-        product.category_id = request.POST.get('category')
-        product.sub_category_id = request.POST.get('subcategory')
+        product.category_id = request.POST.get('category',product.category)
+        product.shipping = request.POST.get('ship', product.shipping)
         # Handle image update
         new_image = request.FILES.get('image')
         print(new_image)

@@ -10,10 +10,6 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
-# from accounts.forms import UserProfileForm, AddressForm
-
-# Create your views here.
-
 # for the home page 
 @never_cache
 def home(request):
@@ -57,19 +53,6 @@ def list_prod(request):
     }
     return render(request, 'dashboard/shop.html', context)
 
-# @never_cache
-# def product_detail(request,product_pid):    
-#     product = get_object_or_404(Product, p_id=product_pid)
-#     product_images = ProductImages.objects.filter(product=product)
-#     print(product_images)
-
-#     context = {
-#         'product': product,
-#         'product_images': product_images,
-   
-#     }
-
-#     return render(request, 'core/product_detail.html',context)
 
 # for viewing the product details 
 def product_detailed_view(request,product_pid):
@@ -204,54 +187,9 @@ def send_email_verification(email):
 
 
 def cart_view(request):
-    user_cart = Cart.objects.filter(user=request.user).first()
-
-    if user_cart:
-        cart_items = user_cart.items.all()
-
-        for cart_item in cart_items:
-            cart_item.total_price = cart_item.product.price * cart_item.quantity
-        sub_total = cart_item.total_price
-        total_price = sum(cart_item.total_price for cart_item in cart_items)
-    else:
-        cart_items = []
-        total_cart_price = 0
-
     context = {
           'cart_items': cart_items, 
           'total_price': total_price,
           'sub_total': sub_total,
        }
     return render(request, 'dashboard/user_cart/cart.html', context)
-
-
-def add_to_cart(request):
-    if request.method == 'GET':
-        product_pid = request.GET.get('product_pid')
-        if product_pid:
-            try:
-                product = Product.objects.get(pid=product_pid)
-
-                user_cart, created = Cart.objects.get_or_create(user=request.user)
-                cart_item, item_created = CartItem.objects.get_or_create(cart=user_cart, product=product)
-
-                if item_created:
-                    message = f"{product.title} added to cart"
-                else:
-
-                    message = f"{product.title} is already in your cart"
-
-                return JsonResponse({'message': message})
-            except Product.DoesNotExist:
-                pass
-
-
-    return HttpResponseBadRequest("Invalid request")
-
-
-@require_POST
-def remove_from_cart(request, cart_item_id):
-    
-    cart_item = get_object_or_404(CartItem, pk=cart_item_id)
-    cart_item.delete()
-    return JsonResponse({'message': 'Item removed from cart successfully'}, status=200)

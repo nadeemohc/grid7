@@ -82,9 +82,19 @@
                                 {% endfor %}
                               </select>
                         </div>
-                        <div class="col-sm-3 mb-3">
-                            
                         </div>
+                    <div class="row gx-2">
+                        <div class="col-sm-3 mb-3">
+                            <label class="form-label">Shipping Details</label>
+                            <textarea placeholder="Type here" name="ship" class="form-control" rows="2"
+                                required></textarea>
+                        </div>
+                        <div class="col-sm-3 mb-3">
+                            <label class="form-label">Additional details Details</label>
+                            <textarea placeholder="Type here" name="add_det" class="form-control"
+                                required></textarea>
+                        </div>
+                    </div>
                         <div class="col-sm-6 mb-3">
                             <label for="product_name" class="form-label">Stock</label>
                             <input type="number" name="stock" class="form-control" required>
@@ -100,10 +110,6 @@
                         </div>
 
                         <div class="mb-3 form-check">
-                            <input type="checkbox" name="featured" class="form-check-input">
-                            <label for="featured" class="form-check-label">Featured</label>
-                        </div>
-                        <div class="mb-3 form-check">
                             <input type="checkbox" name="latest" class="form-check-input">
                             <label for="latest" class="form-check-label">Latest</label>
                         </div>
@@ -117,10 +123,11 @@
                             <input type="checkbox" name="status" class="form-check-input" checked>
                             <label for="status" class="form-check-label">Status</label>
                         </div>
-                    </div> <!-- row.// -->
-                    <div>
                         <button type="submit" class="btn btn-md rounded font-sm hover-up">Add Product</button>
                         <a href="{% url 'cust_admin:prod_list' %}"class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</a>
+                    </div> <!-- row.// -->
+                    <div>
+                        
                     </div>
                     </form>
                 </div>

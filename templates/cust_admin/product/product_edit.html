@@ -82,6 +82,18 @@
                         <div class="col-sm-3 mb-3">
                             
                         </div>
+                        <div class="row gx-2">
+                            <div class="col-sm-3 mb-3">
+                                <label class="form-label">Shipping Details</label>
+                                <textarea placeholder="Type here" name="ship" class="form-control" rows="2"
+                                    required>{{product.ship}}</textarea>
+                            </div>
+                            <div class="col-sm-3 mb-3">
+                                <label class="form-label">Additional details Details</label>
+                                <textarea placeholder="Type here" name="add_det" class="form-control"
+                                    required>{{product.add_det}}</textarea>
+                            </div>
+                        </div>
                         <div class="col-sm-6 mb-3">
                             <label for="product_name" class="form-label">Stock</label>
                             <input type="number" name="stock" class="form-control" required value="{{product.stock}}">

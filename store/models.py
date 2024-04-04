@@ -61,6 +61,7 @@ class Product(models.Model):
     title = models.CharField(max_length=100, default="product")
     image = models.ImageField(upload_to=generic_directory_path, default="product.jpg")
     description = models.TextField(null=True, blank=True, default="This is the product")
+    shipping = models.TextField(null =True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=1.99)
     old_price = models.DecimalField(max_digits=10, decimal_places=2, default=2.99)
     stock = models.IntegerField(default=1)
