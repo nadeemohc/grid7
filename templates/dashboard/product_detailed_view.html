@@ -75,37 +75,23 @@
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                         </ul>
                                     </div>
-                                    <div class="attr-detail attr-color mb-15">
-                                        <strong class="mr-10">Color</strong>
-                                        <ul class="list-filter color-filter">
-                                            <li><a href="#" data-color="Red"><span class="product-color-red"></span></a></li>
-                                            <li><a href="#" data-color="Yellow"><span class="product-color-yellow"></span></a></li>
-                                            <li class="active"><a href="#" data-color="White"><span class="product-color-white"></span></a></li>
-                                            <li><a href="#" data-color="Orange"><span class="product-color-orange"></span></a></li>
-                                            <li><a href="#" data-color="Cyan"><span class="product-color-cyan"></span></a></li>
-                                            <li><a href="#" data-color="Green"><span class="product-color-green"></span></a></li>
-                                            <li><a href="#" data-color="Purple"><span class="product-color-purple"></span></a></li>
-                                        </ul>
-                                    </div>
                                     <div class="attr-detail attr-size">
                                         <strong class="mr-10">Size</strong>
                                         <ul class="list-filter size-filter font-small">
-                                            <li><a href="#">S</a></li>
-                                            <li class="active"><a href="#">M</a></li>
-                                            <li><a href="#">L</a></li>
-                                            <li><a href="#">XL</a></li>
-                                            <li><a href="#">XXL</a></li>
+                                            {% for size in sizes %}
+                                            <li><a href="#">{{ size.size }}</a></li>
+                                            {% endfor %}
                                         </ul>
                                     </div>
                                     <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                     <div class="detail-extralink">
                                         <div class="detail-qty border radius">
                                             <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                            <span class="qty-val">1</span>
+                                            <span id="qty-cart" class="qty-val">1</span>
                                             <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
                                         </div>
                                         <div class="product-extra-link2">
-                                            <button type="submit" class="button button-add-to-cart">Add to cart</button>
+                                            <button type="button" value="{{ product.p_id }}" id="add-cart" class="button button-add-to-cart">Add to cart</button>
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
                                             <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
                                         </div>
@@ -113,7 +99,7 @@
                                     <ul class="product-meta font-xs color-grey mt-50">
                                         <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
                                         <li class="mb-5">Tags: <a href="#" rel="tag">Cloth</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
-                                        <li>Availability:<span class="in-stock text-success ml-5">8 Items In Stock</span></li>
+                                        <li>Availability:<span class="in-stock text-success ml-5">{{ prod_count }} Items In Stock</span></li>
                                     </ul>
                                 </div>
                                 <!-- Detail Info -->
@@ -125,21 +111,15 @@
                                 <div class="description mb-50">
                                     <p>{{product.description}}</p>
                                     <h3 class="section-title style-1 mt-40 mb-30">Packaging & Delivery</h3>
-                                    <p>Less lion goodness that euphemistically robin expeditiously bluebird smugly scratched far while thus cackled sheepishly rigid after due one assenting regarding censorious while occasional or this more crane
-                                        went more as this less much amid overhung anathematic because much held one exuberantly sheep goodness so where rat wry well concomitantly.
-                                    </p>
-                                    <p>Scallop or far crud plain remarkably far by thus far iguana lewd precociously and and less rattlesnake contrary caustic wow this near alas and next and pled the yikes articulate about as less cackled dalmatian
-                                        in much less well jeering for the thanks blindly sentimental whimpered less across objectively fanciful grimaced wildly some wow and rose jeepers outgrew lugubrious luridly irrationally attractively
-                                        dachshund.
-                                    </p>
+                                    <p>{{product.shipping}}</p>
                                 </div>
                                 <h3 class="section-title style-1 mt-40 mb-30">Additional info</h3>
                                 <ul class="product-more-infor">
-                                    <li><span>Type Of Packing</span> Bottle</li>
-                                    <li><span>Color</span> Green, Pink, Powder Blue, Purple</li>
-                                    <li><span>Quantity Per Case</span> 100ml</li>
-                                    <li><span>Ethyl Alcohol</span> 70%</li>
-                                    <li><span>Piece In One</span> Carton</li>
+                                    
+                                    {% for product in products %}
+                                    <li><span>{{product.specification}}</span></li>
+                                    {% endfor %}
+                                        
                                 </ul>
                                 <div class="social-icons single-share mt-40">
                                     <ul class="text-grey-5 d-inline-block">
@@ -155,5 +135,60 @@
                     </div>
                 </div>
         </section>
+
+
+        {% comment %}
     
+<script>
+    // Check if button's pressed
+    $(document).on('click', '#add-cart', function(e){
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: '{% url 'cart:add_to_cart' %}',
+            data: {
+                product_id: $(this).val(),
+                product_qty: $('#qty-cart option:selected').text(),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                action: 'post',
+            },
+            success: function(json){
+                // Update the cart quantity immediately
+                document.getElementById("cart_quantity").textContent = json.qty;
+            },
+            error: function(xhr, errmsg, err){
+                // Handle error
+            }
+        });
+    });
+</script>
+
+{% endcomment %}
+<script>
+    // Check if button's pressed
+    $(document).on('click', '#add-cart', function(e){
+        e.preventDefault();
+        var productQty = $('#qty-cart').text(); // Get the text content of the span
+        $.ajax({
+            type: 'POST',
+            url: '{% url 'cart:add_to_cart' %}',
+            data: {
+                product_id: $(this).val(),
+                product_qty: productQty, // Use the fetched quantity here
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                action: 'post',
+            },
+            success: function(json){
+                // Update the cart quantity immediately
+                document.getElementById("cart_quantity").textContent = json.qty;
+            },
+            error: function(xhr, errmsg, err){
+                // Handle error
+            }
+        });
+    });
+</script>
+
+
+
 {% endblock content %}

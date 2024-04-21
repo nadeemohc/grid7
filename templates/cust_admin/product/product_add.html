@@ -44,11 +44,29 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-lg-10">
+                                <label class="form-label">Size</label>
+                                <div class="border-2 p-3 custom-radio-container">
+                                    <div class="horizontal-checkboxes row">
+                                        {% for size in sizes %}
+                                            <div class="col-3">
+                                                    <input type="checkbox" name="sizes"  value="{{ size.id }}" id="size_{{ size.id }} " >
+                                                    <label for="size_{{ size.id }}" class="form-check-label">{{ size.size }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <!-- <div class="col-lg-8">
-                            <label class="form-label">Discount rate</label>
-                            <input type="number" placeholder="%" class="form-control" id="product_name" required>
-                        </div> -->
+                            
+                        </div>
+                         -->
+                        
                 </div>
+                
+                
                 <div class="card-header">
                     <h4>Media</h4>
                 </div>

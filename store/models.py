@@ -3,6 +3,20 @@ from django.utils.safestring import mark_safe
 from accounts.models import User
 # Create your models here.
 
+class Size(models.Model):
+    sizze = [
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+        ('XL', 'Extra Large'),
+        ('XXL', 'Extra Extra Large'),
+    ]
+    size = models.CharField(max_length=50, choices=sizze)
+    price_increment = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return self.size
+
 def generic_directory_path(instance,filename):
     model_name = instance.__class__.__name__.lower()
 
@@ -47,13 +61,6 @@ class Subcategory(models.Model):
     def __str__(self):
         return self.sub_name
 
-class Size(models.Model):
-    size = models.CharField(max_length=6, default=None)
-
-    def __str__(self):
-        return self.size
-
-
 class Product(models.Model):    
     p_id = models.BigAutoField(unique=True, primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
@@ -66,6 +73,7 @@ class Product(models.Model):
     old_price = models.DecimalField(max_digits=10, decimal_places=2, default=2.99)
     stock = models.IntegerField(default=1)
     specifications = models.TextField(null=True, blank=True)
+    size = models.ManyToManyField(Size, blank= True)
     is_blocked = models.BooleanField(default=False)
     status = models.BooleanField(default=True)
     in_stock = models.BooleanField(default=True)
@@ -97,48 +105,24 @@ class ProductImages(models.Model):
     class Meta:
       verbose_name_plural = 'Product Images'
 
-class ProductVariant(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variant')
-    size = models.ForeignKey(Size, on_delete=models.CASCADE)
-    old_price = models.ForeignKey(Product, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock_count = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    image = models.ForeignKey(ProductImages, on_delete=models.CASCADE)
+# class Cart(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-      verbose_name_plural = 'Product variants'
+#     def __str__(self):
+#         return f"Cart for {self.user.username}"
 
-    def variant_image(self):
-      return mark_safe("<img src='%s' width ='50' height='50' />" % (self.image.url))
-   
-    def __str__(self):
-      return self.product.title
-  
-    def get_percentage(self):
-      new_price = (self.price / self.old_price) * 100
-      return new_price
+# class CartItem(models.Model):
+#     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+#     quantity = models.PositiveBigIntegerField(default=1)
+
+#     def product_image(self):
+#         first_image = self.product.p._images.first()
+#         if first_image:
+#             return first_image.Images.url
+#         return None
     
-class VariantImages(models.Model):
-    images = models.ForeignKey(Product, on_delete = models.CASCADE)
+#     def __str__(self):
+#         return f'{self.quantity} x {self.product.title} in {self.cart}'
 
-class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Cart for {self.user.username}"
-
-class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveBigIntegerField(default=1)
-
-    def product_image(self):
-        first_image = self.product.p._images.first()
-        if first_image:
-            return first_image.Images.url
-        return None
-    
-    def __str__(self):
-        return f'{self.quantity} x {self.product.title} in {self.cart}'

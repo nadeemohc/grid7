@@ -3160,7 +3160,7 @@ table .product-thumbnail img {
 
 .banner-bg {
   background-position: center;
-  background-size: cover;
+  /* background-size: cover; */
   padding: 50px;
 }
 

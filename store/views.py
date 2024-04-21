@@ -1,6 +1,6 @@
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from store.models import Category, Product, ProductImages, Cart, CartItem
+from store.models import Category, Product, ProductImages, Size
 from accounts.models import User, Address
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
@@ -11,20 +11,24 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
 # for the home page 
+def get_common_context():
+    return {
+        'categories': Category.objects.filter(is_blocked=False),
+    }
 @never_cache
 def home(request):
     categories = Category.objects.all()
-    Products = Product.objects.all()
-    prod_count = Product.objects.count()
-    featured_products = Product.objects.filter(featured=True)
-    popular_products = Product.objects.filter(popular=True)
-    new_added_products = Product.objects.filter(latest=True)
+    products = Product.objects.all()
+    prod_count = products.count()
+    featured_products = products.filter(featured=True)
+    popular_products = products.filter(popular=True)
+    new_added_products = products.filter(latest=True)
     context = {
         'categories': categories,
-        'products': Products,
+        'products': products,
         'prod_count': prod_count,
         'featured_products': featured_products,
-        'new_added_products':new_added_products,
+        'new_added_products': new_added_products,
         'popular_products': popular_products,
         'title': 'Home',
     }
@@ -53,23 +57,59 @@ def list_prod(request):
     }
     return render(request, 'dashboard/shop.html', context)
 
+def product_list_by_category(request, category_cid):
+    category = get_object_or_404(Category, c_id=category_cid)
+    products = Product.objects.filter(category=category)
+    prod_count = products.count()
+    
+
+    if request.method == 'POST':
+            
+            price_range = request.POST.get('price_range')
+            
+            if price_range:
+                if price_range == '0-50':
+                    products = products.filter(price__range=(0, 50))
+                elif price_range == '50-200':
+                    products = products.filter(price__range=(50, 200))
+                elif price_range == '200-500':
+                    products = products.filter(price__range=(200, 500))
+                elif price_range == '500-1000':
+                    products = products.filter(price__range=(500, 1000))
+                elif price_range == 'more than 1000':
+                    products = products.filter(price__gt=1000)
+
+    context = get_common_context()
+    context.update({
+        'category': category,
+        'products': products,
+        'prod_count': prod_count,
+        
+    })
+    return render(request, 'dashboard/product_list.html', context)
 
 # for viewing the product details 
-def product_detailed_view(request,product_pid):
+def product_detailed_view(request, product_pid):
     product = get_object_or_404(Product, p_id=product_pid)
     product_images = ProductImages.objects.filter(product=product)
-    print(product_images)
+    
+    # Get the size options for the product
+    sizes = product.size.all()
+    product_count = Product.objects.count()
 
     context = {
         'product': product,
+        'product_count': product_count,
         'product_images': product_images,
+        'sizes': sizes,  # Pass the sizes to the template
         'breadcrumb': product.title,
-   
     }
 
-    return render(request, 'dashboard/product_detailed_view.html',context)
+    return render(request, 'dashboard/product_detailed_view.html', context)
+
 
 # for viewing the user details
+@login_required
 def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
@@ -193,3 +233,44 @@ def cart_view(request):
           'sub_total': sub_total,
        }
     return render(request, 'dashboard/user_cart/cart.html', context)
+
+
+def shop(request):
+    categories = Category.objects.all()
+    products = Product.objects.all()
+    prod_count = products.count()
+    context = {
+        'categories': categories,
+        'products': products,
+        'title': 'Shop',
+    }
+
+    return render(request, 'dashboard/shop.html', context)
+
+
+def shop(request, category_id=None):
+    categories = Category.objects.all()
+    products = Product.objects.all()
+    featured_products = products.filter(featured=True)
+    popular_products = products.filter(popular=True)
+    new_added_products = products.filter(latest=True)
+
+    if category_id:
+        category = get_object_or_404(Category, pk=category_id)
+        products = Product.objects.filter(category=category)
+    else:
+        products = Product.objects.all()
+    
+    prod_count = products.count()
+    
+    context = {
+        'categories': categories,
+        'products': products,
+        'featured_products': featured_products,
+        'new_added_products': new_added_products,
+        'popular_products': popular_products,
+        'title': 'Shop',
+        'prod_count': prod_count,  # Add this if you want to display product count
+    }
+
+    return render(request, 'dashboard/shop.html', context)
