@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.safestring import mark_safe
-from accounts.models import User
+from django.utils import timezone
+from accounts.models import User, Address
 # Create your models here.
 
 class Size(models.Model):
@@ -105,24 +106,92 @@ class ProductImages(models.Model):
     class Meta:
       verbose_name_plural = 'Product Images'
 
-# class Cart(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     created_at = models.DateTimeField(auto_now_add=True)
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return f"Cart for {self.user.username}"
+    def get_item_count(self):
+        return self.items.count()  # Use the related name 'items' instead of 'cartitem_set'
 
-# class CartItem(models.Model):
-#     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-#     quantity = models.PositiveBigIntegerField(default=1)
+    def __str__(self):
+        return f"Cart for {self.user.username}"
 
-#     def product_image(self):
-#         first_image = self.product.p._images.first()
-#         if first_image:
-#             return first_image.Images.url
-#         return None
+
+class CartItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    size = models.CharField(max_length=50)  # Add size field
+    is_deleted = models.BooleanField(default=False)
+
+    def product_image(self):
+        # Assuming you want to retrieve the first image of the product
+        first_image = self.product.p_images.first()
+        if first_image:
+            return first_image.Images.url
+        return None
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.title} in {self.cart}"
+
+
+class Payments(models.Model):
+    payment_choices=(
+        ('COD','COD'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    payment_id = models.CharField(max_length=100)
+    payment_method = models.CharField(max_length=100,choices=payment_choices)
+    amount_paid = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.first_name
+        
+
+class CartOrder(models.Model):
+    STATUS =(
+        ('New','New'),
+        ('Paid','Paid'),
+        ('Shipped','Shipped'),
+        ('Conformed','Conformed'),
+        ('Pending','Pending'),
+        ('Delivered','Delivered'),
+        ('Cancelled','Cancelled'),
+        ('Return','Return')
+    )
+    user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    payment=models.ForeignKey(Payments,on_delete=models.SET_NULL,blank=True,null=True)
+    order_number = models.CharField(max_length=20,default=None)
+    order_total = models.FloatField(null=True, blank=True)
+    status=models.CharField(max_length=10, choices=STATUS, default='New')
+    ip =  models.CharField(blank=True,max_length=20)
+    is_ordered=models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=True)
+    updated_at=models.DateTimeField(auto_now=True)
+    selected_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
     
-#     def __str__(self):
-#         return f'{self.quantity} x {self.product.title} in {self.cart}'
+    class Meta:
+        verbose_name_plural = "Cart Order"
+    
+    def __str__(self):
+        return self.order_number
+
+
+class ProductOrder(models.Model):
+    order=models.ForeignKey(CartOrder,on_delete=models.SET_NULL, null=True)
+    payment = models.ForeignKey(Payments,on_delete=models.SET_NULL,blank=True,null=True)
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
+    product=models.ForeignKey(Product,on_delete=models.CASCADE)
+    quantity=models.IntegerField()
+    product_price=models.FloatField(default=0)
+    ordered=models.BooleanField(default=False)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
+    variations = models.ForeignKey(Size, on_delete=models.CASCADE, null=True)
+    def __str__(self):
+        return self.product.product_name
 

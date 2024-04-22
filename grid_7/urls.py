@@ -17,6 +17,7 @@ urlpatterns = [
     path('', include('cust_admin.urls')),
     path('', include('cust_auth_admin.urls')),
     path('', include('user_cart.urls')),
+    path('', include('payment.urls')),
 
     # allauth
     path('accounts/', include('allauth.urls')),

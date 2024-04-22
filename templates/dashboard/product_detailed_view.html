@@ -84,14 +84,11 @@
                                         </ul>
                                     </div>
                                     <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                                    <!-- Toast message -->
+                                    <div id="toast-message" style="display: none;"></div>
                                     <div class="detail-extralink">
-                                        <div class="detail-qty border radius">
-                                            <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                            <span id="qty-cart" class="qty-val">1</span>
-                                            <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                        </div>
                                         <div class="product-extra-link2">
-                                            <button type="button" value="{{ product.p_id }}" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                            <button type="button" id="add-to-cart-btn" class="button button-add-to-cart">Add to cart</button>
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
                                             <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
                                         </div>
@@ -164,6 +161,8 @@
 </script>
 
 {% endcomment %}
+
+{% comment %}
 <script>
     // Check if button's pressed
     $(document).on('click', '#add-cart', function(e){
@@ -187,6 +186,71 @@
             }
         });
     });
+</script>
+{% endcomment %}
+
+<script>
+    document.getElementById('add-to-cart-btn').addEventListener('click', function() {
+        // Make an AJAX request to add the item to cart
+        fetch('{% url 'cart:add_to_cart' %}?product_pid={{ product.p_id }}')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to add item to cart');
+                }
+            })
+            .then(data => {
+                // Display toast message
+                showToastMessage(data.message, 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle error
+                showToastMessage('Failed to add item to cart', 'error');
+            });
+    });
+
+    function addToWishlist(productPid) {
+        fetch(`/add_to_wishlist/${productPid}/`, {
+                // Use backticks (`) for string interpolation
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    product_pid: productPid
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Item added to wishlist successfully
+                    showToastMessage('Item added to wishlist successfully', 'success');
+                } else if (response.status === 400) {
+                    // Item is already in the wishlist
+                    showToastMessage('Item is already in the wishlist', 'info');
+                } else {
+                    // Handle other errors
+                    showToastMessage('Failed to add item to wishlist', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle error
+                showToastMessage('Error: ' + error.message, 'error');
+            });
+    }
+
+    function showToastMessage(message, type) {
+        const toastElement = document.getElementById('toast-message');
+        toastElement.textContent = message;
+        toastElement.className = 'toast-message ' + type;
+        toastElement.style.display = 'block';
+        setTimeout(function() {
+            toastElement.style.display = 'none';
+        }, 3000); // Hide toast message after 3 seconds
+    }
 </script>
 
 

@@ -1,5 +1,8 @@
-from .cart import Cart
+from store.models import CartItem
 
-# Create context processors so the cart can work on all pages on our site
-def cart(request):
-    return {'cart': Cart(request)}
+def cart_item_count(request):
+    if request.user.is_authenticated:
+        item_count = CartItem.objects.filter(cart__user=request.user).count()
+    else:
+        item_count = 0
+    return {'item_count': item_count}

@@ -1,6 +1,6 @@
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from store.models import Category, Product, ProductImages, Size
+from store.models import Category, Product, ProductImages, Size, Cart, CartItem
 from accounts.models import User, Address
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
@@ -23,6 +23,7 @@ def home(request):
     featured_products = products.filter(featured=True)
     popular_products = products.filter(popular=True)
     new_added_products = products.filter(latest=True)
+    
     context = {
         'categories': categories,
         'products': products,
