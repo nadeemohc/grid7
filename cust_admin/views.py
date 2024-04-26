@@ -416,9 +416,12 @@ def product_list_unlist(request, p_id):
 @admin_required
 def prod_list(request):
     products = Product.objects.all().order_by('p_id')
-    return render(request, 'cust_admin/product/product_list.html', 
-                  {'title':'Product List',
-                   'products':products})
+    
+    context = {
+        'products': products,
+        'title': 'Product List'
+    }
+    return render(request, 'cust_admin/product/product_list.html', context)
 
 
 

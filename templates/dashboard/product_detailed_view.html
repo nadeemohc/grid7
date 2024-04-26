@@ -75,26 +75,39 @@
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                         </ul>
                                     </div>
-                                    <div class="attr-detail attr-size">
-                                        <strong class="mr-10">Size</strong>
-                                        <ul class="list-filter size-filter font-small">
-                                            {% for size in sizes %}
-                                            <li><a href="#">{{ size.size }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                                    <div class="detail-extralink">
-                                        <div class="detail-qty border radius">
-                                            <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                            <span id="qty-cart" class="qty-val">1</span>
-                                            <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
+                                    <form id="add-to-cart-form" action="post">
+                                        <input type="hidden" name="product_id" value="{{ product.p_id }}">
+                                        <input type="hidden" name="size" value="" id="selected-size">
+                                        <input type="hidden" name="quantity" value="1">
+                                        {% csrf_token %}
+                                        <div class="attr-detail attr-size">
+                                            <strong class="mr-10">Size</strong>
+                                            <ul class="list-filter size-filter font-small">
+                                                {% for size in sizes %}
+                                                <li>
+                                                    <a href="#" class="size-link" data-size-id="{{ size.id }}" data-size-name="{{ size.size }}">
+                                                        {{ size.size }}
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
                                         </div>
-                                        <div class="product-extra-link2">
-                                            <button type="button" value="{{ product.p_id }}" id="add-cart" class="button button-add-to-cart">Add to cart</button>
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                            <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
+                                        
+                                        <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                                        <div class="detail-extralink">
+                                            <div class="detail-qty border radius">
+                                                <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
+                                                <span id="qty-cart" class="qty-val">1</span>
+                                                <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
+                                            </div>
+                                            <div class="product-extra-link2">
+                                                <button type="button" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                                <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
+                                                <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
+                                            </div>
                                         </div>
+                                    </form>
+                                    
                                     </div>
                                     <ul class="product-meta font-xs color-grey mt-50">
                                         <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
@@ -137,57 +150,70 @@
         </section>
 
 
-        {% comment %}
     
-<script>
-    // Check if button's pressed
-    $(document).on('click', '#add-cart', function(e){
-        e.preventDefault();
-        $.ajax({
-            type: 'POST',
-            url: '{% url 'cart:add_to_cart' %}',
-            data: {
-                product_id: $(this).val(),
-                product_qty: $('#qty-cart option:selected').text(),
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                action: 'post',
-            },
-            success: function(json){
-                // Update the cart quantity immediately
-                document.getElementById("cart_quantity").textContent = json.qty;
-            },
-            error: function(xhr, errmsg, err){
-                // Handle error
-            }
-        });
-    });
-</script>
+        <script>
+            $(document).ready(function() {
+                $('.qty-up').on('click', function(e) {
+                    e.preventDefault();
+                    var quantity = parseInt($('#qty-cart').text());
+                    $('#qty-cart').text(quantity + 1);
+                    $('input[name="quantity"]').val(quantity + 1);  // Update hidden input field
+                });
 
-{% endcomment %}
-<script>
-    // Check if button's pressed
-    $(document).on('click', '#add-cart', function(e){
-        e.preventDefault();
-        var productQty = $('#qty-cart').text(); // Get the text content of the span
-        $.ajax({
-            type: 'POST',
-            url: '{% url 'cart:add_to_cart' %}',
-            data: {
-                product_id: $(this).val(),
-                product_qty: productQty, // Use the fetched quantity here
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                action: 'post',
-            },
-            success: function(json){
-                // Update the cart quantity immediately
-                document.getElementById("cart_quantity").textContent = json.qty;
-            },
-            error: function(xhr, errmsg, err){
-                // Handle error
+                $('.qty-down').on('click', function(e) {
+                    e.preventDefault();
+                    var quantity = parseInt($('#qty-cart').text());
+                    if (quantity > 1) {
+                        $('#qty-cart').text(quantity - 1);
+                        $('input[name="quantity"]').val(quantity - 1);  // Update hidden input field
+                    }
+                });
+            });
+
+            $(document).ready(function() {
+                // Event listener for selecting size
+                $('.size-link').on('click', function(e) {
+                    e.preventDefault();
+                    var sizeId = $(this).data('size-id');
+                    var sizeName = $(this).data('size-name');
+                    // Display the selected size somewhere on the page (optional)
+                    $('#selected-size').val(sizeId);
+                    console.log('Selected size ID:', sizeId); // Add this line for debugging
+                });
+        
+                // Event listener for adding to cart
+                $('#add-cart').on('click', function(e) {
+                    e.preventDefault();
+                    var formData = $('#add-to-cart-form').serialize();
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url "cart:add_to_cart" %}',
+                        data: formData,
+                        beforeSend: function(xhr, settings) {
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                            }
+                        },
+                        success: function(response) {
+                            // Handle success response (e.g., update cart count)
+                        },
+                        error: function(xhr, errmsg, err) {
+                            // Handle error
+                        }
+                    });
+                });
+            });
+        
+            // Function to check if a request is safe from CSRF
+            function csrfSafeMethod(method) {
+                // These HTTP methods do not require CSRF protection
+                return /^(GET|HEAD|OPTIONS|TRACE)$/.test(method);
             }
-        });
-    });
-</script>
+        </script>
+        
+        
+        
+        
 
 
 

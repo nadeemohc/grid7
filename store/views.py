@@ -226,15 +226,6 @@ def send_email_verification(email):
     send_mail(subject, message, from_email, recipient_list)
 
 
-def cart_view(request):
-    context = {
-          'cart_items': cart_items, 
-          'total_price': total_price,
-          'sub_total': sub_total,
-       }
-    return render(request, 'dashboard/user_cart/cart.html', context)
-
-
 def shop(request):
     categories = Category.objects.all()
     products = Product.objects.all()
