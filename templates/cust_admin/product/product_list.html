@@ -60,18 +60,28 @@
 
             {% for message in messages %} {{message}} {%endfor%}
                                 {% for product in products %}
-                                <tr>
-                                    <td>{{ product.p_id }}</td>
-                                    <td><b>{{ product.title }}</b></td>
-                                    <td>
-                                        {% if product.image %}
-                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-sm img-thumbnail" alt="">
-                                        {% else %}
-                                        <p>No image available</p>
-                                        {% endif %}
-                                       
-                                    </td>
-                                        <td>{{ product.size }}</td>                                    
+                                    <tr>
+                                        <td>{{ product.p_id }}</td>
+                                        <td><b>{{ product.title }}</b></td>
+                                        <td>
+                                            {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-sm img-thumbnail" alt="">
+                                            {% else %}
+                                            <p>No image available</p>
+                                            {% endif %}
+                                        
+                                        </td>
+                                        <td>
+                                            {% if product.size.exists %}
+                                                {% for product_size in product.size.all %}
+                                                    {{ product_size.size }}
+                                                    {% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                No sizes available
+                                            {% endif %}
+                                        </td>
+                                                                        
                                         <td>{{ product.price }}</td>
                                         <td>{{ product.old_price }}</td>
                                         <td>{{ product.category }}</td>

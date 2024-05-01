@@ -1,0 +1,16 @@
+# Virtual environment directories
+venv/
+benv/
+
+
+# Database files
+*.sqlite3
+
+
+# Compiled python files
+*.pyc
+
+
+# IDE specific things
+.vscode/
+.idea/
