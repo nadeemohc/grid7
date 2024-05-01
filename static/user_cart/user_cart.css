@@ -1,0 +1,22 @@
+.checkout-btn {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 18em;
+    margin-bottom: 30px;
+}
+
+.price-align {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 28em;
+    margin-bottom: 30px;
+}
+
+.inc-bt{
+    background: #D90E8C;
+    border:None;
+    border-radius:10%;
+}
+.align-total{
+    margin-left:30em;
+}
