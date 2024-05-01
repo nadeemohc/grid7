@@ -47,7 +47,10 @@ def perform_signup(request):
     else: 
         form = SignUpForm()
 
-    context = {'form': form}
+    context = {
+        'title': 'Signup',
+        'form': form,
+    }
     return render(request, 'account/signup.html', context)
 
 
@@ -131,8 +134,10 @@ def perform_login(request):
             # Failed login attempt
             messages.warning(request, "Invalid username or password")
             return redirect('accounts:login')
-    
-    return render(request, 'account/login.html')
+    context = {
+        'title': 'Login',
+    }
+    return render(request, 'account/login.html', context)
 
 
 def edit_info(request):

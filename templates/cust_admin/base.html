@@ -15,7 +15,7 @@
     <meta property="og:url" content="">
     <meta property="og:image" content="">
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{% static 'admin_side/imgs/theme/favicon.svg' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'admin_side/imgs/theme/gear.png' %}">
     <!-- Template CSS -->
     <link href="{% static 'admin_side/css/main.css' %}" rel="stylesheet" type="text/css" />
 </head>
@@ -93,11 +93,11 @@
                 </li> -->
                 <li class="menu-item has-submenu">
                     <a class="menu-link" href="page-transactions-1.html"> <i class="icon material-icons md-monetization_on"></i>
-                        <span class="text">Transactions</span>
+                        <span class="text">Variant</span>
                     </a>
                     <div class="submenu">
-                        <a href="page-transactions-1.html">Transaction 1</a>
-                        <a href="page-transactions-2.html">Transaction 2</a>
+                        <a href="{% url 'cust_admin:add_variant' %}">Add Variant</a>
+                        <a href="{% url 'cust_admin:list_variant' %}">Variant List</a>
                     </div>
                 </li>
                 <li class="menu-item">

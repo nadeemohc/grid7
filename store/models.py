@@ -5,14 +5,7 @@ from django.utils import timezone
 # Create your models here.
 
 class Size(models.Model):
-    sizze = [
-        ('S', 'Small'),
-        ('M', 'Medium'),
-        ('L', 'Large'),
-        ('XL', 'Extra Large'),
-        ('XXL', 'Extra Extra Large'),
-    ]
-    size = models.CharField(max_length=50, choices=sizze)
+    size = models.CharField(max_length=50)
     price_increment = models.PositiveIntegerField(default=0)
     
     def __str__(self):

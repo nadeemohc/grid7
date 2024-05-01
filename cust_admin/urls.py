@@ -28,6 +28,7 @@ urlpatterns = [
     path('subcategory_list/', views.subcategory_list, name='subcategory_list'),
 
     # Variant functionalities
-    path('add_variant', views.variant_add, name='add_variant'),
-    path('list_variant/', views.variant_list, name='list_variant'),
+    path('add_variant', views.add_variant, name='add_variant'),
+    path('list_variant/', views.list_variant, name='list_variant'),
+    path('edit_variant/<int:id>/', views.edit_variant, name='edit_variant'),
 ]
