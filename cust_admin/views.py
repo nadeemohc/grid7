@@ -151,20 +151,23 @@ def add_product(request):
         title = request.POST.get('title')
         image = request.FILES.getlist('image')
         description = request.POST.get('description')
-        price = request.POST.get('price')
-        old_price = request.POST.get('old_price')
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
-        stock = request.POST.get('stock')
-        shipping = request.POST.get('ship')
-        specifications = request.POST.get('add_det')
+        specifications = request.POST.get('specifications')
+
+        # Removed Items / items to add to the variant specification view
+        # price = request.POST.get('price')
+        # old_price = request.POST.get('old_price')
+        # stock = request.POST.get('stock')
+        # shipping = request.POST.get('ship')
+
 
         # Checkboxes
-        popular = request.POST.get('popular') == 'on'
-        featured = request.POST.get('featured') == 'on'
-        latest = request.POST.get('latest') == 'on'
-        in_stock = request.POST.get('in_stock') == 'on'
-        status = request.POST.get('status') == 'on'
+        # popular = request.POST.get('popular') == 'on'
+        # featured = request.POST.get('featured') == 'on'
+        # latest = request.POST.get('latest') == 'on'
+        # in_stock = request.POST.get('in_stock') == 'on'
+        # status = request.POST.get('status') == 'on'
 
         # Get the category and subcategory objects
         category = get_object_or_404(Category, c_id=category_id)
@@ -179,18 +182,19 @@ def add_product(request):
             title=title,
             image=image[0],
             description=description,
-            price=price,
-            old_price=old_price,
             category=category,
             sub_category=subcategory,
-            stock=stock,
-            shipping=shipping,
             specifications=specifications,
-            popular=popular,
-            featured=featured,
-            latest=latest,
-            in_stock=in_stock,
-            status=status,
+            
+            # price=price,
+            # old_price=old_price,
+            # stock=stock,
+            # shipping=shipping,
+            # popular=popular,
+            # featured=featured,
+            # latest=latest,
+            # in_stock=in_stock,
+            # status=status,
         )
 
         # Add selected sizes to the product
@@ -281,6 +285,10 @@ def prod_list(request):
         'title': 'Product List'
     }
     return render(request, 'cust_admin/product/product_list.html', context)
+
+def test(request):
+
+    return render(request, 'cust_admin/product/test_prod.html')
 
 #=========================================== admin add, list, edit, delete product =========================================================================================================
 

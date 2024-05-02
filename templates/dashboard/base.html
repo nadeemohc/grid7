@@ -18,6 +18,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'store/imgs/theme/favicon.png' %}">
     <!-- Template CSS -->
     <link rel="stylesheet" href="{% static 'store/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'store/cart/user_cart.css' %}">
    
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -101,7 +102,14 @@
                                 <div class="header-action-icon-2">
                                     <a class="mini-cart-icon" href="{% url 'cart:view_cart' %}">
                                         <img alt="Evara" src="{% static 'store/imgs/theme/icons/icon-cart.svg' %}">
-                                        <span class="pro-count blue" id="cart_quantity">{{ cart|length }}</span>
+                                        
+
+                                        <span class="pro-count blue" id="cart_quantity">{{ item_count }}</span>
+                                        
+                                        {% comment %}                                        
+                                        <span class="pro-count blue cart-count" data-cart-count="{{ item_count }}">{{ item_count }}</span>
+                                        {% endcomment %}
+
                                     </a>
                                     
                                 </div>

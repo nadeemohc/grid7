@@ -1,50 +1,221 @@
-{% extends "cust_admin/base.html" %}
-{% load static%}
-{% block content %}
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block title %} Add Product Variants {% endblock %}
+{% block  body %}
 <section class="content-main">
-    <div class="content-header">
-        <div>
-            <h2 class="content-title card-title">Add Size</h2>
+    <div class="row">
+        <div class="col-12">
+            <div class="content-header">
+                <h2 class="content-title">Add New Product Variant</h2>
+                <div>
+                    {% if error_messages %}
+                        <div class="alert alert-danger">
+                            <ul>
+                                {% for error_message in error_messages %}
+                                    <li>{{ error_message }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <div>
-            <input type="text" placeholder="Search Categories" class="form-control bg-white">
+        <div class="col-lg-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Variant Details</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% url 'admin_panel:add-variant' %}" class="variant-form">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="id_color">Product:</label>
+                            {{ variant_form.product }}
+                            {{ variant_form.product.errors }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_color">Color:</label>
+                            {{ variant_form.color }}
+                            {{ variant_form.color.errors }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_price">Price:</label>
+                            {{ variant_form.price }}
+                            {{ variant_form.price.errors }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_old_price">Old Price:</label>
+                            {{ variant_form.old_price }}
+                            {{ variant_form.old_price.errors }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_stock_count">Stocks:</label>
+                            {{ variant_form.stock_count }}
+                            {{ variant_form.stock_count.errors }}
+                        </div>
+                        
+                        <div class="form-group" id="id_images">
+                            <label for="id_image">Main Image:</label>
+                            {{ variant_form.image }}
+                            {{ variant_form.image.errors }}
+                            <div id="image-preview" class="mt-3"></div>
+                            <button type="button" id="crop-button" class="btn btn-primary mt-3" style="display: none;">Crop Image</button>
+                            <input type="hidden" id="cropped-images" name="cropped_images" value="">     
+                        </div>
+
+                        <div id="additionalVariantImages">
+                            {% for i in additional_image_count %}
+                                <div class="input-upload">
+                                    <label for="variant_image{{ i }}">Variant Image {{ i }}</label>
+                                    <input id="variant_image{{ i }}" class="form-control" type="file" name="additional_image_{{ i }}">
+                                    <div id="variant-image-preview{{ i }}" class="mt-3"></div>
+                                    <button type="button" id="crop-button{{ i }}" class="btn btn-primary mt-3" style="display: none;">Crop Image</button>
+                                    <input type="hidden" id="cropped-images{{ i }}" name="cropped_images_{{ i }}" value="">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Add Variant</button>
+                    
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <form method='post' action="{% url 'cust_admin:add_variant' %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-4">
-                            <label for="cname" class="form-label">Size</label>
-                            <input type="text" placeholder="Type here" class="form-control" name="size" />
-                        </div>
-                        <div class="mb-4">
-                            <label for="cname" class="form-label">Price Increment</label>
-                            <input type="text" placeholder="Type here" class="form-control" name="price_inc" />
-                        </div>
-                        <!-- <div class="mb-3">
-                          <label for="category" class="form-label">Category:</label>
-                          <select id="category" name="category" class="form-select" required>
-                            <option value="" selected disabled>Please select a Category</option>
-                            {% for category in categories %}
-                              <option value="{{ category.c_id }}">{{ category.c_name }}</option>
-                            {% endfor %}
-                          </select>
-                        </div> -->
-                        <!-- <div class="mb-4">
-                            <input type="checkbox" name="blocked">
-                            <label class="form-label" for="blocked">Blocked</label>
-                        </div> -->
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Add Size</button>
-                        </div>
-                    </form>
-                    
-                </div>
-                
-        </div> <!-- card body .// -->
-    </div> <!-- card .// -->
-</section> <!-- content-main end// -->
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.js"></script>
+<script>
+    // Function to initialize the Cropper.js instance for the main image
+    function initImageCropper(inputId, previewId, buttonId, hiddenInputId) {
+        const imageInput = document.getElementById(inputId);
+        const imagePreview = document.getElementById(previewId);
+        const cropButton = document.getElementById(buttonId);
+        const croppedImagesInput = document.getElementById(hiddenInputId);
+
+        imageInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+
+            if (!files || files.length === 0) return;
+
+            imagePreview.innerHTML = '';
+
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+
+                reader.onload = function () {
+                    const img = new Image();
+                    img.src = reader.result;
+
+                    img.onload = function () {
+                        const imageContainer = document.createElement('div');
+                        imageContainer.classList.add('image-container');
+                        imageContainer.appendChild(img);
+                        imagePreview.appendChild(imageContainer);
+
+                        const cropper = new Cropper(img, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            guides: true,
+                            background: false,
+                            autoCropArea: 0.8,
+                            responsive: true,
+                        });
+
+                        cropButton.addEventListener('click', function () {
+                            const croppedCanvas = cropper.getCroppedCanvas();
+                            croppedCanvas.toBlob(function (blob) {
+                                const croppedImg = new Image();
+                                croppedImg.src = URL.createObjectURL(blob);
+                                croppedImg.style.width = '100%';
+                                imageContainer.innerHTML = '';
+                                imageContainer.appendChild(croppedImg);
+
+                                const croppedImages = JSON.parse(croppedImagesInput.value || '[]');
+                                croppedImages[index] = blob;
+                                croppedImagesInput.value = JSON.stringify(croppedImages);
+                            });
+                        });
+                    };
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            cropButton.style.display = 'block';
+        });
+    }
+
+    // Function to initialize the Cropper.js instance for additional variant images
+    function initAdditionalImageCropper(inputId, previewId, buttonId, hiddenInputId) {
+        const imageInput = document.getElementById(inputId);
+        const imagePreview = document.getElementById(previewId);
+        const cropButton = document.getElementById(buttonId);
+        const croppedImagesInput = document.getElementById(hiddenInputId);
+
+        imageInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+
+            if (!files || files.length === 0) return;
+
+            imagePreview.innerHTML = '';
+
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+
+                reader.onload = function () {
+                    const img = new Image();
+                    img.src = reader.result;
+
+                    img.onload = function () {
+                        const imageContainer = document.createElement('div');
+                        imageContainer.classList.add('image-container');
+                        imageContainer.appendChild(img);
+                        imagePreview.appendChild(imageContainer);
+
+                        const cropper = new Cropper(img, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            guides: true,
+                            background: false,
+                            autoCropArea: 0.8,
+                            responsive: true,
+                        });
+
+                        cropButton.addEventListener('click', function () {
+                            const croppedCanvas = cropper.getCroppedCanvas();
+                            croppedCanvas.toBlob(function (blob) {
+                                const croppedImg = new Image();
+                                croppedImg.src = URL.createObjectURL(blob);
+                                croppedImg.style.width = '100%';
+                                imageContainer.innerHTML = '';
+                                imageContainer.appendChild(croppedImg);
+
+                                const croppedImages = JSON.parse(croppedImagesInput.value || '[]');
+                                croppedImages[index] = blob;
+                                croppedImagesInput.value = JSON.stringify(croppedImages);
+                            });
+                        });
+                    };
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            cropButton.style.display = 'block';
+        });
+    }
+    
+    // Call the function to initialize the image cropper for the main image
+    initImageCropper('id_images', 'image-preview', 'crop-button', 'cropped-images');
+
+    // Call the function to initialize the image cropper for additional variant images
+    {% for i in additional_image_count %}
+        initAdditionalImageCropper('variant_image{{ i }}', 'variant-image-preview{{ i }}', 'crop-button{{ i }}', 'cropped-images{{ i }}');
+    {% endfor %}
+</script>
 {% endblock %}

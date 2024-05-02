@@ -31,4 +31,7 @@ urlpatterns = [
     path('add_variant', views.add_variant, name='add_variant'),
     path('list_variant/', views.list_variant, name='list_variant'),
     path('edit_variant/<int:id>/', views.edit_variant, name='edit_variant'),
+
+    path('test/', views.test, name='test'),
+
 ]
