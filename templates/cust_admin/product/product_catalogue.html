@@ -1,0 +1,110 @@
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block content %}
+    
+    
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">{{ title }}</h2>
+                    <p></p>
+                </div>
+                <div>
+                    <a href="{% url 'cust_admin:prod_variant_assign' %}" class="btn btn-md rounded font-sm">Add New Product</a>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <header class="card-header">
+                    <div class="row gx-3">
+                        <div class="col-lg-4 col-md-6 me-auto">
+                            <input type="text" placeholder="Search..." class="form-control">
+                        </div>
+                        <div class="col-lg-2 col-6 col-md-3">
+                            <select class="form-select">
+                                <option>Status</option>
+                                <option>Active</option>
+                                <option>Blockd</option>
+                                <option>Show all</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-6 col-md-3">
+                            <select class="form-select">
+                                <option>Show 20</option>
+                                <option>Show 30</option>
+                                <option>Show 40</option>
+                            </select>
+                        </div>
+                    </div>
+                </header> <!-- card-header end// -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <!-- <th>id</th> -->
+                                    <th>Name</th>
+                                    <th>Image</th>
+                                    <th>Size</th>
+                                    <!-- <th>Price</th>
+                                    <th>Old Price</th> -->
+                                    <th>Category</th>
+                                    <th>Sub Category</th>
+                                    <th>Is Available</th>
+                                    <!-- <th>Latest</th>
+                                    <th>Status</th>
+                                    <th>Stock</th> -->
+                                    <th class="col-md-1">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product_attr in products %}
+                                    <tr>
+                                        <td><b>{{ product_attr.product.title }}</b></td>
+                                        <td>
+                                            {% if product_attr.product.image %}
+                                                <img src="{{ product_attr.product.image.url }}" alt="{{ product_attr.product.title }}" class="img-sm img-thumbnail" alt="">
+                                            {% else %}
+                                                <p>No image available</p>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if product_attr.size %}
+                                                <p>{{ product_attr.size.size }}</p>
+                                            {% else %}
+                                                <p>No size available</p>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ product_attr.product.category }}</td>
+                                        <td>{{ product_attr.product.sub_category.sub_name }}</td>
+                                        <td>{{ product_attr.featured }}</td>
+                                        <td>
+                                            {% if product_attr.is_blocked %}
+                                                <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
+                                            {% else %}
+                                                <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
+                                            {% endif %}
+                                            <a href="{% url 'cust_admin:product_edit' product_attr.product.pk %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            
+                        </table>
+                    </div> <!-- table-responsive //end -->
+                </div> <!-- card-body end// -->
+            </div> <!-- card end// -->
+            <div class="pagination-area mt-15 mb-50">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-start">
+                        <li class="page-item active"><a class="page-link" href="#">01</a></li>
+                        <li class="page-item"><a class="page-link" href="#">02</a></li>
+                        <li class="page-item"><a class="page-link" href="#">03</a></li>
+                        <li class="page-item"><a class="page-link dot" href="#">...</a></li>
+                        <li class="page-item"><a class="page-link" href="#">16</a></li>
+                        <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
+                    </ul>
+                </nav>
+            </div>
+        </section> <!-- content-main end// -->
+        
+{% endblock content %}

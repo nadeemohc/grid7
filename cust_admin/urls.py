@@ -16,7 +16,10 @@ urlpatterns = [
     path('prod_list/', views.prod_list, name='prod_list'),
     path('product_unlist/<int:p_id>/', views.product_list_unlist, name='product_unlist'),
     path('product_edit/<int:p_id>', views.prod_edit, name='product_edit'),
-
+    path('prod_variant_assign/', views.prod_variant_assign, name='prod_variant_assign'),
+    path('prod_catalogue/', views.prod_catalogue_list, name='prod_catalogue'),
+    path('catalogue_unlist/<int:p_id>/', views.catalogue_list_unlist, name='catalogue_unlist'),
+    
     # Category functionalities
     path('category_list', views.category_list, name='category_list'),
     path('add_category/', views.add_category, name='add_category'),
@@ -31,7 +34,4 @@ urlpatterns = [
     path('add_variant', views.add_variant, name='add_variant'),
     path('list_variant/', views.list_variant, name='list_variant'),
     path('edit_variant/<int:id>/', views.edit_variant, name='edit_variant'),
-
-    path('test/', views.test, name='test'),
-
 ]

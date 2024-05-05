@@ -3,10 +3,13 @@ from django.contrib.auth import get_user_model
 from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
+from django.http import HttpResponseBadRequest
+from cust_admin.forms import ProductVariantAssignForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.db import IntegrityError
 from PIL import Image
 from django.db.models import Case, CharField, Value, When
 
@@ -142,68 +145,112 @@ def add_subcat(request):
     # categories = Category.objects.all()
     return render(request, 'cust_admin/sub_category/add_sub_cat.html', {'title':'Add Sub Category'})
 
+#=========================================== admin add, list, edit, delete variant =========================================================================================================
+
+def list_variant(request):
+    # Define the custom ordering based on the size values
+    custom_ordering = Case(
+        When(size='S', then=Value(0)),
+        When(size='M', then=Value(1)),
+        When(size='L', then=Value(2)),
+        When(size='XL', then=Value(3)),
+        When(size='XXL', then=Value(4)),
+        When(size='XXXL', then=Value(5)),
+        default=Value(5),
+        output_field=CharField(),
+    )
+
+    # Fetch the Size objects ordered according to the custom ordering
+    data = Size.objects.all().order_by(custom_ordering)
+
+    context = {
+        'data': data,
+        'title': 'Variant List',
+    }
+    return render(request, 'cust_admin/variant/variant_list.html', context)
+
+def add_variant(request):
+    if request.method == 'POST':
+        size = request.POST.get('size')
+
+        try:
+            existing_size = Size.objects.filter(size__iexact=size)
+            if existing_size:
+                messages.error(request, "The size already exists")
+            else:
+                new_size = Size(size=size)
+                new_size.save()
+                messages.success(request, f'The size {size} added successfully')
+        except IntegrityError as e:
+            error_message = str(e)
+            messages.error(request, f'An error occurred while adding the size: {error_message}')
+        
+        return redirect('cust_admin:list_variant')
+    context = {
+            'title': 'Variant Add',
+        }
+    return render(request, 'cust_admin/variant/variant_add.html', context)
+
+
+def edit_variant(request, id):
+    if request.method == 'POST':
+        size = request.POST.get('size')
+        price_increment = request.POST.get('price_inc')
+        edit=Size.objects.get(id=id)
+        edit.size = size
+        edit.price_increment = price_increment
+        edit.save()
+        return redirect('cust_admin:list_variant')
+    obj = Size.objects.get(id=id)
+    context = {
+        "obj":obj,
+        'title': 'Variant Edit',
+    }
+    
+    return render(request, 'cust_admin/variant/variant_edit.html', context)
+
 #=========================================== admin add, list, edit, delete product =========================================================================================================
+
+@admin_required
+def prod_list(request):
+    products = Product.objects.all().order_by('p_id')
+    
+    context = {
+        'products': products,
+        'title': 'Product Lobby',
+    }
+    return render(request, 'cust_admin/product/product_list.html', context)
 
 @admin_required
 def add_product(request):
     if request.method == 'POST':
         # Extract data from the form
         title = request.POST.get('title')
-        image = request.FILES.getlist('image')
+        images = request.FILES.getlist('image')  # Use 'images' instead of 'image' for multiple file upload
         description = request.POST.get('description')
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
         specifications = request.POST.get('specifications')
-
-        # Removed Items / items to add to the variant specification view
-        # price = request.POST.get('price')
-        # old_price = request.POST.get('old_price')
-        # stock = request.POST.get('stock')
-        # shipping = request.POST.get('ship')
-
-
-        # Checkboxes
-        # popular = request.POST.get('popular') == 'on'
-        # featured = request.POST.get('featured') == 'on'
-        # latest = request.POST.get('latest') == 'on'
-        # in_stock = request.POST.get('in_stock') == 'on'
-        # status = request.POST.get('status') == 'on'
+        availability = request.POST.get('availability') == 'on'
 
         # Get the category and subcategory objects
         category = get_object_or_404(Category, c_id=category_id)
         subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
 
-        # Get the selected sizes from the form
-        selected_sizes_ids = request.POST.getlist('sizes')
-        selected_sizes = Size.objects.filter(id__in=selected_sizes_ids)
-
         # Create the product
         product = Product.objects.create(
             title=title,
-            image=image[0],
             description=description,
             category=category,
             sub_category=subcategory,
             specifications=specifications,
-            
-            # price=price,
-            # old_price=old_price,
-            # stock=stock,
-            # shipping=shipping,
-            # popular=popular,
-            # featured=featured,
-            # latest=latest,
-            # in_stock=in_stock,
-            # status=status,
+            availability=availability,
         )
 
-        # Add selected sizes to the product
-        product.size.set(selected_sizes)
-
         # Save additional images
-        for i in image[1:]:
+        for image in images:  # Iterate over each uploaded image
             try:
-                ProductImages.objects.create(product=product, images=i)
+                ProductImages.objects.create(product=product, images=image)
             except Exception as e:
                 print(e)
 
@@ -222,6 +269,7 @@ def add_product(request):
     }
 
     return render(request, 'cust_admin/product/product_add.html', context)
+
 
 
 @admin_required
@@ -275,80 +323,61 @@ def product_list_unlist(request, p_id):
     messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
     return redirect('cust_admin:prod_list')
 
-
-@admin_required
-def prod_list(request):
-    products = Product.objects.all().order_by('p_id')
-    
-    context = {
-        'products': products,
-        'title': 'Product List'
-    }
-    return render(request, 'cust_admin/product/product_list.html', context)
-
-def test(request):
-
-    return render(request, 'cust_admin/product/test_prod.html')
-
-#=========================================== admin add, list, edit, delete product =========================================================================================================
-
-def list_variant(request):
-    # Define the custom ordering based on the size values
-    custom_ordering = Case(
-        When(size='S', then=Value(0)),
-        When(size='M', then=Value(1)),
-        When(size='L', then=Value(2)),
-        When(size='XL', then=Value(3)),
-        When(size='XXL', then=Value(4)),
-        default=Value(5),
-        output_field=CharField(),
-    )
-
-    # Fetch the Size objects ordered according to the custom ordering
-    data = Size.objects.all().order_by(custom_ordering)
-
-    context = {
-        'data': data,
-        'title': 'Variant List',
-    }
-    return render(request, 'cust_admin/variant/variant_list.html', context)
-
-def add_variant(request):
-    if request.method == 'POST':
-        size = request.POST.get('size')
-        price_increment = request.POST.get('price_inc')
-
-        try:
-            existing_size = Size.objects.filter(size__iexact=size)
-            if existing_size:
-                messages.error(request, "The size already exists")
-            else:
-                new_size = Size(size = size, price_increment = price_increment)
-                new_size.save()
-                messages.success(request, f'The size {size} added Succesfully')
-        except IntegrityError:
-            messages.error(request, 'An error occured while adding the size')
+def prod_variant_assign(request):
+    form = ProductVariantAssignForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        # Process form data
+        product = form.cleaned_data['product']
+        size = form.cleaned_data['size']
+        price = form.cleaned_data['price']
+        old_price = form.cleaned_data['old_price']
+        stock = form.cleaned_data['stock']
+        featured = form.cleaned_data['featured']
+        popular = form.cleaned_data['popular']
+        latest = form.cleaned_data['latest']
+        in_stock = form.cleaned_data['in_stock']
+        status = form.cleaned_data['status']
         
-        return redirect('cust_admin:list_variant')
-    context = {
-            'title': 'Variant Add',
-        }
-    return render(request, 'cust_admin/variant/variant_add.html', context)
+        # Save the form data to the database
+        product_attribute = ProductAttribute.objects.create(
+            p_id=product,
+            product=product,
+            size=size,
+            price=price,
+            old_price=old_price,
+            stock=stock,
+            featured=featured,
+            popular=popular,
+            latest=latest,
+            in_stock=in_stock,
+            status=status
+        )
 
+        # Handle form submission logic here
+        messages.success(request, 'successfully added Product with varient!')
+        return redirect('cust_admin:prod_catalogue')
 
-def edit_variant(request, id):
-    if request.method == 'POST':
-        size = request.POST.get('size')
-        price_increment = request.POST.get('price_inc')
-        edit=Size.objects.get(id=id)
-        edit.size = size
-        edit.price_increment = price_increment
-        edit.save()
-        return redirect('cust_admin:list_variant')
-    obj = Size.objects.get(id=id)
     context = {
-        "obj":obj,
-        'title': 'Variant Edit',
+        'title': 'Add New Product',
+        'form': form,
     }
+    return render(request, 'cust_admin/product/prod_variant_assign.html', context)
+
+def prod_catalogue_list(request):    
+    products = ProductAttribute.objects.all().order_by('p_id')
+    prods = Product.objects.all()
     
-    return render(request, 'cust_admin/variant/variant_edit.html', context)
+    context = {
+        'prods': prods,
+        'products': products,
+        'title': 'Product Catalogue',
+    }
+    return render(request, 'cust_admin/product/product_catalogue.html', context)
+
+def catalogue_list_unlist(request, p_id):
+    product = get_object_or_404(ProductAttribute, pk=p_id)
+    product.is_blocked = not product.is_blocked
+    product.save()
+    action = 'unblocked' if not product.is_blocked else 'blocked'
+    messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
+    return redirect('cust_admin:prod_catalogue')

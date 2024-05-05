@@ -6,7 +6,7 @@
         <section class="content-main">
             <div class="content-header">
                 <div>
-                    <h2 class="content-title card-title">Product List</h2>
+                    <h2 class="content-title card-title">{{ title }}</h2>
                     <p></p>
                 </div>
                 <div>
@@ -44,15 +44,15 @@
                                     <th>id</th>
                                     <th>Name</th>
                                     <th>Image</th>
-                                    <th>Size</th>
-                                    <th>Price</th>
-                                    <th>Old Price</th>
+                                    <!-- <th>Size</th> -->
+                                    <!-- <th>Price</th>
+                                    <th>Old Price</th> -->
                                     <th>Category</th>
                                     <th>Sub Category</th>
-                                    <th>Featured</th>
-                                    <th>Latest</th>
+                                    <th>Is Available</th>
+                                    <!-- <th>Latest</th>
                                     <th>Status</th>
-                                    <th>Stock</th>
+                                    <th>Stock</th> -->
                                     <th class="col-md-1">Action</th>
                                 </tr>
                             </thead>
@@ -71,7 +71,7 @@
                                             {% endif %}
                                         
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             {% if product.size.exists %}
                                                 {% for product_size in product.size.all %}
                                                     {{ product_size.size }}
@@ -80,21 +80,21 @@
                                             {% else %}
                                                 No sizes available
                                             {% endif %}
-                                        </td>
+                                        </td> -->
                                                                         
-                                        <td>{{ product.price }}</td>
-                                        <td>{{ product.old_price }}</td>
+                                        <!-- <td>{{ product.price }}</td>
+                                        <td>{{ product.old_price }}</td> -->
                                         <td>{{ product.category }}</td>
                                         <td>{{ product.sub_category.sub_name }}</td>
-                                        <td>{{ product.featured }}</td>
-                                        <td>{{ product.latest }}</td>
+                                        <td>{{ product.availability }}</td>
+                                        <!-- <td>{{ product.latest }}</td>
                                         <td>{{product.status}}</td>
                                         <td>{% if product.stock != 0 %}
                                             {{ product.stock }}
                                             {% else %}
                                             out of stock
                                             {% endif %}
-                                        </td>
+                                        </td> -->
                                         <td>
                                             {% if product.is_blocked %}
                                             <a href="{% url 'cust_admin:product_unlist' product.p_id%}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;

@@ -46,7 +46,7 @@
                                 <label for="image" class="form-label"></label>
                                 <img src="{% static 'admin_side/imgs/theme/upload.svg' %}" alt="">
                                 <input type="file" name="image" class="form-control" accept="image/*" multiple required>
-                            </div>
+                            </div>                            
                         </div>
                         <div class="card-header">
                             <h4>Organization</h4>
@@ -70,6 +70,10 @@
                                           <option value="{{ subcategory.sid }}">{{ subcategory.sub_name }}</option>
                                         {% endfor %}
                                     </select>
+                                </div>
+                                <div class="col-sm-6 mb-1">
+                                    <input type="checkbox" name="availability" class="form-check-input">
+                                    <label for="featured" class="form-check-label">Available</label>
                                 </div>
                                 </div> <!-- row.// -->
                             </div>

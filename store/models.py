@@ -6,7 +6,6 @@ from django.utils import timezone
 
 class Size(models.Model):
     size = models.CharField(max_length=50)
-    price_increment = models.PositiveIntegerField(default=0)
     
     def __str__(self):
         return self.size
@@ -61,14 +60,42 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
     sub_category = models.ForeignKey(Subcategory, on_delete=models.CASCADE, null=True, related_name="products")
     title = models.CharField(max_length=100, default="product")
-    image = models.ImageField(upload_to=generic_directory_path, default="product.jpg")
     description = models.TextField(null=True, blank=True, default="This is the product")
-    shipping = models.TextField(null =True)
+    specifications = models.TextField(null=True, blank=True)
+    shipping = models.TextField(null=True)
+    availability = models.BooleanField(default=False)
+    is_blocked = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Products"
+        
+    def product_image(self):
+        # Fetch the first image associated with the product
+        if self.images.exists():
+            first_image = self.images.first()
+            return mark_safe('<img src="%s" width="50" height="50" />' % (first_image.images.url))
+        else:
+            return None
+    
+    def __str__(self):
+        return self.title
+
+class ProductImages(models.Model):
+    images = models.ImageField(upload_to='product_images', default='product.jpg')
+    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Product Images'
+
+class ProductAttribute(models.Model):
+    p_id = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='p_id_attributes')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_attributes')
+    # image = models.ForeignKey(ProductImages, on_delete=models.CASCADE, related_name='product_attributes_image')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, default=None, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=1.99)
     old_price = models.DecimalField(max_digits=10, decimal_places=2, default=2.99)
     stock = models.IntegerField(default=1)
-    specifications = models.TextField(null=True, blank=True)
-    size = models.ManyToManyField(Size, blank= True)
     is_blocked = models.BooleanField(default=False)
     status = models.BooleanField(default=True)
     in_stock = models.BooleanField(default=True)
@@ -79,26 +106,14 @@ class Product(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(null=True, blank=True)
 
-    class Meta:
-        verbose_name_plural = "Products"
-        
-    def product_image(self):
-        return mark_safe('<img src="%s" width="50" height="50" />' % (self.image.url))
-    
     def __str__(self):
-        return self.title
-        
-    def get_percentage(self):
-        new_price = (self.price / self.old_price) * 100
-        return new_price
+        if self.size:
+            return f"{self.product.title} - {self.size.size} - Price: {self.price}"
+        else:
+            return f"{self.product.title} - No Size - Price: {self.price}"
 
-class ProductImages(models.Model):
-    images = models.ImageField(upload_to='product_images',default='product.jpg')
-    product = models.ForeignKey(Product,related_name='images', on_delete=models.SET_NULL, null=True)
-    date = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-      verbose_name_plural = 'Product Images'
+
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

@@ -24,7 +24,7 @@
     <div class="screen-overlay"></div>
     <aside class="navbar-aside" id="offcanvas_aside">
         <div class="aside-top">
-            <a href="index.html" class="brand-wrap">
+            <a href="{% url 'cust_admin:admin_dashboard' %}" class="brand-wrap">
                 <img src="{% static 'admin_side/imgs/theme/logo.png' %}" class="logo" alt="Evara Dashboard">
             </a>
             <div>
@@ -34,7 +34,7 @@
         <nav>
             <ul class="menu-aside">
                 <li class="menu-item active">
-                    <a class="menu-link" href="index.html"> <i class="icon material-icons md-home"></i>
+                    <a class="menu-link" href="{% url 'cust_admin:admin_dashboard' %}"> <i class="icon material-icons md-home"></i>
                         <span class="text">Dashboard</span>
                     </a>
                 </li>
@@ -46,18 +46,37 @@
                         <a href="{% url 'cust_admin:user_list' %}">User list</a>
                         <a href="{% url 'accounts:login' %}">User login</a>
                         <a href="{% url 'accounts:signup' %}">User registration</a>
-                        <a href="page-error-404.html">Error 404</a>
+                        <!-- <a href="page-error-404.html">Error 404</a> -->
+                    </div>
+                </li>
+                <li class="menu-item has-submenu">
+                    <a class="menu-link" href="page-form-product-1.html"> <i class="icon material-icons md-add_box"></i>
+                        <span class="text">Category</span>
+                    </a>
+                    <div class="submenu">
+                        <a href="{% url 'cust_admin:category_list' %}">Category List</a>
+                        <!-- <a href="page-form-product-2.html">product List</a>
+                        <a href="page-form-product-3.html">Add product 3</a>
+                        <a href="page-form-product-4.html">Add product 4</a> -->
                     </div>
                 </li>
                 <li class="menu-item has-submenu">
                     <a class="menu-link" href="page-products-list.html"> <i class="icon material-icons md-shopping_bag"></i>
-                        <span class="text">Products</span>
+                        <span class="text">Catalogue</span>
                     </a>
                     <div class="submenu">
-                        <a href="{% url 'cust_admin:add_product' %}">Add Product</a>
-                        <a href="{% url 'cust_admin:prod_list' %}">Product List</a>
-                        <a href="{% url 'cust_admin:list_variant' %}">Variant List</a>
-                        <a href="{% url 'cust_admin:category_list' %}">Categories</a>
+                        <!-- <a href="{% url 'cust_admin:add_product' %}">Add Product</a> -->
+                        <a href="{% url 'cust_admin:prod_list' %}">Product Lobby</a>
+                        <a href="{% url 'cust_admin:prod_catalogue' %}">Product Catalogue</a>
+                    </div>
+                </li>
+                <li class="menu-item has-submenu">
+                    <a class="menu-link" href="page-transactions-1.html"> <i class="icon material-icons md-monetization_on"></i>
+                        <span class="text">Variant</span>
+                    </a>
+                    <div class="submenu">
+                        <a href="{% url 'cust_admin:add_variant' %}">Add Variant</a>
+                        <a href="{% url 'cust_admin:list_variant' %}">List Variant</a>
                     </div>
                 </li>
                 <li class="menu-item has-submenu">
@@ -78,26 +97,6 @@
                         <a href="page-sellers-cards.html">Sellers cards</a>
                         <a href="page-sellers-list.html">Sellers list</a>
                         <a href="page-seller-detail.html">Seller profile</a>
-                    </div>
-                </li>
-                <!-- <li class="menu-item has-submenu">
-                    <a class="menu-link" href="page-form-product-1.html"> <i class="icon material-icons md-add_box"></i>
-                        <span class="text">Add product</span>
-                    </a>
-                    <div class="submenu">
-                        <a href="page-form-product-1.html">Add product</a>
-                        <a href="page-form-product-2.html">product List</a>
-                        <a href="page-form-product-3.html">Add product 3</a>
-                        <a href="page-form-product-4.html">Add product 4</a>
-                    </div>
-                </li> -->
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="page-transactions-1.html"> <i class="icon material-icons md-monetization_on"></i>
-                        <span class="text">Transactions</span>
-                    </a>
-                    <div class="submenu">
-                        <a href="page-transactions-1.html">Transaction 1</a>
-                        <a href="page-transactions-2.html">Transaction 2</a>
                     </div>
                 </li>
                 <li class="menu-item">

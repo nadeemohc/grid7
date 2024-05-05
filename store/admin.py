@@ -12,9 +12,14 @@ class CategoryAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['p_id', 'category', 'sub_category', 'title', 'image', 'description', 'price', 'old_price', 'stock','specifications']
+    list_display = ['category', 'sub_category', 'title', 'product_image', 'description', 'specifications']
 
 admin.site.register(Product, ProductAdmin)
+
+class ProductAttributeAdmin(admin.ModelAdmin):
+    list_display = ['product', 'size', 'price', 'old_price', 'stock', 'size']
+
+admin.site.register(ProductAttribute, ProductAttributeAdmin)
 
 class SubcategoryAdmin(admin.ModelAdmin):
     list_display = ['sid', 'sub_name', 'category']

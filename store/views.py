@@ -1,7 +1,8 @@
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
-from store.models import Category, Product, ProductImages, Size
+from .models import *
 from accounts.models import User, Address
+from django.db.models import Sum
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -18,7 +19,7 @@ def get_common_context():
 @never_cache
 def home(request):
     categories = Category.objects.all()
-    products = Product.objects.all()
+    products = ProductAttribute.objects.all()
     prod_count = products.count()
     featured_products = products.filter(featured=True)
     popular_products = products.filter(popular=True)
@@ -89,23 +90,70 @@ def product_list_by_category(request, category_cid):
     return render(request, 'dashboard/product_list.html', context)
 
 # for viewing the product details 
+from django.http import Http404
+
+from django.http import HttpResponseServerError
+from django.template.defaultfilters import linebreaksbr
+
+from django.http import HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError
+from django.shortcuts import render
+from django.db.models import Sum
+
 def product_detailed_view(request, product_pid):
-    product = get_object_or_404(Product, p_id=product_pid)
-    product_images = ProductImages.objects.filter(product=product)
+    try:
+        # Get all product attributes with the given product_pid
+        product_attributes = ProductAttribute.objects.filter(product__p_id=product_pid)
+        
+        # Check if product attributes exist
+        if product_attributes.exists():
+            # Get the corresponding product instance (assuming product is the same for all variants)
+            product = product_attributes.first().product
+
+            # Get the product images associated with the product
+            product_images = ProductImages.objects.filter(product=product)
+            
+            # Define the custom ordering for sizes
+            custom_order = {'S': 0, 'M': 1, 'L': 2, 'XL': 3, 'XXL': 4, 'XXXL': 5}
+            
+            # Get the size options for the product and order them based on the custom ordering
+            sizes = product_attributes.values_list('size__size', flat=True).distinct()
+            sizes = sorted(sizes, key=lambda x: custom_order.get(x, 999))
+            
+            sub = Product.objects.all()
+            
+            # Count of total products
+            product_count = product_attributes.aggregate(total_stock=Sum('stock'))['total_stock']
+            
+            # Get the product specifications and split by newline characters
+            ps_lines = product.specifications.split('\n') if product.specifications else []
+            
+            context = {
+                'product': product,
+                'product_id': product_pid,
+                'sub': sub,
+                'product_attributes': product_attributes,
+                'product_count': product_count,
+                'product_images': product_images,
+                'sizes': sizes,
+                'breadcrumb2': product.category,
+                'breadcrumb3': product.title,
+                'ps_lines': ps_lines,  # Pass the list of specification lines to the template
+            }
+            
+            # Return the rendered template with the context
+            return render(request, 'dashboard/product_detailed_view.html', context)
+        else:
+            # Return an error message if product attributes do not exist
+            return HttpResponseServerError('Product attributes not found')
+
+    except Exception as e:
+        # Log the exception
+        print("Error fetching product:", e)
+        # Return an appropriate response
+        return HttpResponseServerError('Error fetching product')
+
     
-    # Get the size options for the product
-    sizes = product.size.all()
-    product_count = Product.objects.count()
-
-    context = {
-        'product': product,
-        'product_count': product_count,
-        'product_images': product_images,
-        'sizes': sizes,  # Pass the sizes to the template
-        'breadcrumb': product.title,
-    }
-
-    return render(request, 'dashboard/product_detailed_view.html', context)
 
 
 # for viewing the user details
@@ -239,29 +287,59 @@ def shop(request):
     return render(request, 'dashboard/shop.html', context)
 
 
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from .models import Product, ProductImages, Category
+
 def shop(request, category_id=None):
     categories = Category.objects.all()
     products = Product.objects.all()
-    featured_products = products.filter(featured=True)
-    popular_products = products.filter(popular=True)
-    new_added_products = products.filter(latest=True)
 
     if category_id:
         category = get_object_or_404(Category, pk=category_id)
-        products = Product.objects.filter(category=category)
-    else:
-        products = Product.objects.all()
+        products = products.filter(category=category)
     
-    prod_count = products.count()
+    # Fetch product images for each product
+    product_images = {}
+    for product in products:
+        images = ProductImages.objects.filter(product=product)
+        product_images[product.pk] = images.first() if images.exists() else None
     
     context = {
         'categories': categories,
         'products': products,
-        'featured_products': featured_products,
-        'new_added_products': new_added_products,
-        'popular_products': popular_products,
         'title': 'Shop',
-        'prod_count': prod_count,  # Add this if you want to display product count
+        'product_images': product_images,  # Pass product images to the template
     }
 
     return render(request, 'dashboard/shop.html', context)
+
+
+# def shop(request, category_id=None):
+#     categories = Category.objects.all()
+#     prod = ProductAttribute.objects.all()
+#     products = Product.objects.all()
+#     featured_products = prod.filter(featured=True)
+#     popular_products = prod.filter(popular=True)
+#     new_added_products = prod.filter(latest=True)
+
+#     if category_id:
+#         category = get_object_or_404(Category, pk=category_id)
+#         products = Product.objects.filter(category=category)
+#     else:
+#         products = Product.objects.all()
+    
+#     prod_count = products.count()
+    
+#     context = {
+#         'categories': categories,
+#         'products': products,
+#         'prod': prod,
+#         'featured_products': featured_products,
+#         'new_added_products': new_added_products,
+#         'popular_products': popular_products,
+#         'title': 'Shop',
+#         'prod_count': prod_count,  # Add this if you want to display product count
+#     }
+
+#     return render(request, 'dashboard/shop.html', context)
