@@ -18,6 +18,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'userform/imgs/theme/favicon.svg' %}">
     <!-- Template CSS -->
     <link href="{% static 'userform/css/main.css' %}" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/sweetalert2@7.8.2/dist/sweetalert2.all.js"></script>
 </head>
 
 <body>
@@ -77,7 +78,25 @@
 
 
 {% endblock content %}
-    
+<script>
+    {% for message in messages %}
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
+    });
+    Toast.fire({
+        icon: "{{message.tags}}",
+        title: "{{message}}"
+    });
+    {% endfor %}
+</script>
 
 
 

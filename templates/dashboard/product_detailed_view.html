@@ -7,8 +7,8 @@
         <div class="container">
             <div class="breadcrumb">
                 <a href="index.html" rel="nofollow">Home</a>
-                <span></span> {{ breadcrumb2 }}
-                <span></span> {{ breadcrumb3 }}
+                <span></span> {{ product.category }}
+                <span></span> {{ title }}
             </div>
         </div>
     </div>
@@ -78,7 +78,8 @@
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                         </ul>
                                     </div>
-                                    <form id="add-to-cart-form" action="post">
+                                   
+                                   
                                         <input type="hidden" name="product_id" value="{{ product.p_id }}">
                                         <input type="hidden" name="size" value="" id="selected-size">
                                         <input type="hidden" name="quantity" value="1">
@@ -88,32 +89,30 @@
                                             <ul class="list-filter size-filter font-small">
                                                 <div class="sizes-list">
                                                     <ul>
-                                                        {% for size in sizes %}
+                                                        {% for attribute in product_attributes %}
                                                         <li>
                                                             <a href="#" class="size-link" data-size-id="{{ size.id }}" data-size-name="{{ size }}">
-                                                                {{ size }}
+                                                                {{ attribute.size }}
                                                             </a>
                                                         </li>
                                                         {% endfor %}
                                                     </ul>
                                                 </div>
-                                                
                                         </div>
+                                        <br>
                                         
-                                        <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                                        <div class="detail-extralink">
-                                            <div class="detail-qty border radius">
-                                                <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                                <span id="qty-cart" class="qty-val">1</span>
-                                                <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                            </div>
-                                            <div class="product-extra-link2">
-                                                <button type="button" id="add-cart" class="button button-add-to-cart">Add to cart</button>
-                                                <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                                <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
-                                            </div>
-                                        </div>
-                                    </form>
+                                   <form id="add-to-cart-form" action="{% url 'cart:add_to_cart' %}" method="post">
+                                    {% csrf_token %}
+                                    <!-- Input field for product ID -->
+                                    <input type="hidden" name="product_id" value="{{ product.p_id }}">
+                                    <!-- Input field for quantity -->
+                                    <strong class="mr-10">Quantity</strong>
+                                    <input type="number" name="quantity" id="quantity" value="1" min="1" style="width: 70px;"><br><br>
+                                    <!-- Add to cart button -->
+                                    <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                </form>
+                                
+                                
                                     
                                     </div>
                                     <ul class="product-meta font-xs color-grey mt-50">
@@ -128,15 +127,15 @@
                         <div class="row">
                             <div class="col-lg-10 m-auto entry-main-content">
                                 <h2 class="section-title style-1 mb-30">Description</h2>
-                                <!-- <div class="description mb-50">
+                                <div class="description mb-50">
                                     <p>{{product.description}}</p>
-                                    <h3 class="section-title style-1 mt-40 mb-30">Packaging & Delivery</h3>
-                                    <p>{{product.shipping}}</p>
-                                </div> -->
+                                    <!-- <h3 class="section-title style-1 mt-40 mb-30">Packaging & Delivery</h3>
+                                    <p>{{product.shipping}}</p> -->
+                                </div>
                                 <h3 class="section-title style-1 mt-40 mb-30">Additional info</h3>
                                 <ul class="product-more-infor">
-                                    {% for line in ps_lines %}
-                                        <li><span>{{ line }}</span></li>
+                                    {% for line  in specifications_lines %}
+                                    <li><span>{{ line }}</span></li>
                                     {% endfor %}
                                 </ul>
                                 

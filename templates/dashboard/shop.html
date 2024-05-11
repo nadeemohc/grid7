@@ -71,8 +71,8 @@
                                 <div class="product-img-action-wrap">
                                     <div class="product-img product-img-zoom">
                                         <a href="{% url 'store:product_view' product.p_id %}">
-                                            <img class="default-img" src="{{ product.images.url }}" alt="{{ product.title }}">
-                                            <img class="hover-img" src="{{ product.images.url }}" alt="{{ product.title }}">
+                                            <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
+                                            <img class="hover-img" src="{{ product.images.url }}" alt="">
                                         </a>
                                     </div>
                                     
@@ -87,7 +87,7 @@
                                 </div>
                                 <div class="product-content-wrap">
                                     <div class="product-category">
-                                        <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a>
+                                        <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
                                     </div>
                                     <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title }}</a></h2>
                                     <div class="rating-result" title="90%">
@@ -96,11 +96,12 @@
                                         </span>
                                     </div>
                                     <div class="product-price">
-                                        <span>&#8377;{{ product.price }} </span>
-                                        <span class="old-price">&#8377;{{ product.old_price }}</span>
+                                        <span>&#8377;{{  product.product_attributes.first.price }} </span>
+                                        <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+
                                     </div>
                                     <div class="product-action-1 show">
-                                        <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
+                                        <a aria-label="Add To Cart" class="action-btn hover-up" href="{% url 'cart:add_to_cart' %}"><i class="fi-rs-shopping-bag-add"></i></a>
                                     </div>
                                 </div>
                             </div>

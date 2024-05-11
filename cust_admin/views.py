@@ -222,52 +222,102 @@ def prod_list(request):
     return render(request, 'cust_admin/product/product_list.html', context)
 
 @admin_required
+# def add_product(request):
+#     if request.method == 'POST':
+#         # Extract data from the form
+#         title = request.POST.get('title')
+#         images = request.FILES.getlist('image')  # Use 'images' instead of 'image' for multiple file upload
+#         description = request.POST.get('description')
+#         category_id = request.POST.get('category')
+#         subcategory_id = request.POST.get('subcategory')
+#         specifications = request.POST.get('specifications')
+#         availability = request.POST.get('availability') == 'on'
+
+#         # Get the category and subcategory objects
+#         category = get_object_or_404(Category, c_id=category_id)
+#         subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
+
+#         # Create the product
+#         product = Product.objects.create(
+#             title=title,
+#             description=description,
+#             category=category,
+#             sub_category=subcategory,
+#             specifications=specifications,
+#             availability=availability,
+#         )
+
+#         # Save additional images
+#         for image in images:  # Iterate over each uploaded image
+#             try:
+#                 ProductImages.objects.create(product=product, images=image)
+#             except Exception as e:
+#                 print(e)
+
+#         messages.success(request, 'Product added successfully!')
+#         return redirect('cust_admin:prod_list')
+
+#     # Fetch categories, subcategories, and sizes for dropdowns and selects
+#     categories = Category.objects.all()
+#     subcategories = Subcategory.objects.all()
+#     sizes = Size.objects.all()
+
+#     context = {
+#         'categories': categories,
+#         'subcategories': subcategories,
+#         'sizes': sizes,
+#     }
+
+#     return render(request, 'cust_admin/product/product_add.html', context)
+
+
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
+# from .models import Product, ProductImages, Category, Subcategory
+
 def add_product(request):
     if request.method == 'POST':
         # Extract data from the form
         title = request.POST.get('title')
-        images = request.FILES.getlist('image')  # Use 'images' instead of 'image' for multiple file upload
         description = request.POST.get('description')
+        specifications = request.POST.get('specifications')
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
-        specifications = request.POST.get('specifications')
         availability = request.POST.get('availability') == 'on'
+        # Main product image
+        image = request.FILES.get('image')
 
         # Get the category and subcategory objects
-        category = get_object_or_404(Category, c_id=category_id)
-        subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
+        category = Category.objects.get(c_id=category_id)
+        subcategory = Subcategory.objects.get(sid=subcategory_id)
 
         # Create the product
         product = Product.objects.create(
             title=title,
             description=description,
+            specifications=specifications,
             category=category,
             sub_category=subcategory,
-            specifications=specifications,
             availability=availability,
+            image=image  # Assign the main product image
         )
 
         # Save additional images
-        for image in images:  # Iterate over each uploaded image
-            try:
-                ProductImages.objects.create(product=product, images=image)
-            except Exception as e:
-                print(e)
+        images = request.FILES.getlist('images')  # Additional product images
+        for img in images:
+            ProductImages.objects.create(product=product, images=img)
 
         messages.success(request, 'Product added successfully!')
         return redirect('cust_admin:prod_list')
-
-    # Fetch categories, subcategories, and sizes for dropdowns and selects
+    
+    # If request method is GET, render the form
     categories = Category.objects.all()
     subcategories = Subcategory.objects.all()
-    sizes = Size.objects.all()
-
     context = {
         'categories': categories,
         'subcategories': subcategories,
-        'sizes': sizes,
     }
-
+    
     return render(request, 'cust_admin/product/product_add.html', context)
 
 
@@ -340,7 +390,6 @@ def prod_variant_assign(request):
         
         # Save the form data to the database
         product_attribute = ProductAttribute.objects.create(
-            p_id=product,
             product=product,
             size=size,
             price=price,
@@ -364,7 +413,7 @@ def prod_variant_assign(request):
     return render(request, 'cust_admin/product/prod_variant_assign.html', context)
 
 def prod_catalogue_list(request):    
-    products = ProductAttribute.objects.all().order_by('p_id')
+    products = ProductAttribute.objects.all().order_by('product')
     prods = Product.objects.all()
     
     context = {

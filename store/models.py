@@ -55,6 +55,32 @@ class Subcategory(models.Model):
     def __str__(self):
         return f"Cart for {self.sub_name}"
 
+# class Product(models.Model):    
+#     p_id = models.BigAutoField(unique=True, primary_key=True)
+#     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
+#     sub_category = models.ForeignKey(Subcategory, on_delete=models.CASCADE, null=True, related_name="products")
+#     title = models.CharField(max_length=100, default="product")
+#     description = models.TextField(null=True, blank=True, default="This is the product")
+#     specifications = models.TextField(null=True, blank=True)
+#     shipping = models.TextField(null=True)
+#     availability = models.BooleanField(default=False)
+#     is_blocked = models.BooleanField(default=False)
+
+#     class Meta:
+#         verbose_name_plural = "Products"
+        
+#     def product_image(self):
+#         # Fetch the first image associated with the product
+#         if self.images.exists():
+#             first_image = self.images.first()
+#             return mark_safe('<img src="%s" width="50" height="50" />' % (first_image.images.url))
+#         else:
+#             return None
+    
+#     def __str__(self):
+#         return self.title
+
+
 class Product(models.Model):    
     p_id = models.BigAutoField(unique=True, primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
@@ -65,18 +91,11 @@ class Product(models.Model):
     shipping = models.TextField(null=True)
     availability = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='product_images', default='product.jpg')
 
     class Meta:
         verbose_name_plural = "Products"
         
-    def product_image(self):
-        # Fetch the first image associated with the product
-        if self.images.exists():
-            first_image = self.images.first()
-            return mark_safe('<img src="%s" width="50" height="50" />' % (first_image.images.url))
-        else:
-            return None
-    
     def __str__(self):
         return self.title
 
@@ -89,9 +108,7 @@ class ProductImages(models.Model):
         verbose_name_plural = 'Product Images'
 
 class ProductAttribute(models.Model):
-    p_id = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='p_id_attributes')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_attributes')
-    # image = models.ForeignKey(ProductImages, on_delete=models.CASCADE, related_name='product_attributes_image')
     size = models.ForeignKey(Size, on_delete=models.CASCADE, default=None, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=1.99)
     old_price = models.DecimalField(max_digits=10, decimal_places=2, default=2.99)
@@ -124,10 +141,10 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
-    size=models.ForeignKey(Size, on_delete=models.CASCADE)
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE)
     quantity = models.PositiveBigIntegerField(default=1)
+    is_deleted = models.BooleanField(default=False)
 
     def product_image(self):
         first_image = self.product.p._images.first()

@@ -15,5 +15,6 @@ urlpatterns = [
     path('delete_address/<int:pk>', views.delete_address, name='delete_address'),
     path('change_password/', views.change_password, name='change_password'),
     path('shop/', views.shop, name='shop'),
+    path('shop/<int:category_id>/', views.shop, name='shop_by_category'),
     
 ]

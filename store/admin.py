@@ -12,7 +12,7 @@ class CategoryAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['category', 'sub_category', 'title', 'product_image', 'description', 'specifications']
+    list_display = ['category', 'sub_category', 'title', 'image', 'description', 'specifications']
 
 admin.site.register(Product, ProductAdmin)
 
@@ -26,10 +26,10 @@ class SubcategoryAdmin(admin.ModelAdmin):
 
 admin.site.register(Subcategory, SubcategoryAdmin)
 
-class ProductImagesAdmin(admin.ModelAdmin):
-    list_display = ['id', 'product_id', 'images']
+# class ProductImagesAdmin(admin.ModelAdmin):
+#     list_display = ['id', 'product_id', 'images']
     
-admin.site.register(ProductImages, ProductImagesAdmin)
+# admin.site.register(ProductImages, ProductImagesAdmin)
 
 admin.site.register(Size)
 

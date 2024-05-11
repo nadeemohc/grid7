@@ -9,7 +9,7 @@
                 <h2 class="content-title">Edit Product</h2>
             </div>
         </div>
-        <div>
+        <div class="col-lg-6">
             <div class="card mb-4">
                 <div class="card-header">
                     <h4>Basic</h4>
@@ -18,121 +18,71 @@
                     <form method="post" action="{% url 'cust_admin:product_edit' product.p_id %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-4">
-                            <label for="product_name" class="form-label">Product title</label>
-                            <input type="text" name="title" placeholder="Type here" class="form-control" required value="{{product.title}}">
+                            <label for="title" class="form-label">Product Title</label>
+                            <input type="text" name="title" placeholder="Enter product title" class="form-control" required value="{{ product.title }}">
                         </div>
                         <div class="mb-4">
-                            <label class="form-label">Full description</label>
-                            <textarea placeholder="Type here" name="description" class="form-control" rows="4" required>{{product.description}}</textarea>
+                            <label for="description" class="form-label">Full Description</label>
+                            <textarea placeholder="Enter product description" name="description" class="form-control" rows="4" required>{{ product.description }}</textarea>
                         </div>
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="mb-4">
-                                    <label class="form-label">Regular price</label>
-                                    <div class="row gx-2">
-                                        <input placeholder="&#8377;" type="number" name="old_price" class="form-control" required value="{{product.old_price}}">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="mb-4">
-                                    <label class="form-label">Discount price</label>
-                                    <input placeholder="&#8377;" type="number" name="price" class="form-control" required value="{{product.price}}">
-                                </div>
-                            </div>
+                        <div class="mb-4">
+                            <label for="specifications" class="form-label">Specifications</label>
+                            <textarea placeholder="Enter product specifications" name="specifications" class="form-control" rows="4" required>{{ product.specifications }}</textarea>
                         </div>
-                        <!-- <div class="col-lg-8">
-                            <label class="form-label">Discount rate</label>
-                            <input type="number" placeholder="%" class="form-control" id="product_name" required>
-                        </div> -->
                 </div>
+            </div> <!-- card end// -->
+        </div>
+        <div class="col-lg-4">
+            <div class="card mb-4">
                 <div class="card-header">
                     <h4>Media</h4>
                 </div>
-                <div class="col-sm-3 mb-3">
+                <div class="card-body">
                     <div class="input-upload">
-                        <label for="image" class="form-label"></label>
-                        <img src="{% static 'admin_side/imgs/theme/upload.svg' %}" alt="">
-                        <input type="file" name="image" class="form-control" accept="image/*" multiple required>
+                        <label for="image" class="form-label">Main Product Image</label>
+                        <input type="file" name="image" class="form-control" accept="image/*" required>
+                    </div>
+                    <div class="input-upload">
+                        <label for="images" class="form-label">Additional Product Images</label>
+                        <input type="file" name="images" class="form-control" accept="image/*" multiple required>
                     </div>
                 </div>
                 <div class="card-header">
-                    <h4>Categorization</h4>
+                    <h4>Organization</h4>
                 </div>
                 <div class="card-body">
                     <div class="row gx-2">
-                        <div class="col-sm-3 mb-3">
-                            <label class="form-label">Category</label>
+                        <div class="col-sm-6 mb-3">
+                            <label for="category" class="form-label">Category</label>
                             <select id="category" name="category" class="form-select" required>
-                              <option value="" disabled selected>Select Category</option>
-                              {% for category in categories %}
-                                <option value="{{ category.c_id }}">{{ category.c_name }}</option>
-                              {% endfor %}
+                                <option value="" disabled selected>Select Category</option>
+                                {% for category in categories %}
+                                  <option value="{{ category.c_id }}">{{ category.c_name }}</option>
+                                {% endfor %}
                             </select>
-                        </div>
-                        <div class="col-sm-3 mb-3">
-                          <label class="form-label">Sub-category</label>
-                          <select id="subcategory" name="subcategory" class="form-select" required>
-                              <option value="" disabled selected>Select Subcategory</option>
-                              {% for subcategory in subcategories %}
-                                <option value="{{ subcategory.sid }}">{{ subcategory.sub_name }}</option>
-                              {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-sm-3 mb-3">
-                            
-                        </div>
-                        <div class="row gx-2">
-                            <div class="col-sm-3 mb-3">
-                                <label class="form-label">Shipping Details</label>
-                                <textarea placeholder="Type here" name="ship" class="form-control" rows="2"
-                                    required>{{product.ship}}</textarea>
-                            </div>
-                            <div class="col-sm-3 mb-3">
-                                <label class="form-label">Additional details Details</label>
-                                <textarea placeholder="Type here" name="add_det" class="form-control"
-                                    required>{{product.add_det}}</textarea>
-                            </div>
                         </div>
                         <div class="col-sm-6 mb-3">
-                            <label for="product_name" class="form-label">Stock</label>
-                            <input type="number" name="stock" class="form-control" required value="{{product.stock}}">
+                            <label for="subcategory" class="form-label">Sub-category</label>
+                            <select id="subcategory" name="subcategory" class="form-select" required>
+                                <option value="" disabled selected>Select Subcategory</option>
+                                {% for subcategory in subcategories %}
+                                  <option value="{{ subcategory.sid }}">{{ subcategory.sub_name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="featured" class="form-check-input">
-                            <label for="featured" class="form-check-label">Featured</label>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="popular" class="form-check-input">
-                            <label for="featured" class="form-check-label">Popular</label>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="latest" class="form-check-input">
-                            <label for="latest" class="form-check-label">Latest</label>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="in_stock" class="form-check-input" checked>
-                            <label for="in_stock" class="form-check-label">In Stock</label>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="status" class="form-check-input" checked>
-                            <label for="status" class="form-check-label">Status</label>
+                        <div class="col-sm-6 mb-1">
+                            <input type="checkbox" name="availability" class="form-check-input">
+                            <label for="availability" class="form-check-label">Available</label>
                         </div>
                     </div> <!-- row.// -->
-                    <div>
-                      <button type="submit" class="btn btn-primary">Save Product Details</button>
-                      <a href="{% url 'cust_admin:prod_list' %}" class="btn btn-secondary">Cancel</a>
-                    </div>
-                    </form>
                 </div>
-            </div>
+            </div> <!-- card end// -->
         </div>
-        <!--  -->
+        <div>
+            <button type="submit" class="btn btn-md rounded font-sm hover-up">Add Product</button> &nbsp;
+            <a href="{% url 'cust_admin:prod_list' %}"class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</a>
+        </div>
+    </form>
     </div>
 </section> <!-- content-main end// -->
-
 {% endblock content %}

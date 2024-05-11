@@ -1,80 +1,117 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
-
 {% block content %}
-    
-    <main class="main">
-        <div class="page-header breadcrumb-wrap">
-            <div class="container">
-                <div class="breadcrumb">
-                    <a href="index.html" rel="nofollow">Home</a>
-                    <span></span> Shop
-                    <span></span> Checkout
-                </div>
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Checkout
             </div>
         </div>
-        <section class="mt-50 mb-50">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-25">
-                            <h4>Billing Details</h4>
-                        </div>
-                        <form method="post">
-                            {% csrf_token %}
-                <div class="form-group">
-                    <label for="street_address">Street Address</label>
-                    <input type="text" class="form-control" id="street_address" name="street_address" required>
-                </div>
-                <div class="form-group">
-                    <label for="city">City</label>
-                    <input type="text" class="form-control" id="city" name="city" required>
-                </div>
-                <div class="form-group">
-                    <label for="state">State</label>
-                    <input type="text" class="form-control" id="state" name="state" required>
-                </div>
-                <div class="form-group">
-                    <label for="postal_code">Postal Code</label>
-                    <input type="text" class="form-control" id="postal_code" name="postal_code" required>
-                </div>
-                <div class="form-group">
-                    <label for="country">Country</label>
-                    <input type="text" class="form-control" id="country" name="country" required>
-                </div>
-                <a href="" type="submit" class="btn btn-light rounded btn-sm font-sm">Save Address</a>
-                        </form>
-                <div class="form-group border border-radius-5 mt-30">
-                    <div class="mb-20 mt-20">
-                    <h4>Select Existing Address</h4>
-                    </div>    
-                    <div class="row">
-                            {% for a in address %}
-                                {% with loop_counter=forloop.counter0 %}
-                                    <div class="col-lg-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h5 class="mb-0"> Address {{ loop_counter|add:1 }}</h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <address>{{ a.street_address }}<br>
-                                                    {{ a.city }} - {{ a.postal_code }} <br>{{ a.state }} <br></address>
-                                                <p>{{ a.country }}</p>
-                                                <!-- <a href="#" class="btn btn-light rounded btn-sm font-sm mr-5">Edit</a> -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endwith %}
-                            {% endfor %}
-                        </div>
-                </div>
+    </div>
+    <script>
+        function submitForm() {
+            // Validate the form fields or perform any necessary checks
+            var name = document.getElementsByName('name')[0].value;
+            var address = document.getElementsByName('address')[0].value;
+            var phone = document.getElementsByName('phone')[0].value;
+            var district = document.getElementsByName('district')[0].value;
+            var pincode = document.getElementsByName('pincode')[0].value;
+        
+            // Example: Check if the name field is empty
+            if (name.trim() === '') {
+                alert('Please enter your full name.');
+                return false; // Prevent form submission
+            }
+        
+            // Add more validation checks as needed
+        
+            // If everything is okay, submit the form
+            document.forms['billingForm'].submit();
+        }
+        </script>
+    <section class="mt-50 mb-50">
+        
+        <div class="container">
+            {% comment %} <div class="row">
+                <div class="col-lg-6">
+                    <div class="toggle_info">
+                        <span><i class="fi-rs-label mr-10"></i><span class="text-muted">Have a coupon?</span> <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a></span>
                     </div>
-                    <div class="col-md-6">
-                        <div class="order_review">
-                            <div class="mb-20">
-                                <h4>Your Orders</h4>
-                            </div>
-                            <div class="table-responsive order_table text-center">
+                    <div class="panel-collapse collapse coupon_form " id="coupon">
+                        <div class="panel-body">
+                            <p class="mb-30 font-sm">If you have a coupon code, please apply it below.</p>
+                            <form method="post">
+                                <div class="form-group">
+                                    <input type="text" placeholder="Enter Coupon Code...">
+                                </div>
+                                
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="divider mt-50 mb-50"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-25">
+                        <h4>Billing Details</h4>
+                    </div>
+                    <form method="POST" action="{% url 'cart:payment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="users" value="{{ request.user.id }}">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="street_address" name="street_address" placeholder="street address *" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="city" name="city" placeholder="city *" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="state" name="state" placeholder="state *" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="postal_code" name="postal_code" placeholder="postal code *" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="country" name="country" placeholder="country *" required>
+                        </div>
+                        <div class="form-group mb-30">
+                            <button type="submit" class="btn btn-fill-out btn-block mt-30">Submit</button>
+                        </div>
+                    </form>
+                    <form method="post" action="{% url 'cart:payment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="use_existing_address" value="true">
+                        <div class="form-group">
+                            <label for="existing_address">Select Existing Address:</label>
+                            <select class="form-control" name="existing_address" id="existing_address">
+                                {% for address in user_addresses %}
+                                    <option value="{{ address.adress.id }}">{{ address.street_address }} {{ address.city }} {{ address.postal_code }} {{ address.state }} {{ address.country }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group mb-30">
+                            <button type="submit" class="btn btn-fill-out btn-block mt-30">Use Existing Address</button>
+                        </div>
+                    </form>
+                    
+                </div>
+                
+                
+                <div class="col-md-6">
+                    <div class="order_review">
+                        <div class="mb-20">
+                            <h4>Your Orders</h4>
+                        </div>
+                        <div class="table-responsive order_table text-center">
+                            <form method="post" action="{% url 'cart:payment' %}">
                                 <table class="table">
                                     <thead>
                                         <tr>
@@ -83,35 +120,80 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <!-- <form method="post" action=""> -->
+                                            {% csrf_token %}
+                                        {% for item in items%}
                                         <tr>
-                                            <td class="image product-thumbnail"><img src="assets/imgs/shop/product-1-1.jpg" alt="#"></td>
+                                            <td class="image product-thumbnail"><img src="{{ item.product.product.image.url}}"  alt="#"></td>
                                             <td>
-                                                <h5><a href="shop-product-full.html">Yidarton Women Summer Blue</a></h5> <span class="product-qty">x 2</span>
+                                                <h5><a href="shop-product-full.html">{{ item.product.product.title }}</a></h5> <span class="product-qty">x {{item.quantity}}</span>
                                             </td>
-                                            <td>$180.00</td>
+                                            <td>₹{{item.product.price}}</td>
                                         </tr>
-                                        <tr>
-                                            <th>SubTotal</th>
-                                            <td class="product-subtotal" colspan="2">$280.00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Shipping</th>
-                                            <td colspan="2"><em>Free Shipping</em></td>
-                                        </tr>
+                                        {% endfor %}
+                                    </form>
+                                    <tr>
+                                        <td class="cart_total_label">cart</td>
+                                        <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{ total_cart_price }}</td>
+                                      </tr>
+    
+                                    <tr>
+                                        <td class="cart_total_label">Coupon Discount</td>
+                                        <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{discounts}}</td>
+                                      </tr>
+                                       
                                         <tr>
                                             <th>Total</th>
-                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">$280.00</span></td>
+                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total_cart_price }}</span></td>
                                         </tr>
+                                        
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="#" type="submit" class="btn btn-light rounded btn-sm font-sm">Place Order</a>
+                            <div class="btn-container d-flex justify-content-between">
+                                <a href=""><button type="submit" id="cod-btn" class="btn btn-primary">Cash on delivery</button></a>
+                            </div>
+                            </form>
+                            
                         </div>
-                    </div>
+                        <div class="bt-1 border-color-1 mt-30 mb-30">
+                        </div>
+                        {% if messages %}
+                                      <div class="messages">
+                                          <ul class="messages">
+                                              {% for message in messages %}
+                                                  <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                              {% endfor %}
+                                          </ul>
+                                      </div>
+                                  {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    <div class="col-md-8">
                 </div>
             </div>
-        </section>
-    </main>
-    
-{% endblock content %}
-    
+        </div>
+    </section>
+    <!-- Add this script at the end of checkout.html and payment.html -->
+<script>
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+
+    // Optional: Disable the form submit button after submission
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                var submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+
+</main>
+{% endblock %}

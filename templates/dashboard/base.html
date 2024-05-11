@@ -19,8 +19,7 @@
     <!-- Template CSS -->
     <link rel="stylesheet" href="{% static 'store/css/main.css' %}">
     <link rel="stylesheet" href="{% static 'store/cart/user_cart.css' %}">
-   
-    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
+   <script src="https://unpkg.com/sweetalert2@7.8.2/dist/sweetalert2.all.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     
 </head>
@@ -47,13 +46,13 @@
                     </div>
                     <div class="col-xl-6 col-lg-4">
                         <div class="text-center">
-                            <div id="news-flash" class="d-inline-block">
+                            <!-- <div id="news-flash" class="d-inline-block">
                                 <ul>
                                     <li>Get great devices up to 50% off <a href="shop-grid-right.html">View details</a></li>
                                     <li>Supper Value Deals - Save more with coupons</li>
                                     <li>Trendy 25silver jewelry, save up 35% off today <a href="shop-grid-right.html">Shop now</a></li>
                                 </ul>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     <div class="col-xl-3 col-lg-4">
@@ -136,7 +135,7 @@
                                     <li><a class="#" href="{% url 'store:home' %}">Home</a>
                                         
                                     </li>
-                                    <li><a href="shop-grid-right.html">Category<i class="fi-rs-angle-down"></i></a>
+                                    <li><a href="#">Category<i class="fi-rs-angle-down"></i></a>
                                         <ul class="sub-menu">
                                             <li><a href="shop-grid-right.html">Clothing & Apparels</a></li>
                                             <li><a href="shop-grid-right.html">Posters</a></li>
@@ -144,7 +143,7 @@
                                             <li><a href="{% url 'store:shop' %}">Shop All</a></li>                                            
                                         </ul>
                                     </li>
-                                    <li><a href="shop-grid-right.html">Shop by Team<i class="fi-rs-angle-down"></i></a>
+                                    <li><a href="#">Shop by Team<i class="fi-rs-angle-down"></i></a>
                                     <ul class="sub-menu">
                                             {% for category in categories %}
                                                 {% if category.is_blocked != True %}
@@ -350,7 +349,8 @@
         Swal.fire({
             title: "{{ message.tags }}",
             text: "{{ message }}",
-            icon: "{{ message.tags }}"
+            icon: "{{ message.tags }}",
+            timer: 1500 
         });
     {% endfor %}
     </script>
@@ -506,7 +506,6 @@
     <script src="{% static 'store/js/main.js' %}"></script>
     <script src="{% static 'store/js/shop.js' %}"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
