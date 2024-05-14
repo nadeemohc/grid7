@@ -1,4 +1,4 @@
-from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseNotFound, Http404, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from accounts.models import User, Address
@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.template.defaultfilters import linebreaksbr
+
 
 # for the home page 
 def get_common_context():
@@ -19,7 +21,7 @@ def get_common_context():
 @never_cache
 def home(request): 
     categories = Category.objects.all()
-    products = ProductAttribute.objects.all()
+    products = Product.objects.all()
     prod_count = products.count()
     featured_products = products.filter(featured=True)
     popular_products = products.filter(popular=True)
@@ -44,6 +46,7 @@ def handler404(request, exception):
 def list_prod(request):
     categories = Category.objects.all()
     Products = Product.objects.all()
+    product_attributes = ProductAttribute.objects.all()
     prod_count = Product.objects.count()
     featured_products = Product.objects.filter(featured=True)
     popular_products = Product.objects.filter(popular=True)
@@ -51,6 +54,7 @@ def list_prod(request):
     context = {
         'categories': categories,
         'products': Products,
+        'product_attributes': product_attributes,
         'prod_count': prod_count,
         'featured_products': featured_products,
         'new_added_products':new_added_products,
@@ -91,16 +95,6 @@ def product_list_by_category(request, category_cid):
     return render(request, 'dashboard/product_list.html', context)
 
 # for viewing the product details 
-from django.http import Http404
-
-from django.http import HttpResponseServerError
-from django.template.defaultfilters import linebreaksbr
-
-from django.http import HttpResponseServerError
-from django.http import HttpResponse, HttpResponseServerError
-from django.shortcuts import render
-from django.db.models import Sum
-
 def product_detailed_view(request, product_pid):
     # Get the product or return 404 if not found
     product = get_object_or_404(Product, p_id=product_pid)

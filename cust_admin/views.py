@@ -283,6 +283,9 @@ def add_product(request):
         specifications = request.POST.get('specifications')
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
+        featured = request.POST.get('featured') == 'on'
+        popular = request.POST.get('popular') == 'on'
+        latest = request.POST.get('latest') == 'on'
         availability = request.POST.get('availability') == 'on'
         # Main product image
         image = request.FILES.get('image')
@@ -297,6 +300,9 @@ def add_product(request):
             description=description,
             specifications=specifications,
             category=category,
+            featured=featured,
+            popular=popular,
+            latest=latest,
             sub_category=subcategory,
             availability=availability,
             image=image  # Assign the main product image
@@ -382,9 +388,6 @@ def prod_variant_assign(request):
         price = form.cleaned_data['price']
         old_price = form.cleaned_data['old_price']
         stock = form.cleaned_data['stock']
-        featured = form.cleaned_data['featured']
-        popular = form.cleaned_data['popular']
-        latest = form.cleaned_data['latest']
         in_stock = form.cleaned_data['in_stock']
         status = form.cleaned_data['status']
         
@@ -395,9 +398,6 @@ def prod_variant_assign(request):
             price=price,
             old_price=old_price,
             stock=stock,
-            featured=featured,
-            popular=popular,
-            latest=latest,
             in_stock=in_stock,
             status=status
         )

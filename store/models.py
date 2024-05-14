@@ -55,31 +55,6 @@ class Subcategory(models.Model):
     def __str__(self):
         return f"Cart for {self.sub_name}"
 
-# class Product(models.Model):    
-#     p_id = models.BigAutoField(unique=True, primary_key=True)
-#     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
-#     sub_category = models.ForeignKey(Subcategory, on_delete=models.CASCADE, null=True, related_name="products")
-#     title = models.CharField(max_length=100, default="product")
-#     description = models.TextField(null=True, blank=True, default="This is the product")
-#     specifications = models.TextField(null=True, blank=True)
-#     shipping = models.TextField(null=True)
-#     availability = models.BooleanField(default=False)
-#     is_blocked = models.BooleanField(default=False)
-
-#     class Meta:
-#         verbose_name_plural = "Products"
-        
-#     def product_image(self):
-#         # Fetch the first image associated with the product
-#         if self.images.exists():
-#             first_image = self.images.first()
-#             return mark_safe('<img src="%s" width="50" height="50" />' % (first_image.images.url))
-#         else:
-#             return None
-    
-#     def __str__(self):
-#         return self.title
-
 
 class Product(models.Model):    
     p_id = models.BigAutoField(unique=True, primary_key=True)
@@ -91,6 +66,9 @@ class Product(models.Model):
     shipping = models.TextField(null=True)
     availability = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
+    featured = models.BooleanField(default=False)
+    latest = models.BooleanField(default=False)  
+    popular = models.BooleanField(default=False)
     image = models.ImageField(upload_to='product_images', default='product.jpg')
 
     class Meta:
@@ -116,9 +94,6 @@ class ProductAttribute(models.Model):
     is_blocked = models.BooleanField(default=False)
     status = models.BooleanField(default=True)
     in_stock = models.BooleanField(default=True)
-    featured = models.BooleanField(default=False)
-    latest = models.BooleanField(default=False)  
-    popular = models.BooleanField(default=True)
     related = models.ManyToManyField('self', blank=True)
     date = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(null=True, blank=True)

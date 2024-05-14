@@ -6,8 +6,11 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from decimal import Decimal
-# Create your views here.
-
+import store, random
+from . import views
+from datetime import datetime
+from accounts.models import Address
+from store.models import CartItem
 
 
 def view_cart(request):
@@ -56,7 +59,9 @@ def view_cart(request):
 def add_to_cart(request):
     product_id = request.POST.get('product_id')
     quantity = int(request.POST.get('quantity', 1))
-    
+    size = request.post.get('size')
+    print(product_id, quantity,size)
+
     product = get_object_or_404(ProductAttribute, pk=product_id)
     
     # Get or create the user's cart
@@ -71,11 +76,6 @@ def add_to_cart(request):
     # Redirect to the product view page with the product_pid parameter
     return redirect(reverse('store:product_view', kwargs={'product_pid': product_id}))
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
-from store.models import CartItem
 
 # @login_required
 # @require_POST
@@ -183,15 +183,7 @@ def remove_from_cart(request, cart_item_id):
 
 
     from django.shortcuts import render, redirect
-import store
-# from store.models import CartItem, CartOrder, Payments, ProductOrder, Size
-import random
-from . import views
-from datetime import datetime
-from accounts.models import Address
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-# from user_cart.views import cart_view  # Importing the cart_view function from the user_cart app
+
 
 @login_required
 @login_required
