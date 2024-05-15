@@ -59,10 +59,10 @@ def view_cart(request):
 def add_to_cart(request):
     product_id = request.POST.get('product_id')
     quantity = int(request.POST.get('quantity', 1))
-    size = request.post.get('size')
-    print(product_id, quantity,size)
+    size = request.POST.get('size')  # Fixed typo here
+    print(product_id, quantity, size)
 
-    product = get_object_or_404(ProductAttribute, pk=product_id)
+    product = ProductAttribute.objects.get(pk=product_id)
     
     # Get or create the user's cart
     cart, created = Cart.objects.get_or_create(user=request.user)

@@ -55,12 +55,15 @@
                                     </div>
                                     <div class="product-price primary-color float-left">
                                         <!-- Display the current price -->
-                                        <ins><span class="text-brand">&#8377;{{ product_attributes.first.price }}</span></ins>
+                                        <div class="product-price primary-color float-left">
+                                            <!-- Display the product price here -->
+                                            <ins><span id="product-price">₹{{ product_attributes.first.price }}</span></ins>
+                                        </div>
                                         
                                         <!-- Check if the product has an old price -->
                                         {% if product_attributes.first.old_price %}
                                             <!-- Display the old price -->
-                                            <ins><span class="old-price font-md ml-15">&#8377;{{ product_attributes.first.old_price }}</span></ins>
+                                            <ins><span class="old-price font-md ml-15">₹{{ product_attributes.first.old_price }}</span></ins>
                                             
                                             <!-- Hardcoded discount percentage -->
                                             <span class="save-price font-md color3 ml-15">25% Off</span>
@@ -80,37 +83,56 @@
                                     </div>
                                    
                                    
-                                        <input type="hidden" name="product_id" value="{{ product.p_id }}">
-                                        <input type="hidden" name="size" value="{{ size.id }}" id="selected-size">
-                                        <input type="hidden" name="quantity" value="1">
+                                    <form id="add-to-cart-form" action="{% url 'cart:add_to_cart' %}" method="post">
                                         {% csrf_token %}
-                                        <div class="attr-detail attr-size">
-                                            <strong class="mr-10">Size</strong>
-                                            <ul class="list-filter size-filter font-small">
-                                                <div class="sizes-list">
-                                                    <ul>
-                                                        {% for attribute in product_attributes %}
-                                                        <li>
-                                                            <a href="#" class="size-link" data-size-id="{{ size.id }}" data-size-name="{{ size }}">
-                                                                {{ attribute.size }}
-                                                            </a>
-                                                        </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
-                                        </div>
-                                        <br>
+                                        <input type="hidden" name="product_id" value="{{ product_attributes.id }}">
                                         
-                                   <form id="add-to-cart-form" action="{% url 'cart:add_to_cart' %}" method="post">
-                                    {% csrf_token %}
-                                    <!-- Input field for product ID -->
-                                    <input type="hidden" name="product_id" value="{{ product.p_id }}">
-                                    <!-- Input field for quantity -->
-                                    <strong class="mr-10">Quantity</strong>
-                                    <input type="number" name="quantity" id="quantity" value="1" min="1" style="width: 70px;"><br><br>
-                                    <!-- Add to cart button -->
-                                    <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
-                                </form>
+                                        <div class="attr-detail attr-size">
+                                            <!-- Display the size options here -->
+                                            <strong class="mr-10">Size</strong>
+                                            <div class="size-buttons">
+                                                {% for attribute in product_attributes %}
+                                                <button type="button" class="size-button" data-size-id="{{ attribute.id }}">{{ attribute.size }}</button>
+                                                {% endfor %}
+                                            </div>
+                                            <input type="hidden" name="selected-size" id="selected-size" value="{{ product_attributes.first.id }}">
+                                        </div><br>
+                                        
+                                        <div class="quantity">
+                                            <strong class="mr-10">Quantity</strong>
+                                            <input type="number" name="quantity" id="quantity" value="1" min="1" style="width: 70px;">
+                                        </div><br>
+                                        
+                                        <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                    </form>
+                                    
+                                    <style>
+                                        .size-button {
+                                            background-color: transparent;
+                                            border: 1px solid #ccc; /* Border color */
+                                            color: #333; /* Text color */
+                                            padding: 2px 10px; /* Padding */
+                                            margin-right: 10px; /* Margin between buttons */
+                                            cursor: pointer;
+                                            transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition */
+                                            font-size: 13px; /* Adjust the text size */
+                                        }
+                                    
+                                        .size-button:hover {
+                                            background-color: #f2f2f2; /* Background color on hover */
+                                        }
+                                    </style>
+                                    
+                                    
+                                    <script>
+                                        document.querySelectorAll('.size-button').forEach(button => {
+                                            button.addEventListener('click', () => {
+                                                document.getElementById('selected-size').value = button.dataset.sizeId;
+                                                // Add any additional styling or behavior here, like highlighting the selected button
+                                            });
+                                        });
+                                    </script>
+                                    
                                 
                                 
                                     
@@ -157,5 +179,29 @@
                     </div>
                 </div>
         </section>
+
+        <script>
+            document.querySelectorAll('.size-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Get the selected size ID
+                    const sizeId = button.dataset.sizeId;
+        
+                    // Update the hidden input field with the selected size ID
+                    document.getElementById('selected-size').value = sizeId;
+        
+                    // Make an AJAX request to fetch the price for the selected size
+                    fetch(`/get_price/${sizeId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Update the displayed price with the fetched price
+                            document.getElementById('product-price').innerText = `₹${data.price}`;
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
+            });
+        </script>
+        
 
 {% endblock content %}

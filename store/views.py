@@ -119,6 +119,14 @@ def product_detailed_view(request, product_pid):
 
     return render(request, 'dashboard/product_detailed_view.html', context)
 
+def get_price(request, size_id):
+    try:
+        product_attribute = ProductAttribute.objects.get(pk=size_id)
+        price = product_attribute.price
+        return JsonResponse({'price': price})
+    except ProductAttribute.DoesNotExist:
+        return JsonResponse({'error': 'Product attribute not found'}, status=404)
+
 # for viewing the user details
 @login_required
 def user_profile(request):
