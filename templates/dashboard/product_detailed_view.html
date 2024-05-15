@@ -7,8 +7,8 @@
         <div class="container">
             <div class="breadcrumb">
                 <a href="index.html" rel="nofollow">Home</a>
-                <span></span> Fashion
-                <span></span> Abstract Print Patchwork Dress
+                <span></span> {{ product.category }}
+                <span></span> {{ title }}
             </div>
         </div>
     </div>
@@ -22,26 +22,22 @@
                                 <div class="detail-gallery">
                                     <span class="zoom-icon"><i class="fi-rs-search"></i></span>
                                     <!-- MAIN SLIDES -->
-                                        
-                                    <div class="product-image-slider ">
+                                    <div class="product-image-slider">
                                         {% for image in product_images %}
                                         <figure class="border-radius-10">
-                                            <img src="{{image.images.url}}" alt="{{product.title}}">
+                                            <img src="{{ image.images.url }}" alt="{{ product.title }}">
                                         </figure>
                                         {% endfor %}
                                     </div>
-
                                     <!-- THUMBNAILS -->
-                                    
                                     <div class="slider-nav-thumbnails pl-15 pr-15">
                                         {% for image in product_images %}
-                                        <div><img src="{{image.images.url}}" alt="{{product.title}}"></div>
+                                        <div><img src="{{ image.images.url }}" alt="{{ product.title }}"></div>
                                         {% endfor %}
                                     </div>
-
                                 </div>
-                                <!-- End Gallery -->
                             </div>
+                            
                             <div class="col-md-6 col-sm-12 col-xs-12">
                                 <div class="detail-info">
                                     <h2 class="title-detail">{{ product.title }}</h2>
@@ -57,12 +53,22 @@
                                             <span class="font-small ml-5 text-muted"> (25 reviews)</span>
                                         </div>
                                     </div>
-                                    <div class="clearfix product-price-cover">
+                                    <div class="product-price primary-color float-left">
+                                        <!-- Display the current price -->
                                         <div class="product-price primary-color float-left">
-                                            <ins><span class="text-brand">{{ product.price }}</span></ins>
-                                            <ins><span class="old-price font-md ml-15">{{ product.old_price }}</span></ins>
-                                            <span class="save-price  font-md color3 ml-15">25% Off</span>
+                                            <!-- Display the product price here -->
+                                            <ins><span id="product-price">₹{{ product_attributes.first.price }}</span></ins>
                                         </div>
+                                        
+                                        <!-- Check if the product has an old price -->
+                                        {% if product_attributes.first.old_price %}
+                                            <!-- Display the old price -->
+                                            <ins><span class="old-price font-md ml-15">₹{{ product_attributes.first.old_price }}</span></ins>
+                                            
+                                            <!-- Hardcoded discount percentage -->
+                                            <span class="save-price font-md color3 ml-15">25% Off</span>
+                                        {% endif %}
+                                    </div>
                                     </div>
                                     <div class="bt-1 border-color-1 mt-15 mb-15"></div>
                                     <div class="short-desc mb-30">
@@ -75,45 +81,66 @@
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                         </ul>
                                     </div>
-                                    <div class="attr-detail attr-color mb-15">
-                                        <strong class="mr-10">Color</strong>
-                                        <ul class="list-filter color-filter">
-                                            <li><a href="#" data-color="Red"><span class="product-color-red"></span></a></li>
-                                            <li><a href="#" data-color="Yellow"><span class="product-color-yellow"></span></a></li>
-                                            <li class="active"><a href="#" data-color="White"><span class="product-color-white"></span></a></li>
-                                            <li><a href="#" data-color="Orange"><span class="product-color-orange"></span></a></li>
-                                            <li><a href="#" data-color="Cyan"><span class="product-color-cyan"></span></a></li>
-                                            <li><a href="#" data-color="Green"><span class="product-color-green"></span></a></li>
-                                            <li><a href="#" data-color="Purple"><span class="product-color-purple"></span></a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="attr-detail attr-size">
-                                        <strong class="mr-10">Size</strong>
-                                        <ul class="list-filter size-filter font-small">
-                                            <li><a href="#">S</a></li>
-                                            <li class="active"><a href="#">M</a></li>
-                                            <li><a href="#">L</a></li>
-                                            <li><a href="#">XL</a></li>
-                                            <li><a href="#">XXL</a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                                    <div class="detail-extralink">
-                                        <div class="detail-qty border radius">
-                                            <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                            <span class="qty-val">1</span>
-                                            <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                        </div>
-                                        <div class="product-extra-link2">
-                                            <button type="submit" class="button button-add-to-cart">Add to cart</button>
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                            <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
-                                        </div>
+                                   
+                                   
+                                    <form id="add-to-cart-form" action="{% url 'cart:add_to_cart' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product_id" value="{{ product_attributes.id }}">
+                                        
+                                        <div class="attr-detail attr-size">
+                                            <!-- Display the size options here -->
+                                            <strong class="mr-10">Size</strong>
+                                            <div class="size-buttons">
+                                                {% for attribute in product_attributes %}
+                                                <button type="button" class="size-button" data-size-id="{{ attribute.id }}">{{ attribute.size }}</button>
+                                                {% endfor %}
+                                            </div>
+                                            <input type="hidden" name="selected-size" id="selected-size" value="{{ product_attributes.first.id }}">
+                                        </div><br>
+                                        
+                                        <div class="quantity">
+                                            <strong class="mr-10">Quantity</strong>
+                                            <input type="number" name="quantity" id="quantity" value="1" min="1" style="width: 70px;">
+                                        </div><br>
+                                        
+                                        <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                    </form>
+                                    
+                                    <style>
+                                        .size-button {
+                                            background-color: transparent;
+                                            border: 1px solid #ccc; /* Border color */
+                                            color: #333; /* Text color */
+                                            padding: 2px 10px; /* Padding */
+                                            margin-right: 10px; /* Margin between buttons */
+                                            cursor: pointer;
+                                            transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition */
+                                            font-size: 13px; /* Adjust the text size */
+                                        }
+                                    
+                                        .size-button:hover {
+                                            background-color: #f2f2f2; /* Background color on hover */
+                                        }
+                                    </style>
+                                    
+                                    
+                                    <script>
+                                        document.querySelectorAll('.size-button').forEach(button => {
+                                            button.addEventListener('click', () => {
+                                                document.getElementById('selected-size').value = button.dataset.sizeId;
+                                                // Add any additional styling or behavior here, like highlighting the selected button
+                                            });
+                                        });
+                                    </script>
+                                    
+                                
+                                
+                                    
                                     </div>
                                     <ul class="product-meta font-xs color-grey mt-50">
                                         <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
                                         <li class="mb-5">Tags: <a href="#" rel="tag">Cloth</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
-                                        <li>Availability:<span class="in-stock text-success ml-5">8 Items In Stock</span></li>
+                                        <li>Availability:<span class="in-stock text-success ml-5">{{ prod_count }} Items In Stock</span></li>
                                     </ul>
                                 </div>
                                 <!-- Detail Info -->
@@ -123,127 +150,28 @@
                             <div class="col-lg-10 m-auto entry-main-content">
                                 <h2 class="section-title style-1 mb-30">Description</h2>
                                 <div class="description mb-50">
-                                    <p>Uninhibited carnally hired played in whimpered dear gorilla koala depending and much yikes off far quetzal goodness and from for grimaced goodness unaccountably and meadowlark near unblushingly crucial scallop
-                                        tightly neurotic hungrily some and dear furiously this apart.</p>
-                                    <p>Spluttered narrowly yikes left moth in yikes bowed this that grizzly much hello on spoon-fed that alas rethought much decently richly and wow against the frequent fluidly at formidable acceptably flapped
-                                        besides and much circa far over the bucolically hey precarious goldfinch mastodon goodness gnashed a jellyfish and one however because.
-                                    </p>
-                                    <ul class="product-more-infor mt-30">
-                                        <li><span>Type Of Packing</span> Bottle</li>
-                                        <li><span>Color</span> Green, Pink, Powder Blue, Purple</li>
-                                        <li><span>Quantity Per Case</span> 100ml</li>
-                                        <li><span>Ethyl Alcohol</span> 70%</li>
-                                        <li><span>Piece In One</span> Carton</li>
-                                    </ul>
-                                    <hr class="wp-block-separator is-style-dots">
-                                    <p>Laconic overheard dear woodchuck wow this outrageously taut beaver hey hello far meadowlark imitatively egregiously hugged that yikes minimally unanimous pouted flirtatiously as beaver beheld above forward
-                                        energetic across this jeepers beneficently cockily less a the raucously that magic upheld far so the this where crud then below after jeez enchanting drunkenly more much wow callously irrespective limpet.</p>
-                                    <h4 class="mt-30">Packaging & Delivery</h4>
-                                    <hr class="wp-block-separator is-style-wide">
-                                    <p>Less lion goodness that euphemistically robin expeditiously bluebird smugly scratched far while thus cackled sheepishly rigid after due one assenting regarding censorious while occasional or this more crane
-                                        went more as this less much amid overhung anathematic because much held one exuberantly sheep goodness so where rat wry well concomitantly.
-                                    </p>
-                                    <p>Scallop or far crud plain remarkably far by thus far iguana lewd precociously and and less rattlesnake contrary caustic wow this near alas and next and pled the yikes articulate about as less cackled dalmatian
-                                        in much less well jeering for the thanks blindly sentimental whimpered less across objectively fanciful grimaced wildly some wow and rose jeepers outgrew lugubrious luridly irrationally attractively
-                                        dachshund.
-                                    </p>
+                                    <p>{{product.description}}</p>
+                                    <!-- <h3 class="section-title style-1 mt-40 mb-30">Packaging & Delivery</h3>
+                                    <p>{{product.shipping}}</p> -->
                                 </div>
-                                <h3 class="section-title style-1 mb-30">Additional info</h3>
-                                <table class="font-md mb-30">
-                                    <tbody>
-                                        <tr class="stand-up">
-                                            <th>Stand Up</th>
-                                            <td>
-                                                <p>35″L x 24″W x 37-45″H(front to back wheel)</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="folded-wo-wheels">
-                                            <th>Folded (w/o wheels)</th>
-                                            <td>
-                                                <p>32.5″L x 18.5″W x 16.5″H</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="folded-w-wheels">
-                                            <th>Folded (w/ wheels)</th>
-                                            <td>
-                                                <p>32.5″L x 24″W x 18.5″H</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="door-pass-through">
-                                            <th>Door Pass Through</th>
-                                            <td>
-                                                <p>24</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="frame">
-                                            <th>Frame</th>
-                                            <td>
-                                                <p>Aluminum</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="weight-wo-wheels">
-                                            <th>Weight (w/o wheels)</th>
-                                            <td>
-                                                <p>20 LBS</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="weight-capacity">
-                                            <th>Weight Capacity</th>
-                                            <td>
-                                                <p>60 LBS</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="width">
-                                            <th>Width</th>
-                                            <td>
-                                                <p>24″</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="handle-height-ground-to-handle">
-                                            <th>Handle height (ground to handle)</th>
-                                            <td>
-                                                <p>37-45″</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="wheels">
-                                            <th>Wheels</th>
-                                            <td>
-                                                <p>12″ air / wide track slick tread</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="seat-back-height">
-                                            <th>Seat back height</th>
-                                            <td>
-                                                <p>21.5″</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="head-room-inside-canopy">
-                                            <th>Head room (inside canopy)</th>
-                                            <td>
-                                                <p>25″</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="pa_color">
-                                            <th>Color</th>
-                                            <td>
-                                                <p>Black, Blue, Red, White</p>
-                                            </td>
-                                        </tr>
-                                        <tr class="pa_size">
-                                            <th>Size</th>
-                                            <td>
-                                                <p>M, S</p>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div class="social-icons single-share">
+                                <h3 class="section-title style-1 mt-40 mb-30">Additional info</h3>
+                                <ul class="product-more-infor">
+                                    {% for line  in specifications_lines %}
+                                    <li><span>{{ line }}</span></li>
+                                    {% endfor %}
+                                </ul>
+                                
+
+                                
+
+
+                                <div class="social-icons single-share mt-40">
                                     <ul class="text-grey-5 d-inline-block">
                                         <li><strong class="mr-10">Share this:</strong></li>
-                                        <li class="social-facebook"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
-                                        <li class="social-twitter"> <a href="#"><img src="{% static 'store/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
-                                        <li class="social-instagram"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
-                                        <li class="social-linkedin"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
+                                        <li class="social-facebook"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-facebook.svg' %}" alt=""></a></li>
+                                        <li class="social-twitter"> <a href="#"><img src="{% static 'store/imgs/theme/icons/icon-twitter.svg' %}" alt=""></a></li>
+                                        <li class="social-instagram"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-instagram.svg' %}" alt=""></a></li>
+                                        <li class="social-linkedin"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-pinterest.svg' %}" alt=""></a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -251,5 +179,29 @@
                     </div>
                 </div>
         </section>
-    
+
+        <script>
+            document.querySelectorAll('.size-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Get the selected size ID
+                    const sizeId = button.dataset.sizeId;
+        
+                    // Update the hidden input field with the selected size ID
+                    document.getElementById('selected-size').value = sizeId;
+        
+                    // Make an AJAX request to fetch the price for the selected size
+                    fetch(`/get_price/${sizeId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Update the displayed price with the fetched price
+                            document.getElementById('product-price').innerText = `₹${data.price}`;
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
+            });
+        </script>
+        
+
 {% endblock content %}

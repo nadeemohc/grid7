@@ -47,9 +47,54 @@ def perform_signup(request):
     else: 
         form = SignUpForm()
 
-    context = {'form': form}
+    context = {
+        'title': 'Signup',
+        'form': form,
+    }
     return render(request, 'account/signup.html', context)
 
+
+# @never_cache
+# def perform_login(request):
+#     if request.user.is_authenticated:
+#         messages.warning(request, 'You are already logged in')
+#         return redirect("store:home")
+    
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
+        
+    
+#         # Check if the user exists and is active
+#         try:
+#             user = User.objects.get(email=email)
+#             if not user.is_active:
+#                 messages.warning(request, "Access restricted!")
+#                 return redirect('accounts:login')
+#         except Exception as e:
+#             messages.warning(request, f"An error occurred: {str(e)}")
+#             return redirect('accounts:login')
+        
+#         # Authenticate the user with the provided credentials
+#         user = authenticate(request, username=email, password=password)
+
+#         if user is not None:
+#             if user.verified:
+#                 login(request, user)
+#                 request.session['user_logged_in'] = True
+#                 messages.success(request, f'You have logged in as {user.username}')
+#                 return redirect('store:home')
+            
+#             else:
+#                 messages.error(request, 'Please verify your account using OTP')
+#                 request.session["user_id"] = user.id
+#                 sent_otp(request)
+#                 return redirect('accounts:otp_verification')
+    
+#     print("Messages:", messages.get_messages(request))
+#     return render(request, 'account/login.html')
+
+from django.contrib.auth import authenticate, login
 
 @never_cache
 def perform_login(request):
@@ -68,7 +113,7 @@ def perform_login(request):
                 messages.warning(request, "Access restricted!")
                 return redirect('accounts:login')
         except User.DoesNotExist:
-            messages.warning(request, 'Incorrect email or password')
+            messages.warning(request, "User doesn't Exist")
             return redirect('accounts:login')
         
         # Authenticate the user with the provided credentials
@@ -85,9 +130,14 @@ def perform_login(request):
                 request.session["user_id"] = user.id
                 sent_otp(request)
                 return redirect('accounts:otp_verification')
-        
-    return render(request, 'account/login.html')
-
+        else:
+            # Failed login attempt
+            messages.warning(request, "Invalid username or password")
+            return redirect('accounts:login')
+    context = {
+        'title': 'Login',
+    }
+    return render(request, 'account/login.html', context)
 
 
 def edit_info(request):

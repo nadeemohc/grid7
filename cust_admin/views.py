@@ -2,29 +2,49 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
 from accounts.models import User
 from cust_auth_admin.views import admin_required
-from store.models import Category, Product, Subcategory, ProductImages
+from store.models import *
+from django.http import HttpResponseBadRequest
+from cust_admin.forms import ProductVariantAssignForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.db import IntegrityError
 from PIL import Image
+from django.db.models import Case, CharField, Value, When
 
 
-@login_required
+@admin_required
 def dashboard(request):
-    return render(request, 'cust_admin/index.html', {'title':'Admin Dashboard'})
+    product_count = Product.objects.count()
+    cat_count = Category.objects.count()
+    context = {
+        'title': 'Admin Dashboard',
+        'product_count': product_count,
+        'cat_count': cat_count,
+    }
+    return render(request, 'cust_admin/index.html', context)
 
+#=========================================== admin list, view, delete user =========================================================================================================
 
 @admin_required
 def user_list(request):
     users = User.objects.all().order_by('id')
-    return render(request, 'cust_admin/user/user_list.html', {'title':'User List', 'users': users})
+    context={
+        'title':'User List',
+         'users': users,
+         }
+    return render(request, 'cust_admin/user/user_list.html', context)
 
 
 @admin_required
 def user_view(request, username):
     user = get_object_or_404(User, username=username)
-    return render(request, 'cust_admin/user/user_view.html', {'title': 'View User', 'user': user})
+    context = {
+        'title': 'View User',
+        'user': user
+        }
+    return render(request, 'cust_admin/user/user_view.html', context)
 
 User = get_user_model()
 
@@ -38,17 +58,24 @@ def user_block_unblock(request, username):
     messages.success(request, f"The user {user.username} has been {action} successfully.")
     return redirect('cust_admin:user_list')
 
+#=========================================== admin add, list, edit, delete category=========================================================================================================
 
 @admin_required
 def category_list(request):
     categories = Category.objects.all().order_by('c_id')
-    return render(request, 'cust_admin/category/category_list.html',
-                   {'title':'Category List',
-                    'categories':categories})
+    context = {
+        'title':'Category List',
+        'categories':categories,
+        }
+    return render(request, 'cust_admin/category/category_list.html', context)
 
 
 @admin_required
 def add_category(request):
+    context = {
+        'title': 'Add Category'
+    }
+
     if request.method == 'POST':
         c_name = request.POST.get('cname')
         c_image = request.FILES.get('image')
@@ -62,10 +89,10 @@ def add_category(request):
             c_data = Category(c_name=c_name, c_image=c_image)
             c_data.save()
             messages.success(request, "Category added successfully.")
-
             return redirect('cust_admin:category_list')
 
-    return render(request, 'cust_admin/category/add_category.html', {'title': 'Add Category'})
+    return render(request, 'cust_admin/category/add_category.html', context)
+
 
 
 @admin_required
@@ -86,17 +113,25 @@ def edit_category(request, c_id):
         category.c_image = request.FILES.get('image')
         # is_blocked = request.POST.get('blocked')
 
-
+        
         category.save()
+        context = {
+            'title':'Add Category'
+            }
         return redirect('cust_admin:category_list')
           
-    return render(request, 'cust_admin/category/category_edit.html', {'title':'Add Category'})
+    return render(request, 'cust_admin/category/category_edit.html', context)
 
+#=========================================== admin add, list subcategory =========================================================================================================
 
 @admin_required
 def subcategory_list(request):
     sub_cat = Subcategory.objects.all()
-    return render(request,'cust_admin/sub_category/sub_cat_list.html', {'title':'Sub Category', 'sub_cat':sub_cat})
+    context = {
+        'title':'Sub Category',
+        'sub_cat':sub_cat,
+               }
+    return render(request,'cust_admin/sub_category/sub_cat_list.html', context)
 
 
 @admin_required
@@ -110,67 +145,187 @@ def add_subcat(request):
     # categories = Category.objects.all()
     return render(request, 'cust_admin/sub_category/add_sub_cat.html', {'title':'Add Sub Category'})
 
+#=========================================== admin add, list, edit, delete variant =========================================================================================================
+
+def list_variant(request):
+    # Define the custom ordering based on the size values
+    custom_ordering = Case(
+        When(size='S', then=Value(0)),
+        When(size='M', then=Value(1)),
+        When(size='L', then=Value(2)),
+        When(size='XL', then=Value(3)),
+        When(size='XXL', then=Value(4)),
+        When(size='XXXL', then=Value(5)),
+        default=Value(5),
+        output_field=CharField(),
+    )
+
+    # Fetch the Size objects ordered according to the custom ordering
+    data = Size.objects.all().order_by(custom_ordering)
+
+    context = {
+        'data': data,
+        'title': 'Variant List',
+    }
+    return render(request, 'cust_admin/variant/variant_list.html', context)
+
+def add_variant(request):
+    if request.method == 'POST':
+        size = request.POST.get('size')
+
+        try:
+            existing_size = Size.objects.filter(size__iexact=size)
+            if existing_size:
+                messages.error(request, "The size already exists")
+            else:
+                new_size = Size(size=size)
+                new_size.save()
+                messages.success(request, f'The size {size} added successfully')
+        except IntegrityError as e:
+            error_message = str(e)
+            messages.error(request, f'An error occurred while adding the size: {error_message}')
+        
+        return redirect('cust_admin:list_variant')
+    context = {
+            'title': 'Variant Add',
+        }
+    return render(request, 'cust_admin/variant/variant_add.html', context)
+
+
+def edit_variant(request, id):
+    if request.method == 'POST':
+        size = request.POST.get('size')
+        price_increment = request.POST.get('price_inc')
+        edit=Size.objects.get(id=id)
+        edit.size = size
+        edit.price_increment = price_increment
+        edit.save()
+        return redirect('cust_admin:list_variant')
+    obj = Size.objects.get(id=id)
+    context = {
+        "obj":obj,
+        'title': 'Variant Edit',
+    }
+    
+    return render(request, 'cust_admin/variant/variant_edit.html', context)
+
+#=========================================== admin add, list, edit, delete product =========================================================================================================
 
 @admin_required
+def prod_list(request):
+    products = Product.objects.all().order_by('p_id')
+    
+    context = {
+        'products': products,
+        'title': 'Product Lobby',
+    }
+    return render(request, 'cust_admin/product/product_list.html', context)
+
+@admin_required
+# def add_product(request):
+#     if request.method == 'POST':
+#         # Extract data from the form
+#         title = request.POST.get('title')
+#         images = request.FILES.getlist('image')  # Use 'images' instead of 'image' for multiple file upload
+#         description = request.POST.get('description')
+#         category_id = request.POST.get('category')
+#         subcategory_id = request.POST.get('subcategory')
+#         specifications = request.POST.get('specifications')
+#         availability = request.POST.get('availability') == 'on'
+
+#         # Get the category and subcategory objects
+#         category = get_object_or_404(Category, c_id=category_id)
+#         subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
+
+#         # Create the product
+#         product = Product.objects.create(
+#             title=title,
+#             description=description,
+#             category=category,
+#             sub_category=subcategory,
+#             specifications=specifications,
+#             availability=availability,
+#         )
+
+#         # Save additional images
+#         for image in images:  # Iterate over each uploaded image
+#             try:
+#                 ProductImages.objects.create(product=product, images=image)
+#             except Exception as e:
+#                 print(e)
+
+#         messages.success(request, 'Product added successfully!')
+#         return redirect('cust_admin:prod_list')
+
+#     # Fetch categories, subcategories, and sizes for dropdowns and selects
+#     categories = Category.objects.all()
+#     subcategories = Subcategory.objects.all()
+#     sizes = Size.objects.all()
+
+#     context = {
+#         'categories': categories,
+#         'subcategories': subcategories,
+#         'sizes': sizes,
+#     }
+
+#     return render(request, 'cust_admin/product/product_add.html', context)
+
+
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
+# from .models import Product, ProductImages, Category, Subcategory
+
 def add_product(request):
     if request.method == 'POST':
+        # Extract data from the form
         title = request.POST.get('title')
-        image = request.FILES.getlist('image')
         description = request.POST.get('description')
-        price = request.POST.get('price')
-        old_price = request.POST.get('old_price')
+        specifications = request.POST.get('specifications')
         category_id = request.POST.get('category')
         subcategory_id = request.POST.get('subcategory')
-        stock = request.POST.get('stock')
-        
-        # Checkboxes
         featured = request.POST.get('featured') == 'on'
+        popular = request.POST.get('popular') == 'on'
         latest = request.POST.get('latest') == 'on'
-        in_stock = request.POST.get('in_stock') == 'on'
-        status = request.POST.get('status') == 'on'
+        availability = request.POST.get('availability') == 'on'
+        # Main product image
+        image = request.FILES.get('image')
 
         # Get the category and subcategory objects
-        category = get_object_or_404(Category, c_id=category_id)
-        subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
+        category = Category.objects.get(c_id=category_id)
+        subcategory = Subcategory.objects.get(sid=subcategory_id)
 
         # Create the product
-        
         product = Product.objects.create(
-                title=title,
-                image=image[0],
-                description=description,
-                price=price,
-                old_price=old_price,
-                category=category,
-                sub_category=subcategory,
-                stock=stock,
-                featured=featured,
-                latest=latest,
-                in_stock=in_stock,
-                status=status,
-            )
-       
-        for i in image:
-            try:
-                ProductImages.objects.create(product=product, images=i)
-            except Exception as e:
-                print(e)
+            title=title,
+            description=description,
+            specifications=specifications,
+            category=category,
+            featured=featured,
+            popular=popular,
+            latest=latest,
+            sub_category=subcategory,
+            availability=availability,
+            image=image  # Assign the main product image
+        )
+
+        # Save additional images
+        images = request.FILES.getlist('images')  # Additional product images
+        for img in images:
+            ProductImages.objects.create(product=product, images=img)
 
         messages.success(request, 'Product added successfully!')
         return redirect('cust_admin:prod_list')
     
-    # Fetch categories and subcategories for dropdowns
+    # If request method is GET, render the form
     categories = Category.objects.all()
     subcategories = Subcategory.objects.all()
-
-
     context = {
         'categories': categories,
         'subcategories': subcategories,
-        
     }
-
+    
     return render(request, 'cust_admin/product/product_add.html', context)
+
 
 
 @admin_required
@@ -182,18 +337,25 @@ def prod_edit(request, p_id):
         # Update product details
         product.title = request.POST.get('title', product.title)
         product.description = request.POST.get('description', product.description)
-        product.price = request.POST.get('price', product.price)
         product.old_price = request.POST.get('old_price', product.old_price)
+        product.price = request.POST.get('price', product.price)
+        product.category_id = request.POST.get('category', product.category)
+        # product.subcategory_id = request.POST.get('subcategory_id', product.subcategory)  
         product.stock = request.POST.get('stock', product.stock)
+        product.shipping = request.POST.get('shipping', product.shipping)
         product.specifications = request.POST.get('specifications', product.specifications)
-        product.category_id = request.POST.get('category')
-        product.sub_category_id = request.POST.get('subcategory')
+        product.featured = request.POST.get('featured') == 'on'
+        product.popular = request.POST.get('popular') == 'on'
+        product.latest = request.POST.get('latest') == 'on'
+        product.in_stock = request.POST.get('in_stock') == 'on'
+        product.status = request.POST.get('status') == 'on'
         # Handle image update
         new_image = request.FILES.get('image')
         print(new_image)
         if new_image:
             product.image = new_image
         product.save()
+
 
         return redirect('cust_admin:prod_list')
         
@@ -217,12 +379,54 @@ def product_list_unlist(request, p_id):
     messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
     return redirect('cust_admin:prod_list')
 
+def prod_variant_assign(request):
+    form = ProductVariantAssignForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        # Process form data
+        product = form.cleaned_data['product']
+        size = form.cleaned_data['size']
+        price = form.cleaned_data['price']
+        old_price = form.cleaned_data['old_price']
+        stock = form.cleaned_data['stock']
+        in_stock = form.cleaned_data['in_stock']
+        status = form.cleaned_data['status']
+        
+        # Save the form data to the database
+        product_attribute = ProductAttribute.objects.create(
+            product=product,
+            size=size,
+            price=price,
+            old_price=old_price,
+            stock=stock,
+            in_stock=in_stock,
+            status=status
+        )
 
-@admin_required
-def prod_list(request):
-    products = Product.objects.all().order_by('p_id')
-    return render(request, 'cust_admin/product/product_list.html', 
-                  {'title':'Product List',
-                   'products':products})
+        # Handle form submission logic here
+        messages.success(request, 'successfully added Product with varient!')
+        return redirect('cust_admin:prod_catalogue')
 
+    context = {
+        'title': 'Add New Product',
+        'form': form,
+    }
+    return render(request, 'cust_admin/product/prod_variant_assign.html', context)
 
+def prod_catalogue_list(request):    
+    products = ProductAttribute.objects.all().order_by('product')
+    prods = Product.objects.all()
+    
+    context = {
+        'prods': prods,
+        'products': products,
+        'title': 'Product Catalogue',
+    }
+    return render(request, 'cust_admin/product/product_catalogue.html', context)
+
+def catalogue_list_unlist(request, p_id):
+    product = get_object_or_404(ProductAttribute, pk=p_id)
+    product.is_blocked = not product.is_blocked
+    product.save()
+    action = 'unblocked' if not product.is_blocked else 'blocked'
+    messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
+    return redirect('cust_admin:prod_catalogue')

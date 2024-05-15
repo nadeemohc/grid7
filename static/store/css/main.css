@@ -73,6 +73,12 @@ footer, header, hgroup, menu, nav, section {
   display: block;
 }
 
+.clickable-div {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 body {
   line-height: 1;
 }
@@ -731,7 +737,7 @@ strong,
 }
 
 .section-title span {
-  color: #088178;
+  color: #d50000;
 }
 
 h3.section-title {
@@ -3154,7 +3160,7 @@ table .product-thumbnail img {
 
 .banner-bg {
   background-position: center;
-  background-size: cover;
+  /* background-size: cover; */
   padding: 50px;
 }
 

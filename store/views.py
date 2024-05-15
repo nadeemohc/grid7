@@ -1,74 +1,140 @@
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseNotFound, Http404, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
-from store.models import Category, Product, ProductImages
+from .models import *
 from accounts.models import User, Address
+from django.db.models import Sum
 from django.core.mail import send_mail
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.template.defaultfilters import linebreaksbr
 
-# from accounts.forms import UserProfileForm, AddressForm
 
-# Create your views here.
-
+# for the home page 
+def get_common_context():
+    return {
+        'categories': Category.objects.filter(is_blocked=False),
+    }
 @never_cache
-def home(request):
+def home(request): 
     categories = Category.objects.all()
-    Products = Product.objects.all()
-    # featured_products = Product.objects.filter(featured=True)
-    # popular_products = Product.objects.filter(popular=True)
-    # new_added_products = Product.objects.filter(latest=True)
-    return render(request, 'dashboard/home.html', 
-                  {'title':'Home',
-                   'categories':categories,
-                   'products':Products})
+    products = Product.objects.all()
+    prod_count = products.count()
+    featured_products = products.filter(featured=True)
+    popular_products = products.filter(popular=True)
+    new_added_products = products.filter(latest=True)
 
+    context = {
+        'categories': categories,
+        'products': products,
+        'prod_count': prod_count,
+        'featured_products': featured_products,
+        'new_added_products': new_added_products,
+        'popular_products': popular_products,
+        'title': 'Home',
+        }
+    return render(request, 'dashboard/home.html', context)
 
+# For displaying the 404 page
 def handler404(request, exception):
     return render(request, '404.html', status=404)
 
-@never_cache
-def product_detail(request,product_pid):    
-    product = get_object_or_404(Product, p_id=product_pid)
-    product_images = ProductImages.objects.filter(product=product)
-    print(product_images)
+# For listing the products in shop page
+def list_prod(request):
+    categories = Category.objects.all()
+    Products = Product.objects.all()
+    product_attributes = ProductAttribute.objects.all()
+    prod_count = Product.objects.count()
+    featured_products = Product.objects.filter(featured=True)
+    popular_products = Product.objects.filter(popular=True)
+    new_added_products = Product.objects.filter(latest=True)
+    context = {
+        'categories': categories,
+        'products': Products,
+        'product_attributes': product_attributes,
+        'prod_count': prod_count,
+        'featured_products': featured_products,
+        'new_added_products':new_added_products,
+        'popular_products': popular_products,
+        'title': 'Shop',
+    }
+    return render(request, 'dashboard/shop.html', context)
 
+def product_list_by_category(request, category_cid):
+    category = get_object_or_404(Category, c_id=category_cid)
+    products = Product.objects.filter(category=category)
+    prod_count = products.count()
+    product_attributes = ProductAttribute.objects.all()
+
+    if request.method == 'POST':
+            
+            price_range = request.POST.get('price_range')
+            
+            if price_range:
+                if price_range == '0-50':
+                    products = products.filter(price__range=(0, 50))
+                elif price_range == '50-200':
+                    products = products.filter(price__range=(50, 200))
+                elif price_range == '200-500':
+                    products = products.filter(price__range=(200, 500))
+                elif price_range == '500-1000':
+                    products = products.filter(price__range=(500, 1000))
+                elif price_range == 'more than 1000':
+                    products = products.filter(price__gt=1000)
+
+    context = get_common_context()
+    context.update({
+        'category': category,
+        'products': products,
+        'prod_count': prod_count,
+        'product_attributes': product_attributes,        
+    })
+    return render(request, 'dashboard/product_list.html', context)
+
+# for viewing the product details 
+def product_detailed_view(request, product_pid):
+    # Get the product or return 404 if not found
+    product = get_object_or_404(Product, p_id=product_pid)
+    
+    # Replace newline characters with HTML line break tags
+    specifications_lines = product.specifications.split('\n')
+    
+    # Get product images ordered by upload timestamp
+    product_images = ProductImages.objects.filter(product=product).order_by('images')
+    
+    # Get product attributes including size
+    product_attributes = ProductAttribute.objects.filter(product=product)
+    title = product.title
+    
     context = {
         'product': product,
+        'title': title,
+        'specifications_lines': specifications_lines,  # Pass the modified specifications to the template
         'product_images': product_images,
-   
+        'product_attributes': product_attributes,
     }
 
-    return render(request, 'core/product_detail.html',context)
+    return render(request, 'dashboard/product_detailed_view.html', context)
 
+def get_price(request, size_id):
+    try:
+        product_attribute = ProductAttribute.objects.get(pk=size_id)
+        price = product_attribute.price
+        return JsonResponse({'price': price})
+    except ProductAttribute.DoesNotExist:
+        return JsonResponse({'error': 'Product attribute not found'}, status=404)
 
-def product_detailed_view(request,product_pid):
-    product = get_object_or_404(Product, p_id=product_pid)
-    product_images = ProductImages.objects.filter(product=product)
-    print(product_images)
-
-    context = {
-        'product': product,
-        'product_images': product_images,
-        'breadcrumb': product.title,
-   
-    }
-
-    return render(request, 'dashboard/product_detailed_view.html',context)
-
+# for viewing the user details
+@login_required
 def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
     return render(request, 'dashboard/user_profile.html', {'title': 'User Profile', 'user': user, 'address': address})
 
-
-# def user_profile(request):
-#     user = request.user
-#     address = Address.objects.filter(user=user.id)
-#     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':user, 'address':address})
-
-
+# For adding new address in the user profile
 def add_address(request):
     
     if request.method == 'POST':
@@ -92,7 +158,7 @@ def add_address(request):
     
     return render(request, 'dashboard/user_profil.html',{'address': address})
 
-
+# for editing the address
 @login_required
 def edit_address(request, address_id):
     address = get_object_or_404(Address, id=address_id)
@@ -111,7 +177,7 @@ def edit_address(request, address_id):
     return render(request, 'dashboard/user_profile.html', {'address': address})
 
 
-
+# for deleting the existing address
 def delete_address(request, pk):
     address = get_object_or_404(Address, pk=pk)
     # Check if the logged-in user is the owner of the address
@@ -119,7 +185,8 @@ def delete_address(request, pk):
         address.delete()
     return redirect('store:user_profile')
 
-
+# for editing the existing user details
+# url name: store:edit_profile
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
@@ -150,6 +217,8 @@ def edit_profile(request):
 
     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':request.user})
 
+# for changing the password of the logged in user
+# url name: store:change_password
 @login_required
 def change_password(request):
     if request.method == 'POST':
@@ -167,7 +236,7 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
     return render(request, 'dashboard/change_password.html', {'form': form})
 
-
+# for sending the email saying password has changed(store:change_password)
 def send_email_verification(email):
     subject = 'Password Change Verification'
     message = 'Your password has been successfully changed. If you did not make this change, please contact us immediately.'
@@ -176,5 +245,43 @@ def send_email_verification(email):
     send_mail(subject, message, from_email, recipient_list)
 
 
-def cart_view(request):
-    return render(request, 'dashboard/cart.html')
+def shop(request):
+    categories = Category.objects.all()
+    products = Product.objects.all()
+    prod_count = products.count()
+    context = {
+        'categories': categories,
+        'products': products,
+        'title': 'Shop',
+    }
+
+    return render(request, 'dashboard/shop.html', context)
+
+
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from .models import Product, Category
+
+def shop(request, category_id=None):
+    # Retrieve all categories
+    categories = Category.objects.all()
+    product_attributes = ProductAttribute.objects.all()
+     
+    # Retrieve all products
+    products = Product.objects.filter(is_blocked=False)  # Exclude blocked products
+
+    # Filter products by category if category_id is provided
+    if category_id:
+        products = products.filter(category__pk=category_id)
+
+    # Fetch product images for each product
+    # products = Product.objects.all()
+
+    context = {
+        'categories': categories,
+        'products': products,
+        'title': 'Shop',
+        'product_attributes': product_attributes,
+    }
+
+    return render(request, 'dashboard/shop.html', context)
