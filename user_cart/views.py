@@ -13,34 +13,35 @@ from accounts.models import Address
 from store.models import CartItem
 
 
+
 def view_cart(request):
     # Retrieve the user's cart if it exists
-    user_cart = Cart.objects.filter(user=request.user).first()
+    user = request.user
+    items = CartItem.objects.filter(user=user, is_deleted=False)
 
     cart_items = []
     total_cart_price = Decimal(0)  # Initialize total_cart_price as Decimal
 
-    if user_cart:
-        cart_items = user_cart.items.all()
+    for cart_item in items:
+        # Access the associated product
+        product = cart_item.product
+        
+        # Access the price from one of the product attributes
+        # Assuming there's at least one product attribute associated with the product
+        # You may need to adjust this logic based on your data model
+        # product_attribute = product.productattribute_set.first()
+        product_attribute = cart_item.product  # Assuming the ProductAttribute itself represents the product variant
 
-        for cart_item in cart_items:
-            # Access the associated product
-            product = cart_item.product
+        if product_attribute:
+            price = product_attribute.price
             
-            # Access the price from one of the product attributes
-            # Assuming there's at least one product attribute associated with the product
-            # You may need to adjust this logic based on your data model
-            # product_attribute = product.productattribute_set.first()
-            product_attribute = product  # Assuming the ProductAttribute itself represents the product variant
+            # Calculate the subtotal for each item (product price * quantity)
+            cart_item.subtotal = price * cart_item.quantity
 
-            if product_attribute:
-                price = product_attribute.price
-                
-                # Calculate the subtotal for each item (product price * quantity)
-                cart_item.subtotal = price * cart_item.quantity
+            # Add the subtotal to the total_cart_price
+            total_cart_price += cart_item.subtotal
 
-                # Add the subtotal to the total_cart_price
-                total_cart_price += cart_item.subtotal
+        cart_items.append(cart_item)
 
     context = {
         'cart_items': cart_items,
@@ -54,22 +55,26 @@ def view_cart(request):
 
 
 
+import logging
+
+logger = logging.getLogger(__name__)
 @login_required
 @require_POST
 def add_to_cart(request):
-    product_id = request.POST.get('product_id')
+    product_id = int(request.POST.get('product_id'))
     quantity = int(request.POST.get('quantity', 1))
-    size = request.POST.get('size')  # Fixed typo here
-    print(product_id, quantity, size)
+    size_id = request.POST.get('selected_size')  # Correctly retrieving the selected size ID
+    print(product_id, quantity, size_id)
+    logger.debug(f"Product ID: {product_id}, Quantity: {quantity}, Size ID: {size_id}")
 
-    product = ProductAttribute.objects.get(pk=product_id)
-    
+    product = ProductAttribute.objects.get(pk=size_id)
+    print(product)
     # Get or create the user's cart
     cart, created = Cart.objects.get_or_create(user=request.user)
     
-    # Add the product to the cart with default size=None
-    cart_item = CartItem.objects.create(user=request.user, cart=cart, product=product, quantity=quantity)
-    
+    # Add the product to the cart with the selected size
+    cart_item = CartItem.objects.create(user=request.user, cart=cart, product=product, quantity=quantity, size=size_id)
+  
     # Optionally, you can display a success message
     messages.success(request, f"{product} added to cart.")
     

@@ -4,3 +4,4 @@
 4. Setup the cash on payment functionality
 5. Setup the ajax's things like the product count in cart 
 6. If there's time left then do the whshlist and pagination things
+7. The fetching of add to cart has some problems regarding the product_id and size but the quantity is correct

@@ -85,7 +85,7 @@
                                    
                                     <form id="add-to-cart-form" action="{% url 'cart:add_to_cart' %}" method="post">
                                         {% csrf_token %}
-                                        <input type="hidden" name="product_id" value="{{ product_attributes.id }}">
+                                        <input type="hidden" name="product_id" value="{{ product.p_id }}">
                                         
                                         <div class="attr-detail attr-size">
                                             <!-- Display the size options here -->
@@ -95,7 +95,7 @@
                                                 <button type="button" class="size-button" data-size-id="{{ attribute.id }}">{{ attribute.size }}</button>
                                                 {% endfor %}
                                             </div>
-                                            <input type="hidden" name="selected-size" id="selected-size" value="{{ product_attributes.first.id }}">
+                                            <input type="hidden" name="selected_size" id="selected-size" value="{{ product_attributes.first.size }}">
                                         </div><br>
                                         
                                         <div class="quantity">
@@ -105,6 +105,7 @@
                                         
                                         <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
                                     </form>
+                                    
                                     
                                     <style>
                                         .size-button {
@@ -117,23 +118,49 @@
                                             transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition */
                                             font-size: 13px; /* Adjust the text size */
                                         }
-                                    
+
                                         .size-button:hover {
                                             background-color: #f2f2f2; /* Background color on hover */
                                         }
+
+                                        .size-button.selected {
+                                            background-color: #088178; /* Background color for selected state */
+                                            color: white; /* Text color for selected state */
+                                            border-color: #088178; /* Border color for selected state */
+                                        }
                                     </style>
-                                    
                                     
                                     <script>
                                         document.querySelectorAll('.size-button').forEach(button => {
                                             button.addEventListener('click', () => {
-                                                document.getElementById('selected-size').value = button.dataset.sizeId;
-                                                // Add any additional styling or behavior here, like highlighting the selected button
+                                                // Remove the 'selected' class from all buttons
+                                                document.querySelectorAll('.size-button').forEach(btn => {
+                                                    btn.classList.remove('selected');
+                                                });
+
+                                                // Add the 'selected' class to the clicked button
+                                                button.classList.add('selected');
+                                                
+                                                // Get the selected size ID
+                                                const sizeId = button.dataset.sizeId;
+        
+                                                // Update the hidden input field with the selected size ID
+                                                document.getElementById('selected-size').value = sizeId;
+        
+                                                // Make an AJAX request to fetch the price for the selected size
+                                                fetch(`/get_price/${sizeId}/`)
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        // Update the displayed price with the fetched price
+                                                        document.getElementById('product-price').innerText = `₹${data.price}`;
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error:', error);
+                                                    });
                                             });
                                         });
                                     </script>
                                     
-                                
                                 
                                     
                                     </div>
@@ -161,10 +188,6 @@
                                     {% endfor %}
                                 </ul>
                                 
-
-                                
-
-
                                 <div class="social-icons single-share mt-40">
                                     <ul class="text-grey-5 d-inline-block">
                                         <li><strong class="mr-10">Share this:</strong></li>
@@ -183,12 +206,20 @@
         <script>
             document.querySelectorAll('.size-button').forEach(button => {
                 button.addEventListener('click', () => {
+                    // Remove the 'selected' class from all buttons
+                    document.querySelectorAll('.size-button').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+
+                    // Add the 'selected' class to the clicked button
+                    button.classList.add('selected');
+
                     // Get the selected size ID
                     const sizeId = button.dataset.sizeId;
-        
+
                     // Update the hidden input field with the selected size ID
                     document.getElementById('selected-size').value = sizeId;
-        
+
                     // Make an AJAX request to fetch the price for the selected size
                     fetch(`/get_price/${sizeId}/`)
                         .then(response => response.json())
@@ -201,7 +232,7 @@
                         });
                 });
             });
+
         </script>
-        
 
 {% endblock content %}

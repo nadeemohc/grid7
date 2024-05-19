@@ -4,7 +4,7 @@ from accounts.models import User
 from django.utils import timezone
 # Create your models here.
 
-class Size(models.Model):
+class   Size(models.Model):
     size = models.CharField(max_length=50)
     
     def __str__(self):
@@ -120,6 +120,7 @@ class CartItem(models.Model):
     product = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE)
     quantity = models.PositiveBigIntegerField(default=1)
     is_deleted = models.BooleanField(default=False)
+    size = models.CharField(max_length=10, blank=True, null=True)
 
     def product_image(self):
         first_image = self.product.p._images.first()
