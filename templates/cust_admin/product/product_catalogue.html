@@ -41,56 +41,51 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <!-- <th>id</th> -->
-                                    <th>Name</th>
-                                    <th>Image</th>
-                                    <th>Size</th>
-                                    <!-- <th>Price</th>
-                                    <th>Old Price</th> -->
-                                    <th>Category</th>
-                                    <th>Sub Category</th>
-                                    <th>Is Available</th>
-                                    <!-- <th>Latest</th>
-                                    <th>Status</th>
-                                    <th>Stock</th> -->
-                                    <th class="col-md-1">Action</th>
+                                    <th>#ID</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Image</th>
+                                    <th scope="col">Size</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Sub Category</th>
+                                    <th>Price</th> <!-- Removed scope="col-1" -->
+                                    <th scope="col" class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for product_attr in products %}
-                                    <tr>
-                                        <td><b>{{ product_attr.product.title }}</b></td>
-                                        <td>
-                                            {% if product_attr.product.image %}
-                                                <img src="{{ product_attr.product.image.url }}" alt="{{ product_attr.product.title }}" class="img-sm img-thumbnail" alt="">
-                                            {% else %}
-                                                <p>No image available</p>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if product_attr.size %}
-                                                <p>{{ product_attr.size.size }}</p>
-                                            {% else %}
-                                                <p>No size available</p>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ product_attr.product.category }}</td>
-                                        <td>{{ product_attr.product.sub_category.sub_name }}</td>
-                                        <td>{{ product_attr.featured }}</td>
-                                        <td>
-                                            {% if product_attr.is_blocked %}
-                                                <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
-                                            {% else %}
-                                                <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
-                                            {% endif %}
-                                            <a href="{% url 'cust_admin:product_edit' product_attr.product.pk %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td>{{ product_attr.id }}</td>
+                                    <td><b>{{ product_attr.product.title }}</b></td>
+                                    <td>
+                                        {% if product_attr.product.image %}
+                                        <img src="{{ product_attr.product.image.url }}" alt="{{ product_attr.product.title }}" class="img-sm img-thumbnail" alt="">
+                                        {% else %}
+                                        <p>No image available</p>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if product_attr.size %}
+                                        <p>{{ product_attr.size.size }}</p>
+                                        {% else %}
+                                        <p>No size available</p>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ product_attr.product.category }}</td>
+                                    <td>{{ product_attr.product.sub_category.sub_name }}</td>
+                                    <td>{{product_attr.price}}</td> <!-- Closed the <td> element -->
+                                    <td class="text-end">
+                                        {% if product_attr.is_blocked %}
+                                        <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
+                                        {% else %}
+                                        <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
+                                        {% endif %}
+                                        <a href="{% url 'cust_admin:product_edit' product_attr.product.pk %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
+                                    </td>
+                                </tr>
                                 {% endfor %}
                             </tbody>
-                            
                         </table>
-                    </div> <!-- table-responsive //end -->
+                                            </div> <!-- table-responsive //end -->
                 </div> <!-- card-body end// -->
             </div> <!-- card end// -->
             <div class="pagination-area mt-15 mb-50">

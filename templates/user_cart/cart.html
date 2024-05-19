@@ -84,6 +84,7 @@
                                         </td>
                                         <td><button class='btn primary-btn' onclick="removeFromCart('{{ cart_item.id }}')">Remove</button></td>
                                     </tr>
+                                    pr={{cart_item.product_attribute.description}}
                                     {% endfor %}
                                     {% else %}
                                     <td colspan="6">
