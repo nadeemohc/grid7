@@ -11,6 +11,8 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.template.defaultfilters import linebreaksbr
+from user_cart.views import checkout
+
 
 
 # for the home page 
@@ -136,14 +138,15 @@ def user_profile(request):
 
 # For adding new address in the user profile
 def add_address(request):
-    
+    source = request.GET.get('source', None)
+    print('Inside addaddress')
     if request.method == 'POST':
         street_address = request.POST.get('street_address')
         city = request.POST.get('city')
         state = request.POST.get('state')
         postal_code = request.POST.get('postal_code')
         country = request.POST.get('country')
-        
+        print(street_address, city, state, postal_code, country)
         address = Address.objects.create(
             user = request.user,
             street_address = street_address,
@@ -152,9 +155,13 @@ def add_address(request):
             postal_code = postal_code,
             country = country,
         )
+        if source == 'profile_address':
+                return redirect('store:user_profile')
+        elif source == 'checkout_address':
+            return redirect('cart:checkout')
         messages.success(request, """Address Added successfully
                          Check the My Address Tab""")
-        return redirect('store:user_profile')
+        # return redirect('store:user_profile')
     
     return render(request, 'dashboard/user_profil.html',{'address': address})
 

@@ -98,8 +98,7 @@
                             <!-- <a class="btn  mr-10 mb-sm-15"><i class="fi-rs-shuffle mr-10"></i>Update Cart</a> -->
                             <a href="{% url 'store:shop' %}" class="btn "><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
                         </div>
-                        <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
-                        <div class="row mb-50">
+                        <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>                        <div class="row mb-50">
                             <div class="col-lg-6 col-md-12">
                                 <div class="mb-30 mt-50">
                                     <div class="heading_s1 mb-3">
@@ -158,36 +157,9 @@
  
     <script>
         
-        // {% comment %} function increaseQuantity(cartItemId,cart_id) {
-        //     let quantityInput = document.getElementById(`quantity${cartItemId}`)
-        //     let currentElement = document.getElementById(`total${cartItemId}`)
-        //     fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
-        //         .then(response => {
-        //             if (response.ok) {
-        //                 console.log(response.status);
-        //                 return response.json();
-        //             } else {
-        //                 throw new Error('Failed to increase quantity');
-        //             }
-        //         })
-        //         .then(data => {
-        //             console.log(data)
-        //             // Update quantity
-        //             quantityInput.innerText = data.q;
-        //             console.log(data.total+"backend")
-                    
-        //             currentElement.innerText = `₹${data.total}`
-        //             final.innerText = `₹${data.total_sum}`
-                    
-                    
-        //         })
-        //         .catch(error => {
-        //             console.error('Error:', error);
-        //             showToast('error', error.message);
-        //         });
-        // } {% endcomment %}
         function increaseQuantity(cartItemId, cart_id) {
             console.log(cartItemId,cart_id)
+            console.log('coming');
             console.log('inside increse')
             let final = document.getElementById('final_total');
             let quantityInput = document.getElementById(`quantity${cartItemId}`);
@@ -196,6 +168,7 @@
             fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
                 .then(response => {
                     if (response.status === 200) {
+                        console.log('after');
                         return response.json();
                     } else if (response.status === 201) {
                         showToast('info', 'Product is out of stock');
@@ -206,8 +179,9 @@
                 })
                 .then(data => {
                     console.log(data);
-                    console.log(data.q,"quantity while decreasing")
+                    console.log(data.q,"quantity while increasing")
                     // Update quantity
+                    console.log('after2');
                     quantityInput.innerText = data.q;
                     console.log(data.total + "backend");
         

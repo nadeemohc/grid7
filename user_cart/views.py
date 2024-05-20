@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from decimal import Decimal
 import store, random
+import uuid 
 from . import views
 from datetime import datetime
 from accounts.models import Address
@@ -122,7 +123,7 @@ def add_to_cart(request):
 def decrease_quantity(request, cart_item_id,cart_id):
     print("decrese in")
     cart_item = get_object_or_404(CartItem, pk=cart_item_id)
-    print(cart_item)
+    # print(cart_item)
     
     if cart_item.quantity > 1:
         cart_item.quantity = cart_item.quantity-1
@@ -192,67 +193,191 @@ def remove_from_cart(request, cart_item_id):
 
 @login_required
 @login_required
+
+@login_required
 def checkout(request):
     user = request.user
-
-    # Retrieve the user's cart if it exists
     user_cart = Cart.objects.filter(user=user).first()
-
-    cart_items = []
-    total_cart_price = Decimal(0)  # Initialize total_cart_price as Decimal
+    total_cart_price = Decimal(0)
 
     if user_cart:
         cart_items = user_cart.items.all()
-
         for cart_item in cart_items:
-            # Access the associated product
             product = cart_item.product
-            
-            # Access the price from one of the product attributes
-            # Assuming there's at least one product attribute associated with the product
-            # You may need to adjust this logic based on your data model
-            # product_attribute = product.productattribute_set.first()
-            product_attribute = product  # Assuming the ProductAttribute itself represents the product variant
-
-            if product_attribute:
-                price = product_attribute.price
-                
-                # Calculate the subtotal for each item (product price * quantity)
-                cart_item.subtotal = price * cart_item.quantity
-
-                # Add the subtotal to the total_cart_price
-                total_cart_price += cart_item.subtotal
+            price = product.price
+            cart_item.subtotal = price * cart_item.quantity
+            total_cart_price += cart_item.subtotal
 
     items = CartItem.objects.filter(user=user, is_deleted=False)
     user_addresses = Address.objects.filter(user=user)
-    print(len(user_addresses))
+
     if request.method == 'POST':
-        street_address = request.POST.get('street_address')
-        city = request.POST.get('city')
-        state = request.POST.get('state')
-        postal_code = request.POST.get('postal_code')
-        country = request.POST.get('country')
-        
-        # Save the address to the database or perform any necessary actions
-        address = Address.objects.create(
-            user = request.user,
-            street_address = street_address,
-            city = city,
-            state = state,
-            postal_code = postal_code,
-            country = country,
-        )
-        print(add)
-        # Redirect to a success page or perform any additional actions
-        messages.success(request, 'Address added successfully!')
-        return redirect('cart:checkout')  # Redirect to the checkout page or any other page
+        selected_address_id = request.POST.get('existing_address')
+        if selected_address_id:
+            try:
+                selected_address = Address.objects.get(id=selected_address_id, user=user)
+                
+                # Create the order
+                order_number = str(uuid.uuid4())[:12]  # Use first 12 characters of UUID
+                new_order = CartOrder.objects.create(
+                    user=user,
+                    order_number=order_number,
+                    order_total=total_cart_price,
+                    selected_address=selected_address,
+                    status='New'
+                )
+
+                # Create ProductOrder entries
+                for item in items:
+                    ProductOrder.objects.create(
+                        order=new_order,
+                        user=user,
+                        product=item.product.product,
+                        quantity=item.quantity,
+                        product_price=item.product.price,
+                        ordered=True,
+                        variations=item.product
+                    )
+
+                # Delete all items from the user's cart after creating the order
+                user_cart.items.all().delete()
+
+                return render(request, 'user_cart/order_success.html', {
+                    'order': new_order,
+                    'product_orders': ProductOrder.objects.filter(order=new_order),
+                })
+            except Address.DoesNotExist:
+                messages.error(request, "Selected address does not exist.")
+        else:
+            messages.error(request, "Please select an address.")
 
     context = {
         'items': items,
-        'total_cart_price': total_cart_price,  # Add total_cart_price to the context
+        'total_cart_price': total_cart_price,
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
 
-def payment(request):
-    return render(request, 'user_cart/payment.html')
+@login_required
+def payment(request, order_id):
+    user = request.user
+    order = get_object_or_404(CartOrder, id=order_id, user=user)
+
+    if request.method == 'POST':
+        payment_method = request.POST.get('payment_method')
+
+        if payment_method:
+            # Assume payment is successful and update the order status
+            Payments.objects.create(
+                user=user,
+                payment_id=str(uuid.uuid4()),  # Example payment ID
+                payment_method=payment_method,
+                amount_paid=order.order_total,
+                status='Completed'
+            )
+            order.status = 'Paid'
+            order.save()
+
+            messages.success(request, "Your payment was successful!")
+            return redirect('cart:order_confirmation', order_id=order.id)
+        else:
+            messages.error(request, "Please select a payment method.")
+
+    context = {
+        'order': order,
+    }
+    return render(request, 'user_cart/payment.html', context)
+
+
+@login_required
+def order_confirmation(request, order_id):
+    user = request.user
+    order = get_object_or_404(CartOrder, id=order_id, user=user)
+    context = {
+        'order': order,
+    }
+    return render(request, 'user_cart/order_confirmation.html', context)
+
+
+
+# def place_order(request):
+#     user = request.user 
+#     items = CartItem.objects.filter(user=user, is_deleted=False)
+#     request.session.get('applied_coupon_id', None)  
+#     request.session.get('totals', 0)
+#     total = request.session.get('total', 0)
+#     request.session.get('discounts', 0)
+   
+
+#     # user_addresses = items.first().address
+
+#     short_id = str(random.randint(1000, 9999))
+#     yr = datetime.now().year
+#     dt = int(datetime.today().strftime('%d'))
+#     mt = int(datetime.today().strftime('%m'))
+#     d = datetime(yr, mt, dt).date()
+#     payment_id = f"PAYMENT-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+
+#     current_date = d.strftime("%Y%m%d")
+#     short_id = str(random.randint(1000, 9999))
+#     order_numbers = current_date + short_id 
+#     coupons = []
+
+#     for item in items:
+#         coupon = item.coupon
+#         coupons.append(coupon)
+
+#     if coupons:
+#         coupon = coupons[0]
+#     else:
+#         coupon = None
+
+#     var=CartOrder.objects.create(
+#         user=request.user,
+#         order_number=order_numbers,
+#         order_total= total,
+#         coupen=coupon,
+#         selected_address=user_addresses,
+#         ip=request.META.get('REMOTE_ADDR')    
+#     )
+#     var.save()
+#     payment_instance=Payments.objects.create(
+#         user=request.user,
+#         payment_id=payment_id,
+#         payment_method='COD',
+#         amount_paid= total,
+#         status='Pending',
+                
+#     )
+        
+#     var.payment=payment_instance
+#     var.save()
+            
+#     cart=CartItem.objects.filter(user=request.user)
+            
+#     for item in cart:
+#         orderedproduct=ProductOrder()
+#         item.product.stock-=item.quantity
+#         item.product.save()
+#         orderedproduct.order=var
+#         orderedproduct.payment=payment_instance
+#         orderedproduct.user=request.user
+#         orderedproduct.product=item.product.product
+#         orderedproduct.quantity=item.quantity
+#         orderedproduct.product_price=item.product.price
+#         product_attribute = ProductAttribute.objects.get(product=item.product.product, color=item.product.color)
+#         orderedproduct.variations = product_attribute
+#         orderedproduct.ordered=True
+#         orderedproduct.save()
+#         item.delete()  
+#     if 'applied_coupon_id' in request.session:
+#         request.session.pop('applied_coupon_id')     
+#     request.session.pop('totals')
+#     total = request.session.pop('total')
+#     request.session.pop('discounts')
+        
+#     return redirect('cart:success')
+
+# def success(request):
+    
+#     return render(request, 'user_cart/success_page.html')

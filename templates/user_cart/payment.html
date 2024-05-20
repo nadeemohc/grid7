@@ -1,0 +1,50 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Payment
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 offset-md-3">
+                    <div class="order_review">
+                        <div class="mb-20">
+                            <h4>Order Payment</h4>
+                        </div>
+                        <form method="post" action="{% url 'cart:payment' order.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="payment_method">Select Payment Method:</label>
+                                <select class="form-control" name="payment_method" id="payment_method">
+                                    <option value="COD">Cash on Delivery</option>
+                                    <option value="Razorpay">Razorpay</option>
+                                    <option value="Wallet">Wallet</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Pay Now</button>
+                        </form>
+                    </div>
+                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                    {% if messages %}
+                        <div class="messages">
+                            <ul class="messages">
+                                {% for message in messages %}
+                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
