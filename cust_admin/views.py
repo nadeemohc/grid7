@@ -430,3 +430,33 @@ def catalogue_list_unlist(request, p_id):
     action = 'unblocked' if not product.is_blocked else 'blocked'
     messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
     return redirect('cust_admin:prod_catalogue')
+
+def list_order(request):
+    orders = CartOrder.objects.all().order_by('id')
+    context = {
+        'title': 'Order List',
+        'orders': orders,
+    }
+    return render(request, 'cust_admin/order/order_list.html', context)
+
+def order_detail(request, order_id):
+    order = get_object_or_404(CartOrder, id=order_id)
+    context = {
+        'title': 'Order Detail',
+        'order': order,
+    }
+    return render(request, 'cust_admin/order/order_detail.html', context)
+
+def order_update_status(request, order_id):
+    order = get_object_or_404(CartOrder, id=order_id)
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        order.status = status
+        order.save()
+        messages.success(request, 'Order status updated successfully.')
+        return redirect('cust_admin:list_order')
+    context = {
+        'title': 'Update Order Status',
+        'order': order,
+    }
+    return render(request, 'cust_admin/order/order_update_status.html', context)
