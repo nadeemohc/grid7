@@ -89,7 +89,7 @@
                                     <div class="product-category">
                                         <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
                                     </div>
-                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:35 }}</a></h2>
+                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:30 }}</a></h2>
                                     <div class="rating-result" title="90%">
                                         <span>
                                             <span>95%</span>
@@ -130,7 +130,7 @@
                         <ul class="categories">
                             {% for category in categories %}
                                 {% if category.is_blocked != True %}
-                                    <li><a href="{% url 'store:shop' %}">{{ category.c_name }}</a></li>
+                                    <li><a href="{% url 'store:product_list_by_category' category.c_id %}">{{ category.c_name }}</a></li>
                                 {% endif %}
                             {% endfor %}
                         </ul>

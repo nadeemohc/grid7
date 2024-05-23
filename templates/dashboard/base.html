@@ -103,7 +103,7 @@
                                         <img alt="Evara" src="{% static 'store/imgs/theme/icons/icon-cart.svg' %}">
                                         
 
-                                        <span class="pro-count blue" id="cart_quantity">{{ item_count }}</span>
+                                        <span class="pro-count blue" id="cart_quantity">{{ item_4count }}</span>
                                         
                                         {% comment %}                                        
                                         <span class="pro-count blue cart-count" data-cart-count="{{ item_count }}">{{ item_count }}</span>
@@ -147,7 +147,7 @@
                                     <ul class="sub-menu">
                                             {% for category in categories %}
                                                 {% if category.is_blocked != True %}
-                                                    <li><a href="shop-grid-right.html">{{ category.c_name }}</a></li>
+                                                    <li><a href="{% url 'store:product_list_by_category' category.c_id %}">{{ category.c_name }}</a></li>
                                                 {% endif %}
                                             {% endfor %}
                                         </ul>
@@ -467,20 +467,7 @@
         </div>
     </footer>
     <!-- Preloader Start -->
-    <div id="preloader-active">
-        <div class="preloader d-flex align-items-center justify-content-center">
-            <div class="preloader-inner position-relative">
-                <div class="text-center">
-                    <h5 class="mb-10">Now Loading</h5>
-                    <div class="loader">
-                        <div class="bar bar1"></div>
-                        <div class="bar bar2"></div>
-                        <div class="bar bar3"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <!-- Vendor JS-->
     <script src="{% static 'store/js/vendor/modernizr-3.6.0.min.js' %}"></script>
     <script src="{% static 'store/js/vendor/jquery-3.6.0.min.js' %}"></script>

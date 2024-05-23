@@ -20,8 +20,8 @@
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    <div class="mb-25"><br><br><br>
-                        <br><br><br><br>
+                    <div class="mb-25">
+                        
                         <h4>Billing Details</h4>
                     </div>
                     <form method="post" action="{% url 'cart:checkout' %}">
@@ -34,8 +34,9 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Place Order and Proceed to Payment</button>
-                    </form>
+                        <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                    </form><br>
+                    {% include 'user_cart/modal/address.html' %}
                 </div>
                 <div class="col-md-6">
                     <div class="order_review">

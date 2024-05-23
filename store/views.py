@@ -134,7 +134,22 @@ def get_price(request, size_id):
 def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
-    return render(request, 'dashboard/user_profile.html', {'title': 'User Profile', 'user': user, 'address': address})
+    orders = CartOrder.objects.filter(user=user)
+    context = {
+        'user': user,
+        'address':address,
+        'orders': orders,
+        'title': 'User Profile'
+    }
+
+    return render(request, 'dashboard/user_profile.html', context)
+
+def user_order_detail(request, order_id):
+    order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+    context = {
+        'order': order,
+    }
+    return render(request, 'dashboard/user_order_detail.html', context)
 
 # For adding new address in the user profile
 def add_address(request):

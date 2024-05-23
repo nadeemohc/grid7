@@ -17,11 +17,13 @@
             <p><strong>User:</strong> {{ order.user.username }}</p>
             <p><strong>Total:</strong> {{ order.order_total }}</p>
             <p><strong>Status:</strong> {{ order.status }}</p>
-            <p><strong>Date:</strong> {{ order.date }}</p>
+            <p><strong>Date:</strong> {{ order.created_at }}</p>
             <h4>Items:</h4>
             <ul>
-                {% for item in order.items.all %}
-                <li>{{ item.product.title }} - {{ item.quantity }} x {{ item.price }}</li>
+                {% for item in items %}
+                <li>{{ item.product.title }} - {{ item.quantity }} x {{ item.product_price }}</li>
+                {% empty %}
+                <li>No items in this order.</li>
                 {% endfor %}
             </ul>
             <a href="{% url 'cust_admin:order_update_status' order.id %}" class="btn btn-primary">Update Status</a>

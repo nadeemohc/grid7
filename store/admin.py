@@ -36,3 +36,7 @@ admin.site.register(Size)
 admin.site.register(CartItem)
 
 admin.site.register(Cart)
+
+admin.site.register(CartOrder)
+
+admin.site.register(ProductOrder)

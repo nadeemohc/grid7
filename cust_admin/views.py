@@ -441,11 +441,15 @@ def list_order(request):
 
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
+    items = ProductOrder.objects.filter(order=order)
     context = {
         'title': 'Order Detail',
         'order': order,
+        'items': items,
     }
     return render(request, 'cust_admin/order/order_detail.html', context)
+
+
 
 def order_update_status(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)

@@ -1,0 +1,127 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .order-container {
+        padding: 20px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+        margin-top: 20px;
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .order-header h2 {
+        margin: 0;
+    }
+
+    .order-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .order-table th, .order-table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .order-table th {
+        background-color: #f2f2f2;
+    }
+
+    .total-amount {
+        font-size: 18px;
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .btn-pdf {
+        background-color: #e83e8c;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .back-to-shop {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #088178;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+</style>
+
+<div class="container order-container">
+    <!-- <div class="order-header">
+        <h2>Order Details</h2>
+        <a href="#" class="btn-pdf">Download as PDF</a>
+    </div> -->
+
+    <!-- <h3>Billing Details</h3> -->
+    <h3>Order Details</h3>
+    <table class="order-table">
+        <tr>
+            <th>Order ID</th>
+            <td>{{ order.id }}</td>
+        </tr>
+        <tr>
+            <th>Shipping Address</th>
+            <td>{{ order.selected_address.street_address }} {{ order.selected_address.city }}, 
+                {{ order.selected_address.state }}, {{ order.selected_address.country }} P.O - {{ order.selected_address.postal_code }}</td>
+        </tr>
+        <tr>
+            <th>Total Amount</th>
+            <td>₹{{ order.order_total }}</td>
+        </tr>
+    </table>
+
+    <h3>Order Items</h3>
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product.title }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.product_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <!-- <tr>
+                <th colspan="2">Sub Total Price:</th>
+                <td>₹{{ order.sub_total }}</td>
+            </tr> -->
+            {% if order.coupon %}
+            <tr>
+                <th colspan="2">Discount Price:</th>
+                <td>₹{{ order.discount }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th colspan="2">Total Price:</th>
+                <td>₹{{ order.order_total }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
+</div>
+
+{% endblock content %}
