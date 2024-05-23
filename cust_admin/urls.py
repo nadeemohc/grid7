@@ -34,4 +34,9 @@ urlpatterns = [
     path('add_variant', views.add_variant, name='add_variant'),
     path('list_variant/', views.list_variant, name='list_variant'),
     path('edit_variant/<int:id>/', views.edit_variant, name='edit_variant'),
+
+    # Order functionalities
+    path('orders/', views.list_order, name='list_order'),
+    path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
+    path('orders/<int:order_id>/update_status/', views.order_update_status, name='order_update_status'),
 ]

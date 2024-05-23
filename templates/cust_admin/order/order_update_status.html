@@ -1,0 +1,35 @@
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block content %}
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">{{ title }}</h2>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <header class="card-header">
+            <h3>Update Order Status</h3>
+        </header>
+        <div class="card-body">
+            <form method="post" action="{% url 'cust_admin:order_update_status' order.id %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="New" {% if order.status == 'New' %}selected{% endif %}>New</option>
+                        <option value="Paid" {% if order.status == 'Paid' %}selected{% endif %}>Paid</option>
+                        <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="Return" {% if order.status == 'Return' %}selected{% endif %}>Return</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

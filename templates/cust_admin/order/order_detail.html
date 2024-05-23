@@ -1,0 +1,34 @@
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block content %}
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">{{ title }}</h2>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <header class="card-header">
+            <h3>Order Details</h3>
+        </header>
+        <div class="card-body">
+            <p><strong>Order ID:</strong> {{ order.id }}</p>
+            <p><strong>User:</strong> {{ order.user.username }}</p>
+            <p><strong>Total:</strong> {{ order.order_total }}</p>
+            <p><strong>Status:</strong> {{ order.status }}</p>
+            <p><strong>Date:</strong> {{ order.created_at }}</p>
+            <h4>Items:</h4>
+            <ul>
+                {% for item in items %}
+                <li>{{ item.product.title }} - {{ item.quantity }} x {{ item.product_price }}</li>
+                {% empty %}
+                <li>No items in this order.</li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'cust_admin:order_update_status' order.id %}" class="btn btn-primary">Update Status</a>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

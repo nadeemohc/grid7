@@ -1,4 +1,4 @@
-<button type="button" class="btn btn-light rounded btn-sm font-sm col-lg-5" data-bs-toggle="modal" data-bs-target="#addressadd">
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addressadd">
     Add New Address
   </button>
 
@@ -11,7 +11,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <form method="POST" action="{% url 'store:add_address' %}?source=profile_address">
+            <form method="POST" action="{% url 'store:add_address' %}?source=checkout_address">
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="street_address">Street Address</label>

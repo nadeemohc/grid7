@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.safestring import mark_safe
-from accounts.models import User
+from accounts.models import *
 from django.utils import timezone
 # Create your models here.
 
@@ -129,5 +129,65 @@ class CartItem(models.Model):
         return None
     
     def __str__(self):
-        return f'{self.quantity} x {self.product.title} in {self.cart}'
+        return f'{self.quantity} x {self.product} in {self.cart}'
 
+class Payments(models.Model):
+    payment_choices=(
+        ('COD','COD'),
+        ('Razorpay','Razorpay'),
+        ('Wallet','Wallet'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    payment_id = models.CharField(max_length=100)
+    payment_method = models.CharField(max_length=100,choices=payment_choices)
+    amount_paid = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.first_name
+
+class CartOrder(models.Model):
+    STATUS =(
+        ('New','New'),
+        ('Paid','Paid'),
+        ('Shipped','Shipped'),
+        ('Conformed','Conformed'),
+        ('Pending','Pending'),
+        ('Delivered','Delivered'),
+        ('Cancelled','Cancelled'),
+        ('Return','Return')
+    )
+    user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    payment=models.ForeignKey(Payments,on_delete=models.SET_NULL,blank=True,null=True)
+    order_number = models.CharField(max_length=20,default=None)
+    order_total = models.FloatField(null=True, blank=True)
+    status=models.CharField(max_length=10, choices=STATUS, default='New')
+    ip =  models.CharField(blank=True,max_length=20)
+    is_ordered=models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=True)
+    updated_at=models.DateTimeField(auto_now=True)
+    selected_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+
+
+    class Meta:
+        verbose_name_plural = "Cart Order"
+    
+    def __str__(self):
+        return self.order_number
+
+class ProductOrder(models.Model):
+    order = models.ForeignKey(CartOrder, related_name='items', on_delete=models.SET_NULL, null=True)
+    payment = models.ForeignKey(Payments, on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    product_price = models.FloatField(default=0)
+    ordered = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    variations = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return f"{self.product.title} - {self.quantity} x {self.product_price}"
