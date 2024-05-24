@@ -412,6 +412,46 @@ def prod_variant_assign(request):
     }
     return render(request, 'cust_admin/product/prod_variant_assign.html', context)
 
+
+
+def prod_variant_edit(request, pk):
+    product_attribute = get_object_or_404(ProductAttribute, pk=pk)
+
+    if request.method == 'POST':
+        form = ProductVariantAssignForm(request.POST)
+        if form.is_valid():
+            product_attribute.product = form.cleaned_data['product']
+            product_attribute.size = form.cleaned_data['size']
+            product_attribute.price = form.cleaned_data['price']
+            product_attribute.old_price = form.cleaned_data['old_price']
+            product_attribute.stock = form.cleaned_data['stock']
+            product_attribute.in_stock = form.cleaned_data['in_stock']
+            product_attribute.status = form.cleaned_data['status']
+            product_attribute.save()
+
+            messages.success(request, 'Product attribute details updated successfully!')
+            return redirect('cust_admin:prod_catalogue')
+    else:
+        initial_data = {
+            'product': product_attribute.product,
+            'size': product_attribute.size,
+            'price': product_attribute.price,
+            'old_price': product_attribute.old_price,
+            'stock': product_attribute.stock,
+            'in_stock': product_attribute.in_stock,
+            'status': product_attribute.status
+        }
+        form = ProductVariantAssignForm(initial=initial_data)
+
+    context = {
+        'form': form,
+        'title': 'Product Variant Edit',
+    }
+
+    return render(request, 'cust_admin/product/prod_variant_edit.html', context)
+
+
+
 def prod_catalogue_list(request):    
     products = ProductAttribute.objects.all().order_by('product')
     prods = Product.objects.all()

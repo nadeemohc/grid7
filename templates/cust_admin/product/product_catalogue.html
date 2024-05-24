@@ -79,7 +79,7 @@
                                         {% else %}
                                         <a href="{% url 'cust_admin:catalogue_unlist' product_attr.product.pk %}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
                                         {% endif %}
-                                        <a href="{% url 'cust_admin:product_edit' product_attr.product.pk %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
+                                        <a href="{% url 'cust_admin:prod_variant_edit' pk=product_attr.pk %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
