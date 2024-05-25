@@ -270,10 +270,13 @@ def send_email_verification(email):
 def shop(request):
     categories = Category.objects.all()
     products = Product.objects.all()
+    sizes = Size.objects.all()
+    
     prod_count = products.count()
     context = {
         'categories': categories,
         'products': products,
+        'sizes': sizes,
         'title': 'Shop',
     }
 
