@@ -6,6 +6,7 @@ from store.models import *
 from django.http import HttpResponseBadRequest
 from cust_admin.forms import ProductVariantAssignForm
 from django.contrib import messages
+import sweetify
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -176,14 +177,14 @@ def add_variant(request):
         try:
             existing_size = Size.objects.filter(size__iexact=size)
             if existing_size:
-                messages.error(request, "The size already exists")
+                sweetify.toast(request, "The size already exists", timer=3000, icon='warning')
             else:
                 new_size = Size(size=size)
                 new_size.save()
                 messages.success(request, f'The size {size} added successfully')
         except IntegrityError as e:
             error_message = str(e)
-            messages.error(request, f'An error occurred while adding the size: {error_message}')
+            sweetify.toast(request, f'An error occurred while adding the size: {error_message}', icon='alert', timer=3000)
         
         return redirect('cust_admin:list_variant')
     context = {
@@ -222,59 +223,6 @@ def prod_list(request):
     return render(request, 'cust_admin/product/product_list.html', context)
 
 @admin_required
-# def add_product(request):
-#     if request.method == 'POST':
-#         # Extract data from the form
-#         title = request.POST.get('title')
-#         images = request.FILES.getlist('image')  # Use 'images' instead of 'image' for multiple file upload
-#         description = request.POST.get('description')
-#         category_id = request.POST.get('category')
-#         subcategory_id = request.POST.get('subcategory')
-#         specifications = request.POST.get('specifications')
-#         availability = request.POST.get('availability') == 'on'
-
-#         # Get the category and subcategory objects
-#         category = get_object_or_404(Category, c_id=category_id)
-#         subcategory = get_object_or_404(Subcategory, sid=subcategory_id)
-
-#         # Create the product
-#         product = Product.objects.create(
-#             title=title,
-#             description=description,
-#             category=category,
-#             sub_category=subcategory,
-#             specifications=specifications,
-#             availability=availability,
-#         )
-
-#         # Save additional images
-#         for image in images:  # Iterate over each uploaded image
-#             try:
-#                 ProductImages.objects.create(product=product, images=image)
-#             except Exception as e:
-#                 print(e)
-
-#         messages.success(request, 'Product added successfully!')
-#         return redirect('cust_admin:prod_list')
-
-#     # Fetch categories, subcategories, and sizes for dropdowns and selects
-#     categories = Category.objects.all()
-#     subcategories = Subcategory.objects.all()
-#     sizes = Size.objects.all()
-
-#     context = {
-#         'categories': categories,
-#         'subcategories': subcategories,
-#         'sizes': sizes,
-#     }
-
-#     return render(request, 'cust_admin/product/product_add.html', context)
-
-
-# from django.shortcuts import render, redirect
-# from django.contrib import messages
-# from .models import Product, ProductImages, Category, Subcategory
-
 def add_product(request):
     if request.method == 'POST':
         # Extract data from the form
@@ -391,26 +339,69 @@ def prod_variant_assign(request):
         in_stock = form.cleaned_data['in_stock']
         status = form.cleaned_data['status']
         
-        # Save the form data to the database
-        product_attribute = ProductAttribute.objects.create(
-            product=product,
-            size=size,
-            price=price,
-            old_price=old_price,
-            stock=stock,
-            in_stock=in_stock,
-            status=status
-        )
-
-        # Handle form submission logic here
-        messages.success(request, 'successfully added Product with varient!')
-        return redirect('cust_admin:prod_catalogue')
+        # Check if size already exists for the product
+        existing_size = ProductAttribute.objects.filter(product=product, size=size).exists()
+        if existing_size:
+            sweetify.toast(request, f"The size {size} already added", icon='warning')
+        else:
+            # Save the form data to the database
+            product_attribute = ProductAttribute.objects.create(
+                product=product,
+                size=size,
+                price=price,
+                old_price=old_price,
+                stock=stock,
+                in_stock=in_stock,
+                status=status
+            )
+            sweetify.toast(request, 'Successfully added Product with variant!', timer=3000, icon='success')
+            return redirect('cust_admin:prod_catalogue')
 
     context = {
         'title': 'Add New Product',
         'form': form,
     }
     return render(request, 'cust_admin/product/prod_variant_assign.html', context)
+
+
+
+def prod_variant_edit(request, pk):
+    product_attribute = get_object_or_404(ProductAttribute, pk=pk)
+
+    if request.method == 'POST':
+        form = ProductVariantAssignForm(request.POST)
+        if form.is_valid():
+            product_attribute.product = form.cleaned_data['product']
+            product_attribute.size = form.cleaned_data['size']
+            product_attribute.price = form.cleaned_data['price']
+            product_attribute.old_price = form.cleaned_data['old_price']
+            product_attribute.stock = form.cleaned_data['stock']
+            product_attribute.in_stock = form.cleaned_data['in_stock']
+            product_attribute.status = form.cleaned_data['status']
+            product_attribute.save()
+
+            messages.success(request, 'Product attribute details updated successfully!')
+            return redirect('cust_admin:prod_catalogue')
+    else:
+        initial_data = {
+            'product': product_attribute.product,
+            'size': product_attribute.size,
+            'price': product_attribute.price,
+            'old_price': product_attribute.old_price,
+            'stock': product_attribute.stock,
+            'in_stock': product_attribute.in_stock,
+            'status': product_attribute.status
+        }
+        form = ProductVariantAssignForm(initial=initial_data)
+
+    context = {
+        'form': form,
+        'title': 'Product Variant Edit',
+    }
+
+    return render(request, 'cust_admin/product/prod_variant_edit.html', context)
+
+
 
 def prod_catalogue_list(request):    
     products = ProductAttribute.objects.all().order_by('product')
@@ -423,12 +414,12 @@ def prod_catalogue_list(request):
     }
     return render(request, 'cust_admin/product/product_catalogue.html', context)
 
-def catalogue_list_unlist(request, p_id):
-    product = get_object_or_404(ProductAttribute, pk=p_id)
+def catalogue_list_unlist(request, pk):
+    product = get_object_or_404(ProductAttribute, pk=pk)
     product.is_blocked = not product.is_blocked
     product.save()
     action = 'unblocked' if not product.is_blocked else 'blocked'
-    messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
+    sweetify.toast(request, f"The product variant with ID {product.pk} has been {action} successfully.", timer=3000, icon='success')
     return redirect('cust_admin:prod_catalogue')
 
 def list_order(request):
@@ -442,6 +433,7 @@ def list_order(request):
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
+    address = Address.objects.filter()
     context = {
         'title': 'Order Detail',
         'order': order,
