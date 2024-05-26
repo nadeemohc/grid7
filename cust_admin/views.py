@@ -433,6 +433,7 @@ def list_order(request):
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
+    address = Address.objects.filter()
     context = {
         'title': 'Order Detail',
         'order': order,
