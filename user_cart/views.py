@@ -6,14 +6,15 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from decimal import Decimal
-import store, random
+from django.db import IntegrityError
+import store, random, sweetify, logging
 import uuid 
 from . import views
 from datetime import datetime
 from accounts.models import Address
 from store.models import CartItem
 
-
+logger = logging.getLogger(__name__)
 
 def view_cart(request):
     # Retrieve the user's cart if it exists
@@ -35,6 +36,7 @@ def view_cart(request):
 
         if product_attribute:
             price = product_attribute.price
+            size = product_attribute.size
             
             # Calculate the subtotal for each item (product price * quantity)
             cart_item.subtotal = price * cart_item.quantity
@@ -53,70 +55,59 @@ def view_cart(request):
     return render(request, 'user_cart/cart.html', context)
 
 
-
-
-
-import logging
-
-logger = logging.getLogger(__name__)
 @login_required
 @require_POST
 def add_to_cart(request):
-    product_id = int(request.POST.get('product_id'))
-    quantity = int(request.POST.get('quantity', 1))
-    size_id = request.POST.get('selected_size')  # Correctly retrieving the selected size ID
-    print(product_id, quantity, size_id)
-    logger.debug(f"Product ID: {product_id}, Quantity: {quantity}, Size ID: {size_id}")
+    if request.method == 'POST':
+        try:
+            product_id = int(request.POST.get('product_id'))
+            quantity = int(request.POST.get('quantity', 1))
+            size_id = int(request.POST.get('selected_size'))  # Ensure size_id is an integer
 
-    product = ProductAttribute.objects.get(pk=size_id)
-    print(product)
-    # Get or create the user's cart
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    
-    # Add the product to the cart with the selected size
-    cart_item = CartItem.objects.create(user=request.user, cart=cart, product=product, quantity=quantity, size=size_id)
-  
-    # Optionally, you can display a success message
-    messages.success(request, f"{product} added to cart.")
-    
-    # Redirect to the product view page with the product_pid parameter
-    return redirect(reverse('store:product_view', kwargs={'product_pid': product_id}))
+            logger.debug(f"Product ID: {product_id}, Quantity: {quantity}, Size ID: {size_id}")
 
+            # Retrieve the product attribute
+            product_attribute = get_object_or_404(ProductAttribute, pk=size_id)
+            if product_attribute.stock < quantity:
+                sweetify.toast(request, "Not enough stock available", timer=3000, icon='warning')
+                return redirect('store:product_view', product_pid=product_id)
 
-# @login_required
-# @require_POST
-# def increase_quantity(request, cart_item_id):
-#     cart_item = get_object_or_404(CartItem, pk=cart_item_id)
-#     if cart_item.product.stock >= cart_item.quantity + 1:
-#         cart_item.quantity += 1
-#         cart_item.save()
-#         # Calculate total and subtotal
-#         total_price = cart_item.product.price * cart_item.quantity
-#         return JsonResponse({'quantity': cart_item.quantity, 'total': total_price})
-#     else:
-#         # Return status 201 if product is out of stock
-#         return JsonResponse({'error': 'Product is out of stock'}, status=201)
+            # Get or create the user's cart
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            
+            # Add the product to the cart with the selected size
+            cart_item, item_created = CartItem.objects.get_or_create(
+                user=request.user,
+                cart=cart,
+                product=product_attribute,
+                defaults={'quantity': quantity, 'size': size_id}
+            )
 
-# @login_required
-# @require_POST
-# def decrease_quantity(request, cart_item_id):
-#     cart_item = get_object_or_404(CartItem, pk=cart_item_id)
-#     if cart_item.quantity > 1:
-#         cart_item.quantity -= 1
-#         cart_item.save()
-#         # Calculate total and subtotal
-#         total_price = cart_item.product.price * cart_item.quantity
-#         return JsonResponse({'quantity': cart_item.quantity, 'total': total_price})
-#     else:
-#         # Return status 400 if quantity is already 1
-#         return JsonResponse({'error': 'Quantity cannot be less than 1'}, status=400)
+            if not item_created:
+                cart_item.quantity += quantity
+                cart_item.save()
 
+            sweetify.toast(request, "Product added to cart successfully", timer=3000, icon='success')
+            return redirect('store:product_view', product_pid=product_id)
 
+        except ProductAttribute.DoesNotExist:
+            sweetify.toast(request, "Selected size not available", timer=3000, icon='error')
+            return redirect('store:product_view', product_pid=product_id)
 
+        except ValueError:
+            sweetify.toast(request, "Invalid size or quantity entered", timer=3000, icon='error')
+            return redirect('store:product_view', product_pid=product_id)
 
+        except IntegrityError:
+            sweetify.toast(request, 'Error adding product to cart', timer=3000, icon='error')
+            return redirect('store:product_view', product_pid=product_id)
 
+        except Exception as e:
+            logger.error(f'An unexpected error occurred: {e}')
+            sweetify.toast(request, 'An unexpected error occurred. Please try again', timer=3000, icon='error')
+            return redirect('store:product_list')
 
-    
+    return redirect('store:product_view', product_pid=product_id)
 
 
 
@@ -185,6 +176,7 @@ def remove_from_cart(request, cart_item_id):
     
     cart_item = get_object_or_404(CartItem, pk=cart_item_id)
     cart_item.delete()
+    sweetify.toast(request, 'Item removed from cart successfully',timer=3000, icon='success')
     return JsonResponse({'message': 'Item removed from cart successfully'}, status=200)
 
 

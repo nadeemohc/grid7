@@ -134,7 +134,7 @@ def get_price(request, size_id):
 def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
-    orders = CartOrder.objects.filter(user=user)
+    orders = CartOrder.objects.filter(user=user).order_by('-id')
     context = {
         'user': user,
         'address':address,
@@ -271,7 +271,7 @@ def shop(request):
     categories = Category.objects.all()
     products = Product.objects.all()
     sizes = Size.objects.all()
-    
+
     prod_count = products.count()
     context = {
         'categories': categories,

@@ -50,6 +50,7 @@
                                     <tr class="main-heading">
                                         <!-- <th scope="col">Image</th> -->
                                         <th scope="col">Name</th>
+                                        <th scope="col">Size</th>
                                         <th scope="col">Price</th>
                                         <th scope="col">Quantity</th>
                                         <th scope="col">Subtotal</th>
@@ -70,8 +71,9 @@
                                         
                                         <td class="product-des product-name">
                                             <h5 class="product-name"><a href="shop-product-right.html">{{cart_item.product.product.title}}</a></h5>
-                                            <p class="font-xs">{{cart_item.product.description}}</p>
+                                            <!-- <p class="font-xs">{{cart_item.product.description}}</p> -->
                                         </td>
+                                        <td class="product-size"><span>{{ cart_item.product.size }}</span></td>
                                         <td class="price" data-title="Price"><span>{{cart_item.product.price}}</span></td>
                                             
                                         <td class="text-center" data-title="Stock"> 
@@ -132,7 +134,7 @@
                                             <tbody>
                                                 <tr>
                                                     <td class="cart_total_label">Cart Subtotal</td>
-                                                    <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">${{ total_cart_price }}</span></td>
+                                                    <td class="cart_total_amount"><span id="total_cart_price" class="font-lg fw-900 text-brand">₹{{ total_cart_price }}</span></td>
                                                 </tr>
                                                 <tr>
                                                     <td class="cart_total_label">Shipping</td>
@@ -157,97 +159,165 @@
  
     <script>
         
-        function increaseQuantity(cartItemId, cart_id) {
-            console.log(cartItemId,cart_id)
-            console.log('coming');
-            console.log('inside increse')
-            let final = document.getElementById('final_total');
-            let quantityInput = document.getElementById(`quantity${cartItemId}`);
-            let currentElement = document.getElementById(`total${cartItemId}`);
-            console.log(quantityInput)
-            fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
-                .then(response => {
-                    if (response.status === 200) {
-                        console.log('after');
-                        return response.json();
-                    } else if (response.status === 201) {
-                        showToast('info', 'Product is out of stock');
-                        throw new Error('Product is out of stock');
-                    } else {
-                        throw new Error('Failed to increase quantity');
-                    }
-                })
-                .then(data => {
-                    console.log(data);
-                    console.log(data.q,"quantity while increasing")
-                    // Update quantity
-                    console.log('after2');
-                    quantityInput.innerText = data.q;
-                    console.log(data.total + "backend");
+        // function increaseQuantity(cartItemId, cart_id) {
+        //     console.log(cartItemId,cart_id)
+        //     console.log('coming');
+        //     console.log('inside increse')
+        //     let final = document.getElementById('final_total');
+        //     let quantityInput = document.getElementById(`quantity${cartItemId}`);
+        //     let currentElement = document.getElementById(`total${cartItemId}`);
+        //     console.log(quantityInput)
+        //     fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
+        //         .then(response => {
+        //             if (response.status === 200) {
+        //                 console.log('after');
+        //                 return response.json();
+        //             } else if (response.status === 201) {
+        //                 showToast('info', 'Product is out of stock');
+        //                 throw new Error('Product is out of stock');
+        //             } else {
+        //                 throw new Error('Failed to increase quantity');
+        //             }
+        //         })
+        //         .then(data => {
+        //             console.log(data);
+        //             console.log(data.q,"quantity while increasing")
+        //             // Update quantity
+        //             console.log('after2');
+        //             quantityInput.innerText = data.q;
+        //             console.log(data.total + "backend");
         
-                    currentElement.innerText = `₹${data.total}`;
-                    final.innerText = `₹${data.total_sum}`;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('error', error.message);
-                });
-        }
+        //             currentElement.innerText = `₹${data.total}`;
+        //             final.innerText = `₹${data.total_sum}`;
+        //         })
+        //         .catch(error => {
+        //             console.error('Error:', error);
+        //             showToast('error', error.message);
+        //         });
+        // }
         
     
     
-        function showToast(type, message) {
-            // Get the toast element
-            let toast = document.getElementById('toast');
-            // Set toast message and class based on type
-            toast.innerText = message;
-            toast.className = `show ${type}`;
-            // Hide the toast after 3 seconds
-            setTimeout(() => {
-                toast.className = toast.className.replace("show", "");
-            }, 3000);
-        }
+        // // function showToast(type, message) {
+        // //     // Get the toast element
+        // //     let toast = document.getElementById('toast');
+        // //     // Set toast message and class based on type
+        // //     toast.innerText = message;
+        // //     toast.className = `show ${type}`;
+        // //     // Hide the toast after 3 seconds
+        // //     setTimeout(() => {
+        // //         toast.className = toast.className.replace("show", "");
+        // //     }, 3000);
+        // // }
         
-        function decreaseQuantity(cartItemId,cart_id) {
-            console.log("inside decrease ")
-            console.log(cart_id)
-            console.log(cartItemId)
-            let final = document.getElementById('final_total');
-            let currentElement = document.getElementById(`total${cartItemId}`)
-            let quantityInput = document.getElementById(`quantity${cartItemId}`);
-            console.log(quantityInput)
-            fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Failed to decrease quantity');
-                    }
-                })
-                .then(data => {
-                    // Update quantity
-                    console.log(data)
-                    console.log(quantityInput)
-                    console.log(data.q)
-                    quantityInput.innerText = data.q;
+        // function decreaseQuantity(cartItemId,cart_id) {
+        //     console.log("inside decrease ")
+        //     console.log(cart_id)
+        //     console.log(cartItemId)
+        //     let final = document.getElementById('final_total');
+        //     let currentElement = document.getElementById(`total${cartItemId}`)
+        //     let quantityInput = document.getElementById(`quantity${cartItemId}`);
+        //     console.log(quantityInput)
+        //     fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
+        //         .then(response => {
+        //             if (response.ok) {
+        //                 return response.json();
+        //             } else {
+        //                 throw new Error('Failed to decrease quantity');
+        //             }
+        //         })
+        //         .then(data => {
+        //             // Update quantity
+        //             console.log(data)
+        //             console.log(quantityInput)
+        //             console.log(data.q)
+        //             quantityInput.innerText = data.q;
                   
                     
-                    // document.getElementById(`quantity${cartItemId}`).innerText = data.quantity;
-                    currentElement.innerText = data.total
-                    final.innerText = `₹${data.total_sum}`
-                    // Calculate new total price for the item
-                   // const price = parseFloat(document.getElementById(`price${cartItemId}`).innerText.replace('$', ''));
-                   // const total = price * data.quantity;
-                    // Update total price DOM element for the item
-                    //document.getElementById(`total${cartItemId}`).innerText = '$' + total.toFixed(2);
-                    // Update total cart price
-                    //updateTotalCartPrice();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-        } 
+        //             // document.getElementById(`quantity${cartItemId}`).innerText = data.quantity;
+        //             currentElement.innerText = data.total
+        //             final.innerText = `₹${data.total_sum}`
+        //             // Calculate new total price for the item
+        //            // const price = parseFloat(document.getElementById(`price${cartItemId}`).innerText.replace('$', ''));
+        //            // const total = price * data.quantity;
+        //             // Update total price DOM element for the item
+        //             //document.getElementById(`total${cartItemId}`).innerText = '$' + total.toFixed(2);
+        //             // Update total cart price
+        //             //updateTotalCartPrice();
+        //         })
+        //         .catch(error => {
+        //             console.error('Error:', error);
+        //         });
+        // } 
     
+        function increaseQuantity(cartItemId, cart_id) {
+    console.log(cartItemId, cart_id)
+    console.log('coming');
+    console.log('inside increase')
+    let final = document.getElementById('total_cart_price');
+    let quantityInput = document.getElementById(`quantity${cartItemId}`);
+    let currentElement = document.getElementById(`total${cartItemId}`);
+    console.log(quantityInput)
+    fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
+        .then(response => {
+            if (response.status === 200) {
+                console.log('after');
+                return response.json();
+            } else if (response.status === 201) {
+                showToast('info', 'Product is out of stock');
+                throw new Error('Product is out of stock');
+            } else {
+                throw new Error('Failed to increase quantity');
+            }
+        })
+        .then(data => {
+            console.log(data);
+            console.log(data.q, "quantity while increasing")
+            // Update quantity
+            console.log('after2');
+            quantityInput.innerText = data.q;
+            console.log(data.total + "backend");
+
+            currentElement.innerText = `₹${data.total}`;
+            final.innerText = `₹${data.total_sum}`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', error.message);
+        });
+}
+
+function decreaseQuantity(cartItemId, cart_id) {
+    console.log("inside decrease ")
+    console.log(cart_id)
+    console.log(cartItemId)
+    let final = document.getElementById('total_cart_price');
+    let currentElement = document.getElementById(`total${cartItemId}`)
+    let quantityInput = document.getElementById(`quantity${cartItemId}`);
+    console.log(quantityInput)
+    fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to decrease quantity');
+            }
+        })
+        .then(data => {
+            // Update quantity
+            console.log(data)
+            console.log(quantityInput)
+            console.log(data.q)
+            quantityInput.innerText = data.q;
+
+            currentElement.innerText = `₹${data.total}`;
+            final.innerText = `₹${data.total_sum}`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
     
         function removeFromCart(CartItemId) {
             // Send AJAX request to remove item from wishlist

@@ -177,14 +177,14 @@ def add_variant(request):
         try:
             existing_size = Size.objects.filter(size__iexact=size)
             if existing_size:
-                messages.error(request, "The size already exists")
+                sweetify.toast(request, "The size already exists", timer=3000, icon='warning')
             else:
                 new_size = Size(size=size)
                 new_size.save()
                 messages.success(request, f'The size {size} added successfully')
         except IntegrityError as e:
             error_message = str(e)
-            messages.error(request, f'An error occurred while adding the size: {error_message}')
+            sweetify.toast(request, f'An error occurred while adding the size: {error_message}', icon='alert', timer=3000)
         
         return redirect('cust_admin:list_variant')
     context = {
@@ -339,20 +339,23 @@ def prod_variant_assign(request):
         in_stock = form.cleaned_data['in_stock']
         status = form.cleaned_data['status']
         
-        # Save the form data to the database
-        product_attribute = ProductAttribute.objects.create(
-            product=product,
-            size=size,
-            price=price,
-            old_price=old_price,
-            stock=stock,
-            in_stock=in_stock,
-            status=status
-        )
-
-        # Handle form submission logic here
-        messages.success(request, 'successfully added Product with varient!')
-        return redirect('cust_admin:prod_catalogue')
+        # Check if size already exists for the product
+        existing_size = ProductAttribute.objects.filter(product=product, size=size).exists()
+        if existing_size:
+            sweetify.toast(request, f"The size {size} already added", icon='warning')
+        else:
+            # Save the form data to the database
+            product_attribute = ProductAttribute.objects.create(
+                product=product,
+                size=size,
+                price=price,
+                old_price=old_price,
+                stock=stock,
+                in_stock=in_stock,
+                status=status
+            )
+            sweetify.toast(request, 'Successfully added Product with variant!', timer=3000, icon='success')
+            return redirect('cust_admin:prod_catalogue')
 
     context = {
         'title': 'Add New Product',
