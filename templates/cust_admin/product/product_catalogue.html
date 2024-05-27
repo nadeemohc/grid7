@@ -47,7 +47,8 @@
                                     <th scope="col">Size</th>
                                     <th scope="col">Category</th>
                                     <th scope="col">Sub Category</th>
-                                    <th>Price</th> <!-- Removed scope="col-1" -->
+                                    <th scope="col">Price</th>
+                                    <th>Stock</th> 
                                     <th scope="col" class="text-end">Action</th>
                                 </tr>
                             </thead>
@@ -72,7 +73,8 @@
                                     </td>
                                     <td>{{ product_attr.product.category }}</td>
                                     <td>{{ product_attr.product.sub_category.sub_name }}</td>
-                                    <td>{{product_attr.price}}</td> <!-- Closed the <td> element -->
+                                    <td>{{product_attr.price}}</td>
+                                    <td>{{ product_attr.stock }}</td>
                                     <td class="text-end">
                                         {% if product_attr.is_blocked %}
                                         <a href="{% url 'cust_admin:catalogue_unlist' pk=product_attr.pk %}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;

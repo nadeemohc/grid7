@@ -19,7 +19,7 @@ urlpatterns = [
     path('', include('user_cart.urls')),
 
     # allauth
-    path('accounts/', include('allauth.urls')),
+    path('accounts/', include('allauth.urls', )),
     path('accounts/', include('allauth.socialaccount.urls')),
     path('home', TemplateView.as_view(template_name='dashboard/home.html'), name='home'),
     

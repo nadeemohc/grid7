@@ -104,6 +104,15 @@ class ProductAttribute(models.Model):
         else:
             return f"{self.product.title} - No Size - Price: {self.price}"
 
+    def reduce_stock(self, quantity):
+        if self.stock >= quantity:
+            self.stock -= quantity
+            self.save()
+            return True
+        return False
+
+    def check_stock(self, quantity):
+        return self.stock >= quantity
 
 
 

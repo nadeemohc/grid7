@@ -68,7 +68,7 @@ def add_to_cart(request):
 
             # Retrieve the product attribute
             product_attribute = get_object_or_404(ProductAttribute, pk=size_id)
-            if product_attribute.stock < quantity:
+            if not product_attribute.check_stock(quantity):
                 sweetify.toast(request, "Not enough stock available", timer=3000, icon='warning')
                 return redirect('store:product_view', product_pid=product_id)
 
@@ -111,63 +111,38 @@ def add_to_cart(request):
 
 
 
-def decrease_quantity(request, cart_item_id,cart_id):
-    print("decrese in")
-    cart_item = get_object_or_404(CartItem, pk=cart_item_id)
-    # print(cart_item)
-    
-    if cart_item.quantity > 1:
-        cart_item.quantity = cart_item.quantity-1
-        cart_item.save()
-        
-        print(cart_item.quantity)
-        total_price = cart_item.product.price * cart_item.quantity
-        cart_item.save()
-        print(total_price)
 
-        all_products = CartItem.objects.filter(cart_id=cart_id)
 
-        total_quantity = 0
-        total = 0
+@login_required
+def increase_quantity(request, cart_item_id, cart_id):
+    try:
+        cart_item = get_object_or_404(CartItem, id=cart_item_id, cart_id=cart_id)
+        product_attribute = cart_item.product
+        if product_attribute.stock > cart_item.quantity:
+            cart_item.quantity += 1
+            cart_item.save()
+            total = cart_item.quantity * product_attribute.price
+            total_sum = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart_id=cart_id))
+            return JsonResponse({'q': cart_item.quantity, 'total': total, 'total_sum': total_sum}, status=200)
+        else:
+            return JsonResponse({'error': 'Product is out of stock'}, status=201)
+    except CartItem.DoesNotExist:
+        return JsonResponse({'error': 'Cart item not found'}, status=404)
 
-        for cart_item in all_products:
-            total_quantity += cart_item.quantity
-            total += cart_item.product.price * cart_item.quantity
-            print(total)
-
-        return JsonResponse({'q': cart_item.quantity,'total':total_price,'total_sum':total}, status=200)
-    else:
-        return JsonResponse({'error': 'Quantity cannot be less than 1'}, status=400)
-    
-    
-def increase_quantity(request, cart_item_id,cart_id):
-    print('inside inseidhfkasdhfkhk')
-    cart_item = get_object_or_404(CartItem, pk=cart_item_id)
-
-    # print(cart_item)
-
-    # if cart_item.quantity < cart_item.product.stock:
-    cart_item.quantity += 1
-    cart_item.save()
-    
-    
-
-    total_price = cart_item.product.price * cart_item.quantity
-    cart_item.save()
-
-    all_products = CartItem.objects.filter(cart_id=cart_id)
-       
-    total = 0
-        
-        
-    for cart_i in all_products:
-        
-        total += cart_i.product.price * cart_i.quantity
-        
-        
-    return JsonResponse({'q': cart_item.quantity , 'total':total_price,'total_sum':total}, status=200)
-    # else:
-    return JsonResponse({'msg':'This product is out of stock.'},status = 201),
+@login_required
+def decrease_quantity(request, cart_item_id, cart_id):
+    try:
+        cart_item = get_object_or_404(CartItem, id=cart_item_id, cart_id=cart_id)
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+            total = cart_item.quantity * cart_item.product.price
+            total_sum = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart_id=cart_id))
+            return JsonResponse({'q': cart_item.quantity, 'total': total, 'total_sum': total_sum}, status=200)
+        else:
+            return JsonResponse({'error': 'Quantity cannot be less than 1'}, status=400)
+    except CartItem.DoesNotExist:
+        return JsonResponse({'error': 'Cart item not found'}, status=404)
    
 
 
@@ -182,9 +157,6 @@ def remove_from_cart(request, cart_item_id):
 
     from django.shortcuts import render, redirect
 
-
-@login_required
-@login_required
 
 @login_required
 def checkout(request):
@@ -219,17 +191,22 @@ def checkout(request):
                     status='New'
                 )
 
-                # Create ProductOrder entries
+                # Create ProductOrder entries and reduce stock
                 for item in items:
-                    ProductOrder.objects.create(
-                        order=new_order,
-                        user=user,
-                        product=item.product.product,
-                        quantity=item.quantity,
-                        product_price=item.product.price,
-                        ordered=True,
-                        variations=item.product
-                    )
+                    product_attribute = item.product
+                    if product_attribute.reduce_stock(item.quantity):
+                        ProductOrder.objects.create(
+                            order=new_order,
+                            user=user,
+                            product=product_attribute.product,
+                            quantity=item.quantity,
+                            product_price=item.product.price,
+                            ordered=True,
+                            variations=item.product
+                        )
+                    else:
+                        messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                        return redirect('store:product_view', product_pid=product_attribute.product.id)
 
                 # Delete all items from the user's cart after creating the order
                 user_cart.items.all().delete()
@@ -249,6 +226,7 @@ def checkout(request):
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
+
 
 @login_required
 def payment(request, order_id):
