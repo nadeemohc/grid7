@@ -12,6 +12,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.template.defaultfilters import linebreaksbr
 from user_cart.views import checkout
+import sweetify
 
 
 
@@ -310,3 +311,13 @@ def shop(request, category_id=None):
     }
 
     return render(request, 'dashboard/shop.html', context)
+
+def order_cancel(request, order_id):
+    print('inside cancel')
+    order = get_object_or_404(CartOrder, id=order_id)
+    order.status = 'Cancelled'
+    bv = order.status
+    order.save()
+    print(bv)
+    sweetify.toast(request, 'Order status updated successfully.', timer=3000, icon='success')
+    return redirect('store:user_order_detail', order_id = order_id)

@@ -8,51 +8,26 @@
         border: 1px solid #ddd;
         background-color: #f9f9f9;
         margin-top: 20px;
+        position: relative; /* Ensure the container is positioned relative */
     }
 
-    .order-header {
+    .button-container {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+        margin-top: 20px;
     }
 
-    .order-header h2 {
-        margin: 0;
-    }
-
-    .order-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .order-table th, .order-table td {
-        border: 1px solid #ddd;
-        padding: 10px;
-        text-align: left;
-    }
-
-    .order-table th {
-        background-color: #f2f2f2;
-    }
-
-    .total-amount {
-        font-size: 18px;
-        font-weight: bold;
-        color: #28a745;
-    }
-
-    .btn-pdf {
-        background-color: #e83e8c;
+    .cancel-order-btn {
+        background-color: #088178;
         color: white;
         padding: 10px 20px;
         text-decoration: none;
         border-radius: 5px;
+        margin-left: auto; /* Push the cancel button to the right */
     }
 
     .back-to-shop {
         display: inline-block;
-        margin-top: 20px;
         padding: 10px 20px;
         background-color: #088178;
         color: white;
@@ -60,6 +35,7 @@
         border-radius: 5px;
     }
 </style>
+
 
 <div class="container order-container">
     <!-- <div class="order-header">
@@ -121,7 +97,10 @@
         </tfoot>
     </table>
 
-    <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
+    <div class="button-container">
+        <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
+        <a href="{% url 'store:order_cancel' order.id %}" class="cancel-order-btn">Cancel Order</a>
+    </div>
 </div>
 
 {% endblock content %}
