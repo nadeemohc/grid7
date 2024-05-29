@@ -87,7 +87,7 @@
                                     <div class="product-category">
                                         <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
                                     </div>
-                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title }}</a></h2>
+                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:30 }}</a></h2>
                                     <div class="rating-result" title="90%">
                                         <span>
                                             <span>95%</span>

@@ -321,3 +321,16 @@ def order_cancel(request, order_id):
     print(bv)
     sweetify.toast(request, 'Order status updated successfully.', timer=3000, icon='success')
     return redirect('store:user_order_detail', order_id = order_id)
+
+def search_products(request):
+    query = request.GET.get('search_field', '')
+    products = Product.objects.filter(title__icontains=query) if query else Product.objects.none()
+    prod_count = products.count()
+    categories = Category.objects.filter(is_blocked=False)  # Add this line to fetch categories for the sidebar
+    context = {
+        'products': products,
+        'prod_count': prod_count,
+        'categories': categories,
+        'category': 'Search Results'  # or any other context you need
+    }
+    return render(request, 'dashboard/product_search_results.html', context)
