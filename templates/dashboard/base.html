@@ -84,11 +84,35 @@
                         <a href="{% url 'store:home' %}"><img src="{% static 'store/imgs/theme/logo.png' %}" alt="logo"></a>
                     </div>
                     <div class="header-right">
+                        <!-- Add this in your base.html or where your form is located -->
+                        <script>
+                            document.getElementById('searchInput').addEventListener('keydown', function(event) {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault(); // Prevent the default form submission behavior
+                                    document.getElementById('searchForm').submit(); // Submit the form
+                                }
+                            });
+                        </script>
+
+                        <!-- Search form -->
                         <div class="search-style-2">
-                            <form action="#">
-                                <input type="text" placeholder="Search for items...">
+                            <form id="searchForm" action="{% url 'store:search_products' %}" method="get">
+                                <input type="text" id="searchInput" name="search_field" placeholder="Search for items...">
                             </form>
                         </div>
+                     
+                        <style>
+                            .search-style-2 {
+                                position: relative;
+                            }
+                            #searchInput {
+                                width: 100%;
+                                padding: 10px;
+                                box-sizing: border-box;
+                                font-size: 16px;
+                            }
+                        </style>                        
+                        
                         <div class="header-action-right">
                             <div class="header-action-2">
                                 <div class="header-action-icon-2">

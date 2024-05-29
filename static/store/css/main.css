@@ -5862,7 +5862,7 @@ h6.post-title {
   border-width: 0 0 3px 0;
   border-style: solid;
   font-size: 16px;
-  background-image: url(../imgs/theme/icons/search.png);
+  /* background-image: url(../imgs/theme/icons/search.png); */
   background-repeat: no-repeat;
   background-position: center left;
   padding-left: 35px;
