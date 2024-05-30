@@ -116,7 +116,7 @@
                         <div class="header-action-right">
                             <div class="header-action-2">
                                 <div class="header-action-icon-2">
-                                    <a href="shop-wishlist.html">
+                                    <a href="{% url 'store:wishlist' %}">
                                         <img class="svgInject" alt="Evara" src="{% static 'store/imgs/theme/icons/icon-heart.svg' %}">
                                         <!-- <span class="pro-count blue">4</span> -->
                                     </a>
@@ -126,7 +126,7 @@
                                         <img alt="Evara" src="{% static 'store/imgs/theme/icons/icon-cart.svg' %}">
                                         
 
-                                        <span class="pro-count blue" id="cart_quantity">{{ item_4count }}</span>
+                                        <span class="pro-count blue" id="cart_quantity">{{ item_count }}</span>
                                         
                                         {% comment %}                                        
                                         <span class="pro-count blue cart-count" data-cart-count="{{ item_count }}">{{ item_count }}</span>

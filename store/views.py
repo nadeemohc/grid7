@@ -21,6 +21,7 @@ def get_common_context():
     return {
         'categories': Category.objects.filter(is_blocked=False),
     }
+
 @never_cache
 def home(request): 
     categories = Category.objects.all()
@@ -334,3 +335,6 @@ def search_products(request):
         'category': 'Search Results'  # or any other context you need
     }
     return render(request, 'dashboard/product_search_results.html', context)
+
+def wishlist(request):
+    return render(request, 'dashboard/wishlist.html')
