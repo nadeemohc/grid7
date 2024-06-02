@@ -61,17 +61,9 @@
                                     {% if cart_items %}
                                     {% for cart_item in cart_items %}
                                     <tr>
-                                        <!-- <td class="image product-thumbnail">
-                                            {% if cart_item.product.product_image %}
-                                                <img src="{{ cart_item.product.product_image }}" alt="{{ cart_item.product.title }}">
-                                            {% else %}
-                                                <img src="{% static 'path/to/default/image.jpg' %}" alt="Default Image">
-                                            {% endif %}
-                                        </td> -->
-                                        
                                         <td class="product-des product-name">
                                             <h5 class="product-name"><a href="shop-product-right.html">{{cart_item.product.product.title}}</a></h5>
-                                            <!-- <p class="font-xs">{{cart_item.product.description}}</p> -->
+                                        
                                         </td>
                                         <td class="product-size"><span>{{ cart_item.product.size }}</span></td>
                                         <td class="price" data-title="Price"><span>{{cart_item.product.price}}</span></td>

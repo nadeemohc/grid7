@@ -76,10 +76,6 @@
                                         </a>
                                     </div>
                                     
-                                    <div class="product-action-1">
-                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                        <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
-                                    </div>
                                     <div class="product-badges product-badges-position product-badges-mrg">
                                         <span class="best">Best Sell</span>
                                     </div>
@@ -101,7 +97,7 @@
 
                                     </div>
                                     <div class="product-action-1 show">
-                                        <a aria-label="Add To Cart" class="action-btn hover-up" href="{% url 'cart:add_to_cart' %}"><i class="fi-rs-shopping-bag-add"></i></a>
+                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                     </div>
                                 </div>
                             </div>

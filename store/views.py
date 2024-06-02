@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseNotFound, Http404, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseNotFound, Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from accounts.models import User, Address
@@ -337,4 +337,32 @@ def search_products(request):
     return render(request, 'dashboard/product_search_results.html', context)
 
 def wishlist(request):
-    return render(request, 'dashboard/wishlist.html')
+    context = {}
+    try:
+        items = Wishlist.objects.filter(user=request.user).prefetch_related('product__product_attributes')
+        context = {
+            'items': items,
+        }
+    except Wishlist.DoesNotExist:
+        pass
+    return render(request, 'dashboard/wishlist.html', context)
+
+def add_wishlist(request, product_pid):
+    if not request.user.is_authenticated:
+        messages.info(request, 'Login to access wishlist')
+        return redirect('accounts:login')
+    else:
+        try:
+            item = Wishlist.objects.get(user=request.user, product_id=product_pid)
+            sweetify.toast(request, 'Product is already in your wishlist', icon='info')
+        except Wishlist.DoesNotExist:
+            Wishlist.objects.create(user=request.user, product_id=product_pid)
+            sweetify.toast(request, 'Product added to your wishlist successfully', icon='success')
+        
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+def delete_wishlist(request, pk):
+    wishlist = get_object_or_404(Wishlist, id=pk, user=request.user)
+    wishlist.delete()
+    
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
