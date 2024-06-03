@@ -163,33 +163,37 @@ class Payments(models.Model):
         return self.user.first_name
 
 class CartOrder(models.Model):
-    STATUS =(
-        ('New','New'),
-        ('Paid','Paid'),
-        ('Shipped','Shipped'),
-        ('Conformed','Conformed'),
-        ('Pending','Pending'),
-        ('Delivered','Delivered'),
-        ('Cancelled','Cancelled'),
-        ('Return','Return')
+    STATUS = (
+        ('New', 'New'),
+        ('Paid', 'Paid'),
+        ('Shipped', 'Shipped'),
+        ('Conformed', 'Conformed'),
+        ('Pending', 'Pending'),
+        ('Delivered', 'Delivered'),
+        ('Cancelled', 'Cancelled'),
+        ('Return', 'Return')
     )
-    user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    payment=models.ForeignKey(Payments,on_delete=models.SET_NULL,blank=True,null=True)
-    order_number = models.CharField(max_length=20,default=None)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    payment = models.ForeignKey(Payments, on_delete=models.SET_NULL, blank=True, null=True)
+    order_number = models.CharField(max_length=20, default=None)
     order_total = models.FloatField(null=True, blank=True)
-    status=models.CharField(max_length=10, choices=STATUS, default='New')
-    ip =  models.CharField(blank=True,max_length=20)
-    is_ordered=models.BooleanField(default=True)
+    status = models.CharField(max_length=10, choices=STATUS, default='New')
+    ip = models.CharField(blank=True, max_length=20)
+    is_ordered = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, editable=True)
-    updated_at=models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
     selected_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
-
 
     class Meta:
         verbose_name_plural = "Cart Order"
-    
+
     def __str__(self):
         return self.order_number
+
+    def clear_cart(self):
+        cart = Cart.objects.filter(user=self.user).first()
+        if cart:
+            cart.items.all().delete()
 
 class ProductOrder(models.Model):
     order = models.ForeignKey(CartOrder, related_name='items', on_delete=models.SET_NULL, null=True)

@@ -155,9 +155,6 @@ def remove_from_cart(request, cart_item_id):
     return JsonResponse({'message': 'Item removed from cart successfully'}, status=200)
 
 
-    from django.shortcuts import render, redirect
-
-
 @login_required
 def checkout(request):
     user = request.user
@@ -208,13 +205,8 @@ def checkout(request):
                         messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
 
-                # Delete all items from the user's cart after creating the order
-                user_cart.items.all().delete()
-
-                return render(request, 'user_cart/order_success.html', {
-                    'order': new_order,
-                    'product_orders': ProductOrder.objects.filter(order=new_order),
-                })
+                # Redirect to the payment method selection page
+                return redirect('cart:payment_method_selection', order_id=new_order.id)
             except Address.DoesNotExist:
                 messages.error(request, "Selected address does not exist.")
         else:
@@ -226,6 +218,51 @@ def checkout(request):
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
+
+@login_required
+def payment_method_selection(request, order_id):
+    try:
+        order = CartOrder.objects.get(id=order_id, user=request.user)
+    except CartOrder.DoesNotExist:
+        messages.error(request, "Order does not exist.")
+        return redirect('cart:checkout')
+
+    items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
+
+    if request.method == 'POST':
+        selected_payment_method = request.POST.get('payment_method')
+        if selected_payment_method == 'COD':
+            order.status = 'Pending'
+            order.save()
+            order.clear_cart()  # Clear the cart items
+            return redirect('cart:order_success', order_id=order.id)
+        elif selected_payment_method == 'Razorpay':
+            return redirect('cart:razorpay_payment', order_id=order.id)
+        else:
+            messages.error(request, "Invalid payment method selected.")
+            return redirect('cart:payment_method_selection', order_id=order.id)
+
+    context = {
+        'order': order,
+        'items': items,
+        'total_cart_price': order.order_total,
+    }
+    return render(request, 'user_cart/payment_method_selection.html', context)
+
+@login_required
+def order_success(request, order_id):
+    try:
+        order = CartOrder.objects.get(id=order_id, user=request.user)
+        product_orders = ProductOrder.objects.filter(order=order)
+    except CartOrder.DoesNotExist:
+        messages.error(request, "Order does not exist.")
+        return redirect('store:home')
+
+    context = {
+        'order': order,
+        'product_orders': product_orders,
+    }
+    return render(request, 'user_cart/order_success.html', context)
 
 
 @login_required

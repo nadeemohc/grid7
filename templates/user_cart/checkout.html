@@ -1,3 +1,4 @@
+<!-- templates/user_cart/checkout.html -->
 {% extends 'dashboard/base.html' %}
 {% load static %}
 {% block content %}
@@ -5,7 +6,7 @@
     <div class="page-header breadcrumb-wrap">
         <div class="container">
             <div class="breadcrumb">
-                <a href="index.html" rel="nofollow">Home</a>
+                <a href="{% url 'store:home' %}" rel="nofollow">Home</a>
                 <span></span> Shop
                 <span></span> Checkout
             </div>
@@ -21,7 +22,6 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-25">
-                        
                         <h4>Billing Details</h4>
                     </div>
                     <form method="post" action="{% url 'cart:checkout' %}">
@@ -101,4 +101,4 @@
         });
     </script>
 </main>
-{% endblock %}
+{% endblock content %}

@@ -43,7 +43,7 @@
                     <div class="slider-arrow slider-arrow-2 carausel-6-columns-arrow" id="carausel-6-columns-arrows"></div>
                     <div class="carausel-6-columns" id="carausel-6-columns">
                         {% for category in categories %}
-                        {% if category.is_blocked != True %}
+                        {% if category.is_blocked != True and category.c_name != 'Special Edition' %}
                             <div class="card-1">
                                 
                                 <figure class=" img-hover-scale overflow-hidden">

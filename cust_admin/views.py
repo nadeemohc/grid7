@@ -285,18 +285,8 @@ def prod_edit(request, p_id):
         # Update product details
         product.title = request.POST.get('title', product.title)
         product.description = request.POST.get('description', product.description)
-        product.old_price = request.POST.get('old_price', product.old_price)
-        product.price = request.POST.get('price', product.price)
+        specifications = request.POST.get('specifications', product.specifications)
         product.category_id = request.POST.get('category', product.category)
-        # product.subcategory_id = request.POST.get('subcategory_id', product.subcategory)  
-        product.stock = request.POST.get('stock', product.stock)
-        product.shipping = request.POST.get('shipping', product.shipping)
-        product.specifications = request.POST.get('specifications', product.specifications)
-        product.featured = request.POST.get('featured') == 'on'
-        product.popular = request.POST.get('popular') == 'on'
-        product.latest = request.POST.get('latest') == 'on'
-        product.in_stock = request.POST.get('in_stock') == 'on'
-        product.status = request.POST.get('status') == 'on'
         # Handle image update
         new_image = request.FILES.get('image')
         print(new_image)
