@@ -1,7 +1,7 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 {% block content %}
-
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <main class="main">
     <div class="page-header breadcrumb-wrap">
         <div class="container">
@@ -87,9 +87,10 @@
                         </div>
                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                         <h4>Select Payment Method</h4>
-                        <form method="post" action="{% url 'cart:payment_method_selection' order.id %}">
+                        <form method="post" action="{% url 'cart:payment_method_selection' order.id %}" id="payment-form">
                             {% csrf_token %}
                             <input type="hidden" name="order_id" value="{{ order.id }}">
+                            <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="payment_method" id="cod" value="COD" checked>
                                 <label class="form-check-label" for="cod">
@@ -102,7 +103,7 @@
                                     Razorpay
                                 </label>
                             </div>
-                            <button type="submit" class="btn btn-primary mt-3">Proceed</button>
+                            <button type="submit" class="btn btn-primary mt-3" id="pay-button">Proceed</button>
                         </form>
                         {% if messages %}
                             <div class="messages">
@@ -120,4 +121,35 @@
     </section>
 </main>
 
+<script>
+document.getElementById('pay-button').addEventListener('click', function(e) {
+    var paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    if (paymentMethod === 'Razorpay') {
+        e.preventDefault();
+        var options = {
+            "key": "{{ razorpay_key_id }}", // Enter the Key ID generated from the Dashboard
+            "amount": "{{ total_cart_price }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "Your Company Name",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": "{{ razorpay_order_id }}", //This is a sample Order ID. Pass the `id` obtained in the previous step
+            "handler": function (response){
+                document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                document.getElementById('payment-form').submit();
+            },
+            "prefill": {
+                "name": "{{ order.user.username }}",
+                "email": "{{ order.user.email }}",
+                "contact": "{{ order.user.phone }}"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+    }
+});
+</script>
 {% endblock %}

@@ -76,9 +76,19 @@
                                         </a>
                                     </div>
                                     
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="best">Best Sell</span>
-                                    </div>
+                                    {% if product.featured == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="best">Best Sell</span>
+                                        </div>
+                                        {% elif product.popular == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div>
+                                        {% elif product.latest == True %}
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="new">New</span>
+                                        </div>
+                                        {% endif %}
                                     
                                 </div>
                                 <div class="product-content-wrap">

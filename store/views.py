@@ -336,6 +336,12 @@ def search_products(request):
     }
     return render(request, 'dashboard/product_search_results.html', context)
 
+@login_required
+def get_wishlist_count(request):
+    user = request.user
+    wishlist_count = WishlistItem.objects.filter(user=user).count() if user.is_authenticated else 0
+    return JsonResponse({'wishlist_count': wishlist_count})
+
 def wishlist(request):
     context = {}
     try:

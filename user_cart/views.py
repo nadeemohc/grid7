@@ -7,8 +7,8 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from decimal import Decimal
 from django.db import IntegrityError
-import store, random, sweetify, logging
-import uuid 
+import uuid, store, random, sweetify, logging
+from django.conf import settings
 from . import views
 from datetime import datetime
 from accounts.models import Address
@@ -244,7 +244,7 @@ def payment_method_selection(request, order_id):
 
     context = {
         'order': order,
-        'items': items,
+        'items': items, 
         'total_cart_price': order.order_total,
     }
     return render(request, 'user_cart/payment_method_selection.html', context)

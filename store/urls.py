@@ -9,6 +9,7 @@ urlpatterns = [
     path('product_list/', views.list_prod, name='product_list'),
     path('product_list_by_category/<int:category_cid>/',views.product_list_by_category,name = 'product_list_by_category'),
     path('product_view/<int:product_pid>/', views.product_detailed_view, name='product_view'),
+    path('get_wishlist_count/', views.get_wishlist_count, name='get_wishlist_count'),
     path('wishlist/', views.wishlist, name='wishlist'),
     path('add_wishlist/<int:product_pid>/', views.add_wishlist, name='add_to_wishlist'),
     path('delete_wishlist/<int:pk>/', views.delete_wishlist, name='delete_wishlist'),
