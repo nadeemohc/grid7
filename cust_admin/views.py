@@ -423,13 +423,31 @@ def list_order(request):
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
-    address = Address.objects.filter()
+    product_images = []
+    sub_total = 0  # Initialize sub_total here
+    
+    for item in items:
+        product = item.product
+        price = item.product_price
+        quantity = item.quantity
+        total_price = price * quantity  # Calculate total price for current item
+        sub_total += total_price  # Increment sub_total with each iteration
+        product_images.append({
+            'product': item.product,
+            'image': item.product.image.url
+        })
+        # Assign total_price to item
+        item.sub = total_price
+
     context = {
         'title': 'Order Detail',
         'order': order,
         'items': items,
+        'product_images': product_images,
+        'sub_total': sub_total,  # Pass sub_total to the template context
     }
-    return render(request, 'cust_admin/order/order_detail.html', context)
+    return render(request, 'cust_admin/order/order_dtls.html', context)
+
 
 
 

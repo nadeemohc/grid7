@@ -72,10 +72,14 @@ def add_to_cart(request):
                 sweetify.toast(request, "Not enough stock available", timer=3000, icon='warning')
                 return redirect('store:product_view', product_pid=product_id)
 
+            if quantity > 5:
+                sweetify.toast(request, 'Max limit reached for this product', timer=3000, icon='warning')
+                return redirect('store:product_view', product_pid=product_id)
+
             # Get or create the user's cart
             cart, created = Cart.objects.get_or_create(user=request.user)
             
-            # Add the product to the cart with the selected size
+            # Check if the product is already in the cart
             cart_item, item_created = CartItem.objects.get_or_create(
                 user=request.user,
                 cart=cart,
@@ -84,7 +88,12 @@ def add_to_cart(request):
             )
 
             if not item_created:
-                cart_item.quantity += quantity
+                # If the total quantity exceeds the max limit, show an error message
+                new_quantity = cart_item.quantity + quantity
+                # if new_quantity > 5:
+                #     sweetify.toast(request, 'Max limit reached for this product', timer=3000, icon='warning')
+                #     return redirect('store:product_view', product_pid=product_id)
+                cart_item.quantity = new_quantity
                 cart_item.save()
 
             sweetify.toast(request, "Product added to cart successfully", timer=3000, icon='success')
@@ -113,21 +122,26 @@ def add_to_cart(request):
 
 
 
+
 @login_required
 def increase_quantity(request, cart_item_id, cart_id):
     try:
         cart_item = get_object_or_404(CartItem, id=cart_item_id, cart_id=cart_id)
         product_attribute = cart_item.product
         if product_attribute.stock > cart_item.quantity:
-            cart_item.quantity += 1
-            cart_item.save()
-            total = cart_item.quantity * product_attribute.price
-            total_sum = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart_id=cart_id))
-            return JsonResponse({'q': cart_item.quantity, 'total': total, 'total_sum': total_sum}, status=200)
+            if cart_item.quantity < 5:
+                cart_item.quantity += 1
+                cart_item.save()
+                total = cart_item.quantity * product_attribute.price
+                total_sum = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart_id=cart_id))
+                return JsonResponse({'q': cart_item.quantity, 'total': total, 'total_sum': total_sum}, status=200)
+            else:
+                return JsonResponse({'error': 'Max limit reached for this product'}, status=202)
         else:
             return JsonResponse({'error': 'Product is out of stock'}, status=201)
     except CartItem.DoesNotExist:
         return JsonResponse({'error': 'Cart item not found'}, status=404)
+
 
 @login_required
 def decrease_quantity(request, cart_item_id, cart_id):
@@ -218,6 +232,7 @@ def checkout(request):
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
+
 
 @login_required
 def payment_method_selection(request, order_id):
@@ -388,3 +403,8 @@ def order_confirmation(request, order_id):
 # def success(request):
     
 #     return render(request, 'user_cart/success_page.html')
+
+
+
+
+
