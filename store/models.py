@@ -209,3 +209,24 @@ class ProductOrder(models.Model):
 
     def __str__(self):
         return f"{self.product.title} - {self.quantity} x {self.product_price}"
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    discount = models.PositiveIntegerField(help_text='discount in percentage')
+    active = models.BooleanField(default=True)
+    active_date = models.DateField()
+    expiry_date = models.DateField()
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.code
+
+    def is_active(self):
+        today = timezone.now().date()
+        return self.active and self.active_date <= today <= self.expiry_date
+
+    def apply_discount(self, total_amount):
+        if self.is_active():
+            discount_amount = (self.discount / 100) * total_amount
+            return total_amount - discount_amount
+        return total_amount

@@ -1,0 +1,71 @@
+{% extends "cust_admin/base.html" %}
+{% load static %}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Add Coupon</h2>
+        </div>
+        <div>
+            <input type="text" placeholder="Search Categories" class="form-control bg-white">
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_code" class="form-label">Coupon Code</label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="text-danger">
+                                    {{ form.code.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_discount" class="form-label">Discount Percentage</label>
+                            {{ form.discount }}
+                            {% if form.discount.errors %}
+                                <div class="text-danger">
+                                    {{ form.discount.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3 form-check">
+                            <label for="id_active" class="form-check-label">Active</label>
+                            {{ form.active }}
+                            {% if form.active.errors %}
+                                <div class="text-danger">
+                                    {{ form.active.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_active_date" class="form-label">Active Date</label>
+                            {{ form.active_date }}
+                            {% if form.active_date.errors %}
+                                <div class="text-danger">
+                                    {{ form.active_date.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_expiry_date" class="form-label">Expiry Date</label>
+                            {{ form.expiry_date }}
+                            {% if form.expiry_date.errors %}
+                                <div class="text-danger">
+                                    {{ form.expiry_date.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-primary" type="submit">Add Coupon</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

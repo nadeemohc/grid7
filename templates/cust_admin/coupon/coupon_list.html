@@ -1,0 +1,68 @@
+{% extends "cust_admin/base.html" %}
+{% load static %}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Coupon List</h2>
+        </div>
+        <div>
+            <input type="text" placeholder="Search Coupons" class="form-control bg-white">
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Discount (%)</th>
+                        <th>Active</th>
+                        <th>Active Date</th>
+                        <th>Expiry Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coupon in coupons %}
+                        <tr>
+                            <td>{{ coupon.code }}</td>
+                            <td>{{ coupon.discount }}</td>
+                            <td>{{ coupon.active }}</td>
+                            <td>{{ coupon.active_date }}</td>
+                            <td>{{ coupon.expiry_date }}</td>
+                            <td>
+                                <a href="{% url 'cust_admin:edit_coupon' coupon.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ coupon.id }}')">Delete</button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No coupons available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmDelete(couponId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '{% url "cust_admin:delete_coupon" 0 %}'.replace('0', couponId);
+            }
+        })
+    }
+</script>
+{% endblock %}

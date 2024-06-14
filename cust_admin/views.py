@@ -4,7 +4,7 @@ from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
 from django.http import HttpResponseBadRequest
-from cust_admin.forms import ProductVariantAssignForm
+from cust_admin.forms import ProductVariantAssignForm, CouponForm
 from django.contrib import messages
 import sweetify
 from django.contrib.auth.decorators import login_required
@@ -464,3 +464,42 @@ def order_update_status(request, order_id):
         'order': order,
     }
     return render(request, 'cust_admin/order/order_update_status.html', context)
+
+
+def add_coupon(request):
+    if request.method == 'POST':
+        form = CouponForm(request.POST)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Coupon added successfully!', icon='success', timer=3000)
+            return redirect('cust_admin:coupon_list')
+        else:
+            sweetify.error(request, 'There was an error adding the coupon.', timer=3000)
+    else:
+        form = CouponForm()
+    
+    return render(request, 'cust_admin/coupon/add_coupon.html', {'form': form})
+
+def edit_coupon(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    if request.method == 'POST':
+        form = CouponForm(request.POST, instance=coupon)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Coupon updated successfully!', icon='success', timer=3000)
+            return redirect('cust_admin:coupon_list')
+        else:
+            sweetify.error(request, 'There was an error updating the coupon. Please check the form for details.', timer=3000)
+    else:
+        form = CouponForm(instance=coupon)
+    return render(request, 'cust_admin/coupon/edit_coupon.html', {'form': form})
+
+def coupon_list(request):
+    coupons = Coupon.objects.all()
+    return render(request, 'cust_admin/coupon/coupon_list.html', {'coupons': coupons})
+
+def delete_coupon(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    coupon.delete()
+    sweetify.toast(request, 'Coupon deleted successfully!', icon='success', timer=3000)
+    return redirect('cust_admin:coupon_list')

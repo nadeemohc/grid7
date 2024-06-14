@@ -12,6 +12,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.template.defaultfilters import linebreaksbr
 from user_cart.views import checkout
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import sweetify
 
 
@@ -268,50 +269,116 @@ def send_email_verification(email):
     recipient_list = [email]
     send_mail(subject, message, from_email, recipient_list)
 
+def filter_product(request):
+    try:
+        # Get the min and max price from the GET parameters
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        
+        # Filter products based on availability, category, and price range
+        products = Product.objects.filter(
+            is_available=True,
+            category__is_deleted=False,
+            category__is_blocked=False,
+            productattribute__is_deleted=False,
+            productattribute__price__gte=min_price,
+            productattribute__price__lte=max_price
+        ).distinct().order_by('-id')
+        
+        # Render the filtered products to HTML
+        data = render_to_string('userhome/product_list.html', {"products": products})
+        
+        # Return the rendered HTML as a JSON response
+        return JsonResponse({"data": data})
+    except Exception as e:
+        # Handle any exceptions and return an error message
+        return JsonResponse({"error": str(e)})
 
-def shop(request):
-    categories = Category.objects.all()
-    products = Product.objects.all()
-    sizes = Size.objects.all()
+        
+        return JsonResponse({"data": data})
+    except Exception as e:
+        return JsonResponse({"error": str(e)})
 
-    prod_count = products.count()
-    context = {
-        'categories': categories,
-        'products': products,
-        'sizes': sizes,
-        'title': 'Shop',
-    }
-
-    return render(request, 'dashboard/shop.html', context)
-
-
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
-from .models import Product, Category
 
 def shop(request, category_id=None):
-    # Retrieve all categories
-    categories = Category.objects.all()
-    product_attributes = ProductAttribute.objects.all()
-     
-    # Retrieve all products
-    products = Product.objects.filter(is_blocked=False)  # Exclude blocked products
+    # Fetch all categories excluding blocked ones
+    categories = Category.objects.filter(is_blocked=False)
 
-    # Filter products by category if category_id is provided
+    # Get the selected category if provided
+    selected_category = None
     if category_id:
-        products = products.filter(category__pk=category_id)
+        selected_category = get_object_or_404(Category, cid=category_id)
+    elif request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        if category_id:
+            selected_category = get_object_or_404(Category, cid=category_id)
 
-    # Fetch product images for each product
-    # products = Product.objects.all()
+    # Filter products based on the selected category
+    products = Product.objects.filter(is_blocked=False)
+    if selected_category:
+        products = products.filter(category=selected_category)
+
+    # Filter out products related to blocked categories
+    blocked_categories = Category.objects.filter(is_blocked=True)
+    if blocked_categories.exists():
+        blocked_category_products = Product.objects.filter(category__in=blocked_categories)
+        products = products.exclude(pk__in=blocked_category_products.values_list('pk', flat=True))
+
+    # Handle price range filtering
+    if request.method == 'POST':
+        price_range = request.POST.get('price_range')
+        if price_range:
+            if price_range == '0-50':
+                products = products.filter(product_attributes__price__range=(0, 50))
+            elif price_range == '50-200':
+                products = products.filter(product_attributes__price__range=(50, 200))
+            elif price_range == '200-500':
+                products = products.filter(product_attributes__price__range=(200, 500))
+            elif price_range == '500-1000':
+                products = products.filter(product_attributes__price__range=(500, 1000))
+            elif price_range == 'more than 1000':
+                products = products.filter(product_attributes__price__gt=1000)
+
+    # Handle sorting
+    sort_by = request.GET.get('sort_by', 'featured')
+    if sort_by == 'price_asc':
+        products = products.order_by('product_attributes__price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-product_attributes__price')
+    elif sort_by == 'new_arrivals':
+        products = products.order_by('-product_attributes__date')  # Change here
+    elif sort_by == 'avg_rating':
+        products = products.order_by('-avg_rating')
+    elif sort_by == 'name_asc':
+        products = products.order_by('title')
+    elif sort_by == 'name_desc':
+        products = products.order_by('-title')
+
+
+    # Handle items per page
+    items_per_page = request.GET.get('items_per_page', 9)
+    paginator = Paginator(products.distinct(), items_per_page)
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
 
     context = {
         'categories': categories,
-        'products': products,
-        'title': 'Shop',
-        'product_attributes': product_attributes,
+        'selected_category': selected_category,
+        'products': page_obj,
+        'prod_count': paginator.count,
+        'page_obj': page_obj,
+        'sort_by': sort_by,
+        'items_per_page': items_per_page,
     }
-
     return render(request, 'dashboard/shop.html', context)
+
+
+
 
 def order_cancel(request, order_id):
     print('inside cancel')
@@ -339,7 +406,7 @@ def search_products(request):
 @login_required
 def get_wishlist_count(request):
     user = request.user
-    wishlist_count = WishlistItem.objects.filter(user=user).count() if user.is_authenticated else 0
+    wishlist_count = Wishlist.objects.filter(user=user).count() if user.is_authenticated else 0
     return JsonResponse({'wishlist_count': wishlist_count})
 
 def wishlist(request):
