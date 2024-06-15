@@ -104,8 +104,10 @@
                                             <strong class="mr-10">Quantity</strong>
                                             <input type="number" name="quantity" id="quantity" value="1" min="1" style="width: 70px;">
                                         </div><br>
-                                        
+                                        <div class="product-extra-link2">
                                         <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
+                                        </div>
                                     </form>
                                     
                                     

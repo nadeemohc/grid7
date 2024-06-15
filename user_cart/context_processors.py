@@ -1,6 +1,6 @@
 # store/context_processors.py
 
-from store.models import Cart
+from store.models import Cart, Wishlist
 
 def cart_item_count(request):
     if request.user.is_authenticated:
@@ -13,3 +13,11 @@ def cart_item_count(request):
         item_count = 0
 
     return {'item_count': item_count}
+
+    
+def wishlist_item_count(request):
+    if request.user.is_authenticated:
+        wishlist_count = Wishlist.objects.filter(user=request.user).count()
+    else:
+        wishlist_count = 0
+    return {'wishlist_count': wishlist_count}

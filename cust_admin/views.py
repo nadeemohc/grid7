@@ -4,7 +4,7 @@ from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
 from django.http import HttpResponseBadRequest
-from cust_admin.forms import ProductVariantAssignForm
+from cust_admin.forms import ProductVariantAssignForm, CouponForm
 from django.contrib import messages
 import sweetify
 from django.contrib.auth.decorators import login_required
@@ -285,18 +285,8 @@ def prod_edit(request, p_id):
         # Update product details
         product.title = request.POST.get('title', product.title)
         product.description = request.POST.get('description', product.description)
-        product.old_price = request.POST.get('old_price', product.old_price)
-        product.price = request.POST.get('price', product.price)
+        specifications = request.POST.get('specifications', product.specifications)
         product.category_id = request.POST.get('category', product.category)
-        # product.subcategory_id = request.POST.get('subcategory_id', product.subcategory)  
-        product.stock = request.POST.get('stock', product.stock)
-        product.shipping = request.POST.get('shipping', product.shipping)
-        product.specifications = request.POST.get('specifications', product.specifications)
-        product.featured = request.POST.get('featured') == 'on'
-        product.popular = request.POST.get('popular') == 'on'
-        product.latest = request.POST.get('latest') == 'on'
-        product.in_stock = request.POST.get('in_stock') == 'on'
-        product.status = request.POST.get('status') == 'on'
         # Handle image update
         new_image = request.FILES.get('image')
         print(new_image)
@@ -433,13 +423,31 @@ def list_order(request):
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
-    address = Address.objects.filter()
+    product_images = []
+    sub_total = 0  # Initialize sub_total here
+    
+    for item in items:
+        product = item.product
+        price = item.product_price
+        quantity = item.quantity
+        total_price = price * quantity  # Calculate total price for current item
+        sub_total += total_price  # Increment sub_total with each iteration
+        product_images.append({
+            'product': item.product,
+            'image': item.product.image.url
+        })
+        # Assign total_price to item
+        item.sub = total_price
+
     context = {
         'title': 'Order Detail',
         'order': order,
         'items': items,
+        'product_images': product_images,
+        'sub_total': sub_total,  # Pass sub_total to the template context
     }
-    return render(request, 'cust_admin/order/order_detail.html', context)
+    return render(request, 'cust_admin/order/order_dtls.html', context)
+
 
 
 
@@ -456,3 +464,42 @@ def order_update_status(request, order_id):
         'order': order,
     }
     return render(request, 'cust_admin/order/order_update_status.html', context)
+
+
+def add_coupon(request):
+    if request.method == 'POST':
+        form = CouponForm(request.POST)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Coupon added successfully!', icon='success', timer=3000)
+            return redirect('cust_admin:coupon_list')
+        else:
+            sweetify.error(request, 'There was an error adding the coupon.', timer=3000)
+    else:
+        form = CouponForm()
+    
+    return render(request, 'cust_admin/coupon/add_coupon.html', {'form': form})
+
+def edit_coupon(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    if request.method == 'POST':
+        form = CouponForm(request.POST, instance=coupon)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Coupon updated successfully!', icon='success', timer=3000)
+            return redirect('cust_admin:coupon_list')
+        else:
+            sweetify.error(request, 'There was an error updating the coupon. Please check the form for details.', timer=3000)
+    else:
+        form = CouponForm(instance=coupon)
+    return render(request, 'cust_admin/coupon/edit_coupon.html', {'form': form})
+
+def coupon_list(request):
+    coupons = Coupon.objects.all()
+    return render(request, 'cust_admin/coupon/coupon_list.html', {'coupons': coupons})
+
+def delete_coupon(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    coupon.delete()
+    sweetify.toast(request, 'Coupon deleted successfully!', icon='success', timer=3000)
+    return redirect('cust_admin:coupon_list')

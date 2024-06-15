@@ -1,50 +1,265 @@
-{% extends 'dashboard/base.html' %}
+
+{% extends 'dashboard/base.html'%}
 {% load static %}
 {% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/latest/css/all.min.css" integrity="actual-integrity-value" crossorigin="anonymous" />
+
+
 <main class="main">
     <div class="page-header breadcrumb-wrap">
         <div class="container">
             <div class="breadcrumb">
                 <a href="index.html" rel="nofollow">Home</a>
                 <span></span> Shop
-                <span></span> Payment
+                <span></span> Checkout
             </div>
         </div>
     </div>
     <section class="mt-50 mb-50">
         <div class="container">
+            
             <div class="row">
-                <div class="col-md-6 offset-md-3">
+                <div class="col-12">
+                    <div class="divider mt-50 mb-50"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-25">
+                        <h4>Billing Details</h4>
+                    </div>
+                    
+                    <div>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th>Name</th>
+                                    <td>{{ order.user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Address</th>
+                                    <td>{{ order.selected_address.street_address }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td>{{ order.selected_address.city }}</td>
+                                </tr>
+                                <tr>
+                                    <th>District</th>
+                                    <td>{{ order.selected_address.state }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Pincode</th>
+                                    <td>{{ order.selected_address.postal_code }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Country</th>
+                                    <td>{{ order.selected_address.country }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+                <div class="col-md-8">
                     <div class="order_review">
                         <div class="mb-20">
-                            <h4>Order Payment</h4>
+                            <h4>Your Orders</h4>
                         </div>
-                        <form method="post" action="{% url 'cart:payment' order.id %}">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="payment_method">Select Payment Method:</label>
-                                <select class="form-control" name="payment_method" id="payment_method">
-                                    <option value="COD">Cash on Delivery</option>
-                                    <option value="Razorpay">Razorpay</option>
-                                    <option value="Wallet">Wallet</option>
-                                </select>
+                        <div class="table-responsive order_table text-center">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2">Product</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <form method="post" action="">
+                                        {% csrf_token %}
+                                    {% for item in items%}
+                                    <tr>
+                                        <td class="image product-thumbnail"><img src="{{ item.product.image.url}}"  alt="#"></td>
+                                        <td>
+                                            <h5><a href="shop-product-full.html">{{ item.name }}</a></h5> <span class="product-qty">x {{item.quantity}}</span>
+                                        </td>
+                                        <td>₹{{item.total}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </form>
+                                <tr>
+                                    <td class="cart_total_label">cart</td>
+                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{totals}}</td>
+                                  </tr>
+
+                                <tr>
+                                    <td class="cart_total_label">Coupen Descount</td>
+                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{discounts}}</td>
+                                  </tr>
+                                   
+                                    <tr>
+                                        <th>Total</th>
+                                        <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total }}</span></td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                        <div class="btn-container d-flex justify-content-between">
+                            {% if total > wallet_balance %}
+                            <!-- Display a message or disable the wallet button -->
+                            
+                               <div>
+                                <!-- Add any additional fields if needed -->
+                                
+                                <button type="submit" class="btn btn-primary" disabled>Wallet</button>
+                                <p>insufficent balance </p>
                             </div>
-                            <button type="submit" class="btn btn-primary">Pay Now</button>
-                        </form>
-                    </div>
-                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                    {% if messages %}
-                        <div class="messages">
-                            <ul class="messages">
-                                {% for message in messages %}
-                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                                {% endfor %}
-                            </ul>
+                            
+                        {% else %}
+                            <!-- Allow the user to use the wallet -->
+                            <form method="post" action="" id="wallet-form">
+                                {% csrf_token %}
+                                <!-- Add any additional fields if needed -->
+                                <button type="submit" class="btn btn-primary">Wallet</button>
+                            </form>
+                        {% endif %}
+                        <div>
+                            
+                                {% comment %} <input type="hidden" name="total" value="{{ total }}">
+                                <input type="hidden" name="cart_id" value="{{ cart_id }}"> {% endcomment %}
+                                <a href="{"><button type="submit" id="cod-btn" class="btn btn-primary">Cash on delivery</button></a>
+                        
                         </div>
-                    {% endif %}
+                        <div class="btn_container">
+                           
+                            <form method="post" action="">
+                                <input type="hidden" name="total" value="{{ total }}">
+                                <input type="hidden" name="cart_id" value="{{ cart_id }}">
+                                <input type="hidden" name="razorpay_order_id" value="{{ razorpay_order_id }}">
+                                <input type="hidden" name="razorpay_signature" value="{{ razorpay_signature }}"> 
+                                <button class="btn" id="pay-btn">RazorPay</button>
+                            </form>
+                            
+
+                          </div>
+                          {% if messages %}
+                                        <div class="messages">
+                                            <ul class="messages">
+                                                {% for message in messages %}
+                                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                    </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
+   
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI/t1pWC2JzucI3lGv3nANu29b8f0u6FqFn1kxj8=" crossorigin="anonymous"></script> 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
+
+    
+<script>
+
+    var options = {
+       
+      // Enter the Key ID generated from the Dashboard
+      key: "rzp_test_TFXJczUeSyoF49", 
+       
+      // Amount is in currency subunits.
+      // Default currency is INR. Hence, 
+      // 50000 refers to 50000 paise
+      amount: parseInt("{{ total }}") * 100,
+
+      currency: "INR",
+       
+      // Your/store name.
+      name: "CRONICO", 
+       
+      // Pass the `id` obtained in the response of Step 1
+      order_id: "{{ razorpay_order_id }}",
+      callback_url: "",
+
+      // ... other options
+      notes: {
+            "total": "{{ total }}",
+            "cart_id": "{{ cart_id }}"
+        }
+    };
+     
+    // initialise razorpay with the options.
+    var rzp1 = new Razorpay(options);
+    // add event listener to the payment button.
+    document.getElementById("pay-btn").onclick = function (e) {
+      rzp1.open();
+      e.preventDefault();
+    };
+    {% comment %} document.getElementById("cod-btn").onclick = function (e) {
+        // Perform any COD-specific actions here (e.g., server-side verification)
+
+        // Show sweet alert for COD success
+        Swal.fire({
+            icon: 'success',
+            title: 'Payment Successful!',
+            text: 'Thank you for your order. Your payment was successful.',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'View Order Details'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirect to the order details page
+                window.location.href = "{% url 'order_success' %}";
+            }
+        });
+
+        // Prevent the default form submission
+        e.preventDefault();
+    }; {% endcomment %}
+    document.getElementById("wallet-form").onclick = function (e) {
+        // Prevent the default form submission for the wallet button
+        e.preventDefault();
+        // Submit the wallet form using AJAX or other logic if needed
+        document.getElementById("wallet-form").submit();
+    };
+
+
+  </script>
+  
+
+
+
+
+  <!-- Add this script at the end of checkout.html and payment.html -->
+<script>
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+
+    // Optional: Disable the form submit button after submission
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                var submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+
+  
+
+    
 </main>
 {% endblock %}

@@ -7,53 +7,78 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from decimal import Decimal
 from django.db import IntegrityError
-import store, random, sweetify, logging
-import uuid 
+import uuid, store, random, sweetify, logging
+from django.conf import settings
 from . import views
+from django.db.models import Sum
 from datetime import datetime
 from accounts.models import Address
 from store.models import CartItem
 
 logger = logging.getLogger(__name__)
 
+@login_required
 def view_cart(request):
-    # Retrieve the user's cart if it exists
     user = request.user
     items = CartItem.objects.filter(user=user, is_deleted=False)
 
     cart_items = []
-    total_cart_price = Decimal(0)  # Initialize total_cart_price as Decimal
+    total_cart_price = Decimal(0)
 
     for cart_item in items:
-        # Access the associated product
-        product = cart_item.product
-        
-        # Access the price from one of the product attributes
-        # Assuming there's at least one product attribute associated with the product
-        # You may need to adjust this logic based on your data model
-        # product_attribute = product.productattribute_set.first()
-        product_attribute = cart_item.product  # Assuming the ProductAttribute itself represents the product variant
+        product_attribute = cart_item.product
 
         if product_attribute:
             price = product_attribute.price
             size = product_attribute.size
-            
-            # Calculate the subtotal for each item (product price * quantity)
             cart_item.subtotal = price * cart_item.quantity
-
-            # Add the subtotal to the total_cart_price
             total_cart_price += cart_item.subtotal
 
         cart_items.append(cart_item)
 
+    discounts = 0
+    applied_coupon_id = request.session.get('applied_coupon_id')
+
+    if request.method == "POST":
+        if 'apply_coupon' in request.POST:
+            coupon_code = request.POST.get('coupon_code')
+            try:
+                coupon = Coupon.objects.get(code=coupon_code, active=True, active_date__lte=timezone.now(),
+                                            expiry_date__gte=timezone.now())
+
+                discounts = (total_cart_price * coupon.discount) / 100
+                request.session['applied_coupon_id'] = coupon.id
+
+                messages.success(request, 'Coupon applied successfully!')
+            except Coupon.DoesNotExist:
+                messages.error(request, 'Invalid or expired coupon code')
+
+        elif 'remove_coupon' in request.POST:
+            request.session.pop('applied_coupon_id', None)
+            discounts = 0
+            messages.success(request, 'Coupon removed successfully!')
+
+    if applied_coupon_id:
+        try:
+            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
+                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_cart_price * applied_coupon.discount) / 100
+        except Coupon.DoesNotExist:
+            request.session.pop('applied_coupon_id', None)
+
+    total_after_discount = total_cart_price - discounts
+
+    coupons = Coupon.objects.filter(active=True, active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+
     context = {
         'cart_items': cart_items,
         'total_cart_price': total_cart_price,
+        'total_after_discount': total_after_discount,
+        'discounts': discounts,
+        'coupons': coupons,
     }
 
-    # Pass the subtotal and total_cart_price to the frontend
     return render(request, 'user_cart/cart.html', context)
-
 
 @login_required
 @require_POST
@@ -72,10 +97,14 @@ def add_to_cart(request):
                 sweetify.toast(request, "Not enough stock available", timer=3000, icon='warning')
                 return redirect('store:product_view', product_pid=product_id)
 
+            if quantity > 5:
+                sweetify.toast(request, 'Max limit reached for this product', timer=3000, icon='warning')
+                return redirect('store:product_view', product_pid=product_id)
+
             # Get or create the user's cart
             cart, created = Cart.objects.get_or_create(user=request.user)
             
-            # Add the product to the cart with the selected size
+            # Check if the product is already in the cart
             cart_item, item_created = CartItem.objects.get_or_create(
                 user=request.user,
                 cart=cart,
@@ -84,7 +113,12 @@ def add_to_cart(request):
             )
 
             if not item_created:
-                cart_item.quantity += quantity
+                # If the total quantity exceeds the max limit, show an error message
+                new_quantity = cart_item.quantity + quantity
+                # if new_quantity > 5:
+                #     sweetify.toast(request, 'Max limit reached for this product', timer=3000, icon='warning')
+                #     return redirect('store:product_view', product_pid=product_id)
+                cart_item.quantity = new_quantity
                 cart_item.save()
 
             sweetify.toast(request, "Product added to cart successfully", timer=3000, icon='success')
@@ -110,6 +144,20 @@ def add_to_cart(request):
     return redirect('store:product_view', product_pid=product_id)
 
 
+def apply_coupon(request):
+    if request.method == "POST":
+        coupon_code = request.POST.get("coupon_code")
+        try:
+            coupon = Coupon.objects.get(code=coupon_code, active=True)
+            if coupon.is_active():
+                request.session['coupon_id'] = coupon.id
+                messages.success(request, "Coupon applied successfully!")
+            else:
+                messages.error(request, "Coupon is expired or inactive.")
+        except Coupon.DoesNotExist:
+            messages.error(request, "Invalid coupon code.")
+    return redirect('cart:view_cart')
+
 
 
 
@@ -119,15 +167,19 @@ def increase_quantity(request, cart_item_id, cart_id):
         cart_item = get_object_or_404(CartItem, id=cart_item_id, cart_id=cart_id)
         product_attribute = cart_item.product
         if product_attribute.stock > cart_item.quantity:
-            cart_item.quantity += 1
-            cart_item.save()
-            total = cart_item.quantity * product_attribute.price
-            total_sum = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart_id=cart_id))
-            return JsonResponse({'q': cart_item.quantity, 'total': total, 'total_sum': total_sum}, status=200)
+            if cart_item.quantity < 5:
+                cart_item.quantity += 1
+                cart_item.save()
+                total = cart_item.quantity * product_attribute.price
+                total_sum = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart_id=cart_id))
+                return JsonResponse({'q': cart_item.quantity, 'total': total, 'total_sum': total_sum}, status=200)
+            else:
+                return JsonResponse({'error': 'Max limit reached for this product'}, status=202)
         else:
             return JsonResponse({'error': 'Product is out of stock'}, status=201)
     except CartItem.DoesNotExist:
         return JsonResponse({'error': 'Cart item not found'}, status=404)
+
 
 @login_required
 def decrease_quantity(request, cart_item_id, cart_id):
@@ -155,14 +207,12 @@ def remove_from_cart(request, cart_item_id):
     return JsonResponse({'message': 'Item removed from cart successfully'}, status=200)
 
 
-    from django.shortcuts import render, redirect
-
-
 @login_required
 def checkout(request):
     user = request.user
     user_cart = Cart.objects.filter(user=user).first()
     total_cart_price = Decimal(0)
+    cart_items = []
 
     if user_cart:
         cart_items = user_cart.items.all()
@@ -175,6 +225,19 @@ def checkout(request):
     items = CartItem.objects.filter(user=user, is_deleted=False)
     user_addresses = Address.objects.filter(user=user)
 
+    # Fetch applied coupon details
+    applied_coupon_id = request.session.get('applied_coupon_id')
+    discounts = 0
+    if applied_coupon_id:
+        try:
+            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
+                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_cart_price * applied_coupon.discount) / 100
+        except Coupon.DoesNotExist:
+            request.session.pop('applied_coupon_id', None)
+
+    total_after_discount = total_cart_price - discounts  # Calculate total after applying coupon
+
     if request.method == 'POST':
         selected_address_id = request.POST.get('existing_address')
         if selected_address_id:
@@ -186,7 +249,7 @@ def checkout(request):
                 new_order = CartOrder.objects.create(
                     user=user,
                     order_number=order_number,
-                    order_total=total_cart_price,
+                    order_total=total_after_discount,  # Use total_after_discount here
                     selected_address=selected_address,
                     status='New'
                 )
@@ -208,24 +271,95 @@ def checkout(request):
                         messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
 
-                # Delete all items from the user's cart after creating the order
-                user_cart.items.all().delete()
+                # Clear cart after successful order creation
+                user_cart.items.all().delete
 
-                return render(request, 'user_cart/order_success.html', {
-                    'order': new_order,
-                    'product_orders': ProductOrder.objects.filter(order=new_order),
-                })
+                # Redirect to the payment method selection page
+                return redirect('cart:payment_method_selection', order_id=new_order.id)
             except Address.DoesNotExist:
                 messages.error(request, "Selected address does not exist.")
         else:
             messages.error(request, "Please select an address.")
 
+    # Add total price per item to each cart item
+    for item in items:
+        item.total_price = item.product.price * item.quantity
+
     context = {
         'items': items,
-        'total_cart_price': total_cart_price,
+        'total_cart_price': total_cart_price,  # Pass total_cart_price to template
+        'discounts': discounts,
+        'total_after_discount': total_after_discount,
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
+
+
+
+@login_required
+def payment_method_selection(request, order_id):
+    try:
+        order = CartOrder.objects.get(id=order_id, user=request.user)
+    except CartOrder.DoesNotExist:
+        messages.error(request, "Order does not exist.")
+        return redirect('cart:checkout')
+
+    items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
+    
+    # Calculate the total cart price, discount, and total after discount
+    total_cart_price = Decimal(0)
+    for item in items:
+        item.total_price = item.product.price * item.quantity  # Assuming you have a price field in the product
+        total_cart_price += item.total_price
+
+    applied_coupon_id = request.session.get('applied_coupon_id')
+    discounts = Decimal(0)
+    if applied_coupon_id:
+        try:
+            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
+                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_cart_price * applied_coupon.discount) / 100
+        except Coupon.DoesNotExist:
+            request.session.pop('applied_coupon_id', None)
+
+    total_after_discount = total_cart_price - discounts
+
+    if request.method == 'POST':
+        selected_payment_method = request.POST.get('payment_method')
+        if selected_payment_method == 'COD':
+            order.status = 'Pending'
+            order.save()
+            order.clear_cart()  # Clear the cart items
+            return redirect('cart:order_success', order_id=order.id)
+        elif selected_payment_method == 'Razorpay':
+            return redirect('cart:razorpay_payment', order_id=order.id)
+        else:
+            messages.error(request, "Invalid payment method selected.")
+            return redirect('cart:payment_method_selection', order_id=order.id)
+
+    context = {
+        'order': order,
+        'items': items, 
+        'total_cart_price': total_cart_price,
+        'discounts': discounts,
+        'total_after_discount': total_after_discount,
+    }
+    return render(request, 'user_cart/payment_method_selection.html', context)
+
+@login_required
+def order_success(request, order_id):
+    try:
+        order = CartOrder.objects.get(id=order_id, user=request.user)
+        product_orders = ProductOrder.objects.filter(order=order)
+    except CartOrder.DoesNotExist:
+        messages.error(request, "Order does not exist.")
+        return redirect('store:home')
+
+    context = {
+        'order': order,
+        'product_orders': product_orders,
+    }
+    return render(request, 'user_cart/order_success.html', context)
 
 
 @login_required
@@ -267,7 +401,6 @@ def order_confirmation(request, order_id):
         'order': order,
     }
     return render(request, 'user_cart/order_confirmation.html', context)
-
 
 
 # def place_order(request):
@@ -351,3 +484,8 @@ def order_confirmation(request, order_id):
 # def success(request):
     
 #     return render(request, 'user_cart/success_page.html')
+
+
+
+
+

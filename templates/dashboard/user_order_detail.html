@@ -59,6 +59,10 @@
             <th>Total Amount</th>
             <td>₹{{ order.order_total }}</td>
         </tr>
+        <tr>
+            <th>Order Status</th>
+            <td>{{ order.status }}</td>
+        </tr>
     </table>
 
     <h3>Order Items</h3>
@@ -99,7 +103,12 @@
 
     <div class="button-container">
         <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
+        
+        {% if order.status == Cancelled %}
         <a href="{% url 'store:order_cancel' order.id %}" class="cancel-order-btn">Cancel Order</a>
+        {% else %}
+        
+        {% endif %}
     </div>
 </div>
 

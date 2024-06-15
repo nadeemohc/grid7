@@ -43,7 +43,7 @@
                     <div class="slider-arrow slider-arrow-2 carausel-6-columns-arrow" id="carausel-6-columns-arrows"></div>
                     <div class="carausel-6-columns" id="carausel-6-columns">
                         {% for category in categories %}
-                        {% if category.is_blocked != True %}
+                        {% if category.is_blocked != True and category.c_name != 'Special Edition' %}
                             <div class="card-1">
                                 
                                 <figure class=" img-hover-scale overflow-hidden">
@@ -102,11 +102,6 @@
                                                 <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                             </a>
                                         </div>
-                                        <div class="product-action-1">
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                            <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
-                                        </div>
-
                                         
                                         {% if product.featured == True %}
                                         <div class="product-badges product-badges-position product-badges-mrg">
@@ -143,7 +138,7 @@
                                             <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
                                         </div>
                                         <div class="product-action-1 show">
-                                            <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                         </div>
                                     </div>
                                 </div>
@@ -174,11 +169,6 @@
                                                 <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                             </a>
                                         </div>
-                                        <div class="product-action-1">
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                            <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
-                                        </div>
-
                                         
                                         {% if product.featured == True %}
                                         <div class="product-badges product-badges-position product-badges-mrg">
@@ -215,7 +205,7 @@
                                             <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
                                         </div>
                                         <div class="product-action-1 show">
-                                            <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                         </div>
                                     </div>
                                 </div>
@@ -248,11 +238,6 @@
                                                 <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                             </a>
                                         </div>
-                                        <div class="product-action-1">
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                            <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
-                                        </div>
-
                                         
                                         {% if product.featured == True %}
                                         <div class="product-badges product-badges-position product-badges-mrg">
@@ -289,7 +274,7 @@
                                             <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
                                         </div>
                                         <div class="product-action-1 show">
-                                            <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                         </div>
                                     </div>
                                 </div>

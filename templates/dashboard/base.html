@@ -118,24 +118,40 @@
                                 <div class="header-action-icon-2">
                                     <a href="{% url 'store:wishlist' %}">
                                         <img class="svgInject" alt="Evara" src="{% static 'store/imgs/theme/icons/icon-heart.svg' %}">
-                                        <!-- <span class="pro-count blue">4</span> -->
+                                        <span class="pro-count blue" id="wishlist_count">{{ wishlist_count }}</span>
                                     </a>
                                 </div>
                                 <div class="header-action-icon-2">
                                     <a class="mini-cart-icon" href="{% url 'cart:view_cart' %}">
                                         <img alt="Evara" src="{% static 'store/imgs/theme/icons/icon-cart.svg' %}">
-                                        
-
                                         <span class="pro-count blue" id="cart_quantity">{{ item_count }}</span>
-                                        
-                                        {% comment %}                                        
-                                        <span class="pro-count blue cart-count" data-cart-count="{{ item_count }}">{{ item_count }}</span>
-                                        {% endcomment %}
-
                                     </a>
-                                    
                                 </div>
                             </div>
+                        </div>
+                    </header>
+                    <!-- Other body elements -->
+                
+                    <!-- JavaScript to handle wishlist count update -->
+                    <script>
+                        function updateWishlistCount() {
+                            $.ajax({
+                                url: '{% url "store:get_wishlist_count" %}',
+                                type: 'GET',
+                                success: function(data) {
+                                    $('#wishlist_count').text(data.wishlist_count);
+                                },
+                                error: function(error) {
+                                    console.error("Error fetching wishlist count:", error);
+                                }
+                            });
+                        }
+                
+                        $(document).ready(function() {
+                            // Update wishlist count on page load
+                            updateWishlistCount();
+                        });
+                    </script>
                         </div>
                     </div>
                 </div>

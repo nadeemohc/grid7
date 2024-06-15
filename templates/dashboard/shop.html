@@ -1,9 +1,7 @@
-﻿
-{% extends 'dashboard/base.html' %}
+﻿{% extends 'dashboard/base.html' %}
 {% load static %}
 
 {% block content %}
-
 <main class="main">
     <div class="page-header breadcrumb-wrap">
         <div class="container">
@@ -21,87 +19,84 @@
                         <div class="totall-product">
                             <p>We found <strong class="text-brand">{{ prod_count }}</strong> items for you!</p>
                         </div>
-                        <div class="sort-by-product-area">
-                                <div class="sort-by-cover mr-10">
+                            <form class="sort-by-product-area" method="get" id="filter-form">
+                                <div class="sort-by-cover">
                                     <div class="sort-by-product-wrap">
                                         <div class="sort-by">
                                             <span><i class="fi-rs-apps"></i>Show:</span>
                                         </div>
                                         <div class="sort-by-dropdown-wrap">
-                                            <span> 50 <i class="fi-rs-angle-small-down"></i></span>
+                                            <select name="items_per_page" onchange="document.getElementById('filter-form').submit();">
+                                                <option value="9" {% if items_per_page == '9' %}selected{% endif %}>9</option>
+                                                <option value="20" {% if items_per_page == '20' %}selected{% endif %}>20</option>
+                                                <option value="30" {% if items_per_page == '30' %}selected{% endif %}>30</option>
+                                                <option value="all" {% if items_per_page == 'all' %}selected{% endif %}>All</option>
+                                            </select>
                                         </div>
                                     </div>
-                                    <div class="sort-by-dropdown">
-                                        <ul>
-                                            <li><a class="active" href="#">50</a></li>
-                                            <li><a href="#">100</a></li>
-                                            <li><a href="#">150</a></li>
-                                            <li><a href="#">200</a></li>
-                                            <li><a href="#">All</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                </div>&nbsp;&nbsp;&nbsp;
                                 <div class="sort-by-cover">
                                     <div class="sort-by-product-wrap">
                                         <div class="sort-by">
                                             <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
                                         </div>
                                         <div class="sort-by-dropdown-wrap">
-                                            <span> Featured <i class="fi-rs-angle-small-down"></i></span>
+                                            <select name="sort_by" onchange="document.getElementById('filter-form').submit();">
+                                                <option value="featured" {% if sort_by == 'featured' %}selected{% endif %}>Featured</option>
+                                                <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                                                <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                                                <option value="new_arrivals" {% if sort_by == 'new_arrivals' %}selected{% endif %}>New Arrivals</option>
+                                                <!-- <option value="avg_rating" {% if sort_by == 'avg_rating' %}selected{% endif %}>Avg. Rating</option> -->
+                                                <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: Aa-Zz</option>
+                                                <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name: Zz-Aa</option>
+                                            </select>
                                         </div>
                                     </div>
-                                    <div class="sort-by-dropdown">
-                                        <ul>
-                                            <li><a class="active" href="#">Featured</a></li>
-                                            <li><a href="#">Price: Low to High</a></li>
-                                            <li><a href="#">Price: High to Low</a></li>
-                                            <li><a href="#">Release Date</a></li>
-                                            <li><a href="#">Avg. Rating</a></li>
-                                        </ul>
-                                    </div>
                                 </div>
-                        </div>
+                            </form>
                     </div>
-                    <div class="row product-grid-3">
-
+                    <div class="row product-grid-3" id="product-list">
                         {% for product in products %}
-                        {% if product.is_blocked != True %}
+                        {% if not product.is_blocked %}
                         <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                             <div class="product-cart-wrap mb-30">
                                 <div class="product-img-action-wrap">
                                     <div class="product-img product-img-zoom">
                                         <a href="{% url 'store:product_view' product.p_id %}">
                                             <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
-                                            <img class="hover-img" src="{{ product.images.url }}" alt="">
+                                            {% if product.images.first %}
+                                            <img class="hover-img" src="{{ product.images.first.images.url }}" alt="">
+                                            {% endif %}
                                         </a>
                                     </div>
-                                    
-                                    <div class="product-action-1">
-                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                        <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
-                                    </div>
+                                    <!-- {% if product.featured %}
                                     <div class="product-badges product-badges-position product-badges-mrg">
                                         <span class="best">Best Sell</span>
                                     </div>
-                                    
+                                    {% elif product.popular %}
+                                    <div class="product-badges product-badges-position product-badges-mrg">
+                                        <span class="hot">Hot</span>
+                                    </div>
+                                    {% elif product.latest %}
+                                    <div class="product-badges product-badges-position product-badges-mrg">
+                                        <span class="new">New</span>
+                                    </div>
+                                    {% endif %} -->
                                 </div>
                                 <div class="product-content-wrap">
-                                    <div class="product-category">
-                                        <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
-                                    </div>
-                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:30 }}</a></h2>
+                                    <div class="product-category"></div>
+                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title|truncatechars:30 }}</a></h2>
                                     <div class="rating-result" title="90%">
                                         <span>
                                             <span>95%</span>
                                         </span>
                                     </div>
                                     <div class="product-price">
-                                        <span>&#8377;{{  product.product_attributes.first.price }} </span>
+                                        <span>&#8377;{{ product.product_attributes.first.price }}</span>
                                         <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
-
                                     </div>
                                     <div class="product-action-1 show">
-                                        <a aria-label="Add To Cart" class="action-btn hover-up" href="{% url 'cart:add_to_cart' %}"><i class="fi-rs-shopping-bag-add"></i></a>
+                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                     </div>
                                 </div>
                             </div>
@@ -109,17 +104,43 @@
                         {% endif %}
                         {% endfor %}
                     </div>
-                    <!--pagination-->
-                    <!-- Your pagination HTML -->
+                    <!-- Pagination Area -->
                     <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
                         <nav aria-label="Page navigation example">
                             <ul class="pagination justify-content-start">
-                                <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                                <li class="page-item"><a class="page-link" href="#">02</a></li>
-                                <li class="page-item"><a class="page-link" href="#">03</a></li>
-                                <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                                <li class="page-item"><a class="page-link" href="#">16</a></li>
-                                <li class="page-item"><a class="page-link" href="#"><i class="fi-rs-angle-double-small-right"></i></a></li>
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% elif num == 1 %}
+                                        <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+                                        {% if page_obj.number > 6 %}
+                                            <li class="page-item disabled"><a class="page-link dot" href="#">...</a></li>
+                                        {% endif %}
+                                    {% elif num == page_obj.paginator.num_pages %}
+                                        {% if page_obj.number < page_obj.paginator.num_pages|add:'-5' %}
+                                            <li class="page-item disabled"><a class="page-link dot" href="#">...</a></li>
+                                        {% endif %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
                             </ul>
                         </nav>
                     </div>
@@ -129,50 +150,53 @@
                         <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                         <ul class="categories">
                             {% for category in categories %}
-                                {% if category.is_blocked != True %}
-                                    <li><a href="{% url 'store:product_list_by_category' category.c_id %}">{{ category.c_name }}</a></li>
-                                {% endif %}
+                            {% if not category.is_blocked %}
+                            <li><a href="{% url 'store:product_list_by_category' category.c_id %}">{{ category.c_name }}</a></li>
+                            {% endif %}
                             {% endfor %}
                         </ul>
                     </div>
-                    <!-- Fillter By Price -->
-                    <!-- Your price filter HTML -->
                     <div class="sidebar-widget price_range range mb-30">
-                        <div class="widget-header position-relative mb-20 pb-10">
-                            <h5 class="widget-title mb-10">Filter by price</h5>
-                            <div class="bt-1 border-color-1"></div>
-                        </div>
-                        <div class="price-filter">
-                            <div class="price-filter-inner">
-                                <div id="slider-range"></div>
-                                <div class="price_slider_amount">
-                                    <div class="label-input">
-                                        <span>Range:</span><input type="text" id="amount" name="price" placeholder="Add Your Price" />
-                                    </div>
-                                </div>
+                        <h5 class="section-title style-1 mb-30">Filter by price</h5>
+                        <form method="get" id="price-filter-form">
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="below_500" id="below_500" class="form-check-input" {% if price_filter == 'below_500' %}checked{% endif %}>
+                                <label for="below_500" class="form-check-label">Below ₹500</label>
                             </div>
-                        </div>
-                        <div class="list-group">
-                            <div class="list-group-item mb-10 mt-10">
-                                <label class="fw-900">Size</label>
-                                <div class="custome-checkbox">
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox1" value="">
-                                    <label class="form-check-label" for="exampleCheckbox1"><span> (56)</span></label>
-                                    <br>
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox2" value="">
-                                    <label class="form-check-label" for="exampleCheckbox2"><span>Green (78)</span></label>
-                                    <br>
-                                    <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox3" value="">
-                                    <label class="form-check-label" for="exampleCheckbox3"><span>Blue (54)</span></label>
-                                </div>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="500_1000" id="500_1000" class="form-check-input" {% if price_filter == '500_1000' %}checked{% endif %}>
+                                <label for="500_1000" class="form-check-label">₹500 - ₹1000</label>
                             </div>
-                        </div>
-                        <a href="shop-grid-right.html" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i> Fillter</a>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="1000_1500" id="1000_1500" class="form-check-input" {% if price_filter == '1000_1500' %}checked{% endif %}>
+                                <label for="1000_1500" class="form-check-label">₹1000 - ₹1500</label>
+                            </div>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="1500_2000" id="1500_2000" class="form-check-input" {% if price_filter == '1500_2000' %}checked{% endif %}>
+                                <label for="1500_2000" class="form-check-label">₹1500 - ₹2000</label>
+                            </div>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="above_2000" id="above_2000" class="form-check-input" {% if price_filter == 'above_2000' %}checked{% endif %}>
+                                <label for="above_2000" class="form-check-label">Above ₹2000</label>
+                            </div>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="all" id="all" class="form-check-input" {% if price_filter == 'all' %}checked{% endif %}>
+                                <label for="all" class="form-check-label">All</label>
+                            </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Filter</button>
+                                {% if category %}
+                                    <a href="{% url 'store:product_list_by_category' category.c_id %}" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Clear Filter</a>
+                                {% else %}
+                                    <a href="{% url 'store:shop' %}" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Clear Filter</a>
+                                {% endif %}
+                            </div>
+                        </form>
                     </div>
+                    
                 </div>
             </div>
         </div>
     </section>
 </main>
-
 {% endblock content %}

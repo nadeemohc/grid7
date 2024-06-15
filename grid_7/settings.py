@@ -82,8 +82,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.request',
-                # 'user_cart.context_processors.cart', 
-                'user_cart.context_processors.cart_item_count',
+                'user_cart.context_processors.cart_item_count', 
+                'user_cart.context_processors.wishlist_item_count',
             ],
         },
     },
@@ -226,3 +226,7 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'store:home'
 LOGOUT_URL = 'accounts:logout'
 LOGOUT_REDIRECT_URL = 'accounts:login'
+
+
+RAZORPAY_KEY_ID = 'rzp_test_bnAKlpSHjx2D05'
+RAZORPAY_KEY_SECRET = 'zqGufv4qUqgmhes2HIs4971Y'
