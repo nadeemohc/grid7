@@ -157,40 +157,43 @@
                         </ul>
                     </div>
                     <div class="sidebar-widget price_range range mb-30">
-                        <div class="widget-header position-relative mb-20 pb-10">
-                            <h5 class="widget-title mb-10">Filter by price</h5>
-                            <div class="bt-1 border-color-1"></div>
-                        </div>
-                        <form method="post" action="{% url 'store:shop' %}">
-                            {% csrf_token %}
-                            {% if selected_category %}
-                                <input type="hidden" name="category_id" value="{{ selected_category.cid }}">
-                            {% endif %}
-                            <!-- <div class="col-sm-6 mb-1">
-                                <input type="radio" name="price_range" value="0-50" class="form-check-input" id="price_range_0_50">
-                                <label for="price_range_0_50" class="form-check-label">0 - 50</label>
-                            </div> -->
-                            <div class="col-sm-6 mb-1">
-                                <input type="radio" name="price_range" value="50-200" class="form-check-input" id="price_range_50_200">
-                                <label for="price_range_50_200" class="form-check-label">50 - 200</label>
+                        <h5 class="section-title style-1 mb-30">Filter by price</h5>
+                        <form method="get" id="price-filter-form">
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="below_500" id="below_500" class="form-check-input" {% if price_filter == 'below_500' %}checked{% endif %}>
+                                <label for="below_500" class="form-check-label">Below ₹500</label>
                             </div>
-                            <div class="col-sm-6 mb-1">
-                                <input type="radio" name="price_range" value="200-500" class="form-check-input" id="price_range_200_500">
-                                <label for="price_range_200_500" class="form-check-label">200 - 500</label>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="500_1000" id="500_1000" class="form-check-input" {% if price_filter == '500_1000' %}checked{% endif %}>
+                                <label for="500_1000" class="form-check-label">₹500 - ₹1000</label>
                             </div>
-                            <div class="col-sm-6 mb-1">
-                                <input type="radio" name="price_range" value="500-1000" class="form-check-input" id="price_range_500_1000">
-                                <label for="price_range_500_1000" class="form-check-label">500 - 1000</label>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="1000_1500" id="1000_1500" class="form-check-input" {% if price_filter == '1000_1500' %}checked{% endif %}>
+                                <label for="1000_1500" class="form-check-label">₹1000 - ₹1500</label>
                             </div>
-                            <div class="col-sm-6 mb-1">
-                                <input type="radio" name="price_range" value="more than 1000" class="form-check-input" id="price_range_more_1000">
-                                <label for="price_range_more_1000" class="form-check-label">more than 1000</label>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="1500_2000" id="1500_2000" class="form-check-input" {% if price_filter == '1500_2000' %}checked{% endif %}>
+                                <label for="1500_2000" class="form-check-label">₹1500 - ₹2000</label>
                             </div>
-                            <br>
-                            <input type="submit" class="btn primary-btn" value="Apply Filter">
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="above_2000" id="above_2000" class="form-check-input" {% if price_filter == 'above_2000' %}checked{% endif %}>
+                                <label for="above_2000" class="form-check-label">Above ₹2000</label>
+                            </div>
+                            <div class="price-filter">
+                                <input type="radio" name="price_filter" value="all" id="all" class="form-check-input" {% if price_filter == 'all' %}checked{% endif %}>
+                                <label for="all" class="form-check-label">All</label>
+                            </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Filter</button>
+                                {% if category %}
+                                    <a href="{% url 'store:product_list_by_category' category.c_id %}" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Clear Filter</a>
+                                {% else %}
+                                    <a href="{% url 'store:shop' %}" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Clear Filter</a>
+                                {% endif %}
+                            </div>
                         </form>
-                        
                     </div>
+                    
                 </div>
             </div>
         </div>

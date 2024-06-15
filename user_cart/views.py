@@ -10,50 +10,75 @@ from django.db import IntegrityError
 import uuid, store, random, sweetify, logging
 from django.conf import settings
 from . import views
+from django.db.models import Sum
 from datetime import datetime
 from accounts.models import Address
 from store.models import CartItem
 
 logger = logging.getLogger(__name__)
 
+@login_required
 def view_cart(request):
-    # Retrieve the user's cart if it exists
     user = request.user
     items = CartItem.objects.filter(user=user, is_deleted=False)
 
     cart_items = []
-    total_cart_price = Decimal(0)  # Initialize total_cart_price as Decimal
+    total_cart_price = Decimal(0)
 
     for cart_item in items:
-        # Access the associated product
-        product = cart_item.product
-        
-        # Access the price from one of the product attributes
-        # Assuming there's at least one product attribute associated with the product
-        # You may need to adjust this logic based on your data model
-        # product_attribute = product.productattribute_set.first()
-        product_attribute = cart_item.product  # Assuming the ProductAttribute itself represents the product variant
+        product_attribute = cart_item.product
 
         if product_attribute:
             price = product_attribute.price
             size = product_attribute.size
-            
-            # Calculate the subtotal for each item (product price * quantity)
             cart_item.subtotal = price * cart_item.quantity
-
-            # Add the subtotal to the total_cart_price
             total_cart_price += cart_item.subtotal
 
         cart_items.append(cart_item)
 
+    discounts = 0
+    applied_coupon_id = request.session.get('applied_coupon_id')
+
+    if request.method == "POST":
+        if 'apply_coupon' in request.POST:
+            coupon_code = request.POST.get('coupon_code')
+            try:
+                coupon = Coupon.objects.get(code=coupon_code, active=True, active_date__lte=timezone.now(),
+                                            expiry_date__gte=timezone.now())
+
+                discounts = (total_cart_price * coupon.discount) / 100
+                request.session['applied_coupon_id'] = coupon.id
+
+                messages.success(request, 'Coupon applied successfully!')
+            except Coupon.DoesNotExist:
+                messages.error(request, 'Invalid or expired coupon code')
+
+        elif 'remove_coupon' in request.POST:
+            request.session.pop('applied_coupon_id', None)
+            discounts = 0
+            messages.success(request, 'Coupon removed successfully!')
+
+    if applied_coupon_id:
+        try:
+            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
+                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_cart_price * applied_coupon.discount) / 100
+        except Coupon.DoesNotExist:
+            request.session.pop('applied_coupon_id', None)
+
+    total_after_discount = total_cart_price - discounts
+
+    coupons = Coupon.objects.filter(active=True, active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+
     context = {
         'cart_items': cart_items,
         'total_cart_price': total_cart_price,
+        'total_after_discount': total_after_discount,
+        'discounts': discounts,
+        'coupons': coupons,
     }
 
-    # Pass the subtotal and total_cart_price to the frontend
     return render(request, 'user_cart/cart.html', context)
-
 
 @login_required
 @require_POST
@@ -119,6 +144,19 @@ def add_to_cart(request):
     return redirect('store:product_view', product_pid=product_id)
 
 
+def apply_coupon(request):
+    if request.method == "POST":
+        coupon_code = request.POST.get("coupon_code")
+        try:
+            coupon = Coupon.objects.get(code=coupon_code, active=True)
+            if coupon.is_active():
+                request.session['coupon_id'] = coupon.id
+                messages.success(request, "Coupon applied successfully!")
+            else:
+                messages.error(request, "Coupon is expired or inactive.")
+        except Coupon.DoesNotExist:
+            messages.error(request, "Invalid coupon code.")
+    return redirect('cart:view_cart')
 
 
 
@@ -174,6 +212,7 @@ def checkout(request):
     user = request.user
     user_cart = Cart.objects.filter(user=user).first()
     total_cart_price = Decimal(0)
+    cart_items = []
 
     if user_cart:
         cart_items = user_cart.items.all()
@@ -186,6 +225,19 @@ def checkout(request):
     items = CartItem.objects.filter(user=user, is_deleted=False)
     user_addresses = Address.objects.filter(user=user)
 
+    # Fetch applied coupon details
+    applied_coupon_id = request.session.get('applied_coupon_id')
+    discounts = 0
+    if applied_coupon_id:
+        try:
+            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
+                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_cart_price * applied_coupon.discount) / 100
+        except Coupon.DoesNotExist:
+            request.session.pop('applied_coupon_id', None)
+
+    total_after_discount = total_cart_price - discounts  # Calculate total after applying coupon
+
     if request.method == 'POST':
         selected_address_id = request.POST.get('existing_address')
         if selected_address_id:
@@ -197,7 +249,7 @@ def checkout(request):
                 new_order = CartOrder.objects.create(
                     user=user,
                     order_number=order_number,
-                    order_total=total_cart_price,
+                    order_total=total_after_discount,  # Use total_after_discount here
                     selected_address=selected_address,
                     status='New'
                 )
@@ -219,6 +271,9 @@ def checkout(request):
                         messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
 
+                # Clear cart after successful order creation
+                user_cart.items.all().delete
+
                 # Redirect to the payment method selection page
                 return redirect('cart:payment_method_selection', order_id=new_order.id)
             except Address.DoesNotExist:
@@ -226,12 +281,19 @@ def checkout(request):
         else:
             messages.error(request, "Please select an address.")
 
+    # Add total price per item to each cart item
+    for item in items:
+        item.total_price = item.product.price * item.quantity
+
     context = {
         'items': items,
-        'total_cart_price': total_cart_price,
+        'total_cart_price': total_cart_price,  # Pass total_cart_price to template
+        'discounts': discounts,
+        'total_after_discount': total_after_discount,
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
+
 
 
 @login_required
@@ -243,6 +305,24 @@ def payment_method_selection(request, order_id):
         return redirect('cart:checkout')
 
     items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
+    
+    # Calculate the total cart price, discount, and total after discount
+    total_cart_price = Decimal(0)
+    for item in items:
+        item.total_price = item.product.price * item.quantity  # Assuming you have a price field in the product
+        total_cart_price += item.total_price
+
+    applied_coupon_id = request.session.get('applied_coupon_id')
+    discounts = Decimal(0)
+    if applied_coupon_id:
+        try:
+            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
+                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_cart_price * applied_coupon.discount) / 100
+        except Coupon.DoesNotExist:
+            request.session.pop('applied_coupon_id', None)
+
+    total_after_discount = total_cart_price - discounts
 
     if request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
@@ -260,7 +340,9 @@ def payment_method_selection(request, order_id):
     context = {
         'order': order,
         'items': items, 
-        'total_cart_price': order.order_total,
+        'total_cart_price': total_cart_price,
+        'discounts': discounts,
+        'total_after_discount': total_after_discount,
     }
     return render(request, 'user_cart/payment_method_selection.html', context)
 
@@ -319,7 +401,6 @@ def order_confirmation(request, order_id):
         'order': order,
     }
     return render(request, 'user_cart/order_confirmation.html', context)
-
 
 
 # def place_order(request):

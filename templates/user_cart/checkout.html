@@ -1,4 +1,3 @@
-<!-- templates/user_cart/checkout.html -->
 {% extends 'dashboard/base.html' %}
 {% load static %}
 {% block content %}
@@ -47,23 +46,36 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th colspan="2">Product</th>
+                                        <th>Product</th>
+                                        <th>Image</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
                                         <th>Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for item in items %}
                                     <tr>
-                                        <td class="image product-thumbnail"><img src="{{ item.product.product.image.url }}" alt="#"></td>
                                         <td>
-                                            <h5><a href="shop-product-full.html">{{ item.product.product.title }}</a></h5> <span class="product-qty">x {{ item.quantity }}</span>
+                                            <h5><a href="shop-product-full.html">{{ item.product.product.title }}</a></h5>
                                         </td>
+                                        <td class="image product-thumbnail"><img src="{{ item.product.product.image.url }}" alt="#"></td>
                                         <td>₹{{ item.product.price }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>₹{{ item.total_price }}</td> <!-- Total price for each item -->
                                     </tr>
                                     {% endfor %}
                                     <tr>
-                                        <td class="cart_total_label">Cart Total</td>
-                                        <td colspan="2" class="cart_total_amount">₹{{ total_cart_price }}</td>
+                                        <td colspan="4" class="text-right"><strong>Total Before Discount</strong></td>
+                                        <td><strong>₹{{ total_cart_price }}</strong></td> <!-- Total before applying coupon -->
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="text-right"><strong>Discount</strong></td>
+                                        <td><strong>- ₹{{ discounts }}</strong></td> <!-- Applied discount -->
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="text-right"><strong>Total After Discount</strong></td>
+                                        <td><strong>₹{{ total_after_discount }}</strong></td> <!-- Total after applying coupon -->
                                     </tr>
                                 </tbody>
                             </table>

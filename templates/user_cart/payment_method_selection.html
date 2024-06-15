@@ -64,7 +64,9 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th colspan="2">Product</th>
+                                        <th>Image</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
                                         <th>Total</th>
                                     </tr>
                                 </thead>
@@ -72,15 +74,22 @@
                                     {% for item in items %}
                                     <tr>
                                         <td class="image product-thumbnail"><img src="{{ item.product.product.image.url }}" alt="#"></td>
-                                        <td>
-                                            <h5><a href="shop-product-full.html">{{ item.product.product.title }}</a></h5> <span class="product-qty">x {{ item.quantity }}</span>
-                                        </td>
-                                        <td>₹{{ item.product.price }}</td>
+                                        <td><h5><a href="shop-product-full.html">{{ item.product.product.title }}</a></h5></td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>₹{{ item.total_price }}</td> <!-- Updated to show the total price per item -->
                                     </tr>
                                     {% endfor %}
                                     <tr>
                                         <td class="cart_total_label">Cart Total</td>
                                         <td colspan="2" class="cart_total_amount">₹{{ total_cart_price }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cart_total_label">Discount</td>
+                                        <td colspan="2" class="cart_total_amount"> ₹{{ discounts }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cart_total_label">Total After Discount</td>
+                                        <td colspan="2" class="cart_total_amount">₹{{ total_after_discount }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -128,12 +137,12 @@ document.getElementById('pay-button').addEventListener('click', function(e) {
         e.preventDefault();
         var options = {
             "key": "{{ razorpay_key_id }}", // Enter the Key ID generated from the Dashboard
-            "amount": "{{ total_cart_price }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "amount": "{{ total_after_discount|floatformat:0|add:'0.00' }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
             "currency": "INR",
             "name": "Your Company Name",
             "description": "Test Transaction",
             "image": "https://example.com/your_logo",
-            "order_id": "{{ razorpay_order_id }}", //This is a sample Order ID. Pass the `id` obtained in the previous step
+            "order_id": "{{ razorpay_order_id }}", // This is a sample Order ID. Pass the `id` obtained in the previous step
             "handler": function (response){
                 document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
                 document.getElementById('payment-form').submit();

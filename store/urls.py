@@ -25,5 +25,6 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('shop/', views.shop, name='shop'),
     path('shop/<int:category_id>/', views.shop, name='shop_by_category'),
-    # path('filter_product/', views.filter_product,name='filter_product'),
+    path('list_coupons/', views.list_coupon, name='list_coupon'),    
+
 ]

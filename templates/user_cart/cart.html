@@ -17,238 +17,272 @@
         margin-bottom: 30px;
     }
 
-    .inc-bt{
+    .inc-bt {
         background: #e6e5e5;
-        border:None;
-        border-radius:10%;
+        border: none;
+        border-radius: 10%;
     }
-    .align-total{
-        margin-left:30em;
+    .align-total {
+        margin-left: 30em;
     }
-
-   
 </style>
-    
-    <main class="main">
-        <div class="page-header breadcrumb-wrap">
-            <div class="container">
-                <div class="breadcrumb">
-                    <a href="index.html" rel="nofollow">Home</a>
-                    <span></span> Shop
-                    <span></span> Cart
-                </div>
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Cart
             </div>
         </div>
-        <section class="mt-50 mb-50">
-            <div class="container">
-                
-                <div class="row">
-                    <div class="col-12">
-                        <div class="table-responsive">
-                            <table class="table shopping-summery clean">
-                                <thead>
-                                    <tr class="main-heading">
-                                        <!-- <th scope="col">Image</th> -->
-                                        <th scope="col">Name</th>
-                                        <th scope="col">Size</th>
-                                        <th scope="col">Price</th>
-                                        <th scope="col">Quantity</th>
-                                        <th scope="col">Subtotal</th>
-                                        <th scope="col">Remove</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if cart_items %}
-                                    {% for cart_item in cart_items %}
-                                    <tr>
-                                        <td class="product-des product-name">
-                                            <h5 class="product-name"><a href="shop-product-right.html">{{cart_item.product.product.title}}</a></h5>
-                                        
-                                        </td>
-                                        <td class="product-size"><span>{{ cart_item.product.size }}</span></td>
-                                        <td class="price" data-title="Price"><span>{{cart_item.product.price}}</span></td>
-                                            
-                                        <td class="text-center" data-title="Stock"> 
-                                            <button class='inc-bt'onclick="decreaseQuantity('{{ cart_item.id }}' , '{{ cart_item.cart_id }}')">-</button>
-                                            <span id="quantity{{cart_item.id }}">{{ cart_item.quantity }}</span>
-                                            <button class='inc-bt' onclick="increaseQuantity('{{ cart_item.id }}', '{{ cart_item.cart_id }}')" >+</button>
-                                        </td>
-                                        <td class="text-right" data-title="Cart">
-                                            <span id="total{{ cart_item.id }}">{{ cart_item.subtotal }}</span>
-                                        </td>
-                                        <td><button class='btn primary-btn' onclick="removeFromCart('{{ cart_item.id }}')">Remove</button></td>
-                                    </tr>
-                                    pr={{cart_item.product_attribute.description}}
-                                    {% endfor %}
-                                    {% else %}
-                                    <td colspan="6">
-                                        <p style="color: black;">The cart is empty</p>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table shopping-summery clean">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Size</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Subtotal</th>
+                                    <th scope="col">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if cart_items %}
+                                {% for cart_item in cart_items %}
+                                <tr>
+                                    <td class="product-des product-name">
+                                        <h5 class="product-name"><a href="shop-product-right.html">{{ cart_item.product.product.title }}</a></h5>
                                     </td>
+                                    <td class="product-size"><span>{{ cart_item.product.size }}</span></td>
+                                    <td class="price" data-title="Price"><span>{{ cart_item.product.price }}</span></td>
+                                    <td class="text-center" data-title="Stock">
+                                        <button class='inc-bt' onclick="decreaseQuantity('{{ cart_item.id }}', '{{ cart_item.cart_id }}')">-</button>
+                                        <span id="quantity{{ cart_item.id }}">{{ cart_item.quantity }}</span>
+                                        <button class='inc-bt' onclick="increaseQuantity('{{ cart_item.id }}', '{{ cart_item.cart_id }}')">+</button>
+                                    </td>
+                                    <td class="text-right" data-title="Cart">
+                                        <span id="total{{ cart_item.id }}">{{ cart_item.subtotal }}</span>
+                                    </td>
+                                    <td><button class='btn primary-btn' onclick="removeFromCart('{{ cart_item.id }}')">Remove</button></td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <td colspan="6">
+                                    <p style="color: black;">The cart is empty</p>
+                                </td>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cart-action text-end">
+                        <a href="{% url 'store:shop' %}" class="btn"><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
+                    </div>
+                    <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
+                    <div class="row mb-50">
+                        <div class="col-lg-6 col-md-12">
+
+                        <div class="mb-30 mt-50">
+                            <div class="heading_s1 mb-3">
+                                <h4>Apply/Remove Coupon</h4>
+                            </div>
+                            <div class="total-amount">
+                                <div class="left">
+                                    {% if discounts %}
+                                        <!-- Display UI elements for removing the coupon -->
+                                        <form method="post" action="{% url 'cart:view_cart' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="remove_coupon" value="true">
+                                            <button type="submit" id='removeCouponBtn' class="btn btn-sm"><i class="fi-rs-label mr-10"></i>Remove Coupon</button>
+                                        </form>
+                                    {% else %}
+                                        <!-- Display UI elements for applying the coupon -->
+                                        <form method="post" action="{% url 'cart:view_cart' %}">
+                                            {% csrf_token %}
+                                            <div class="form-row row justify-content-center">
+                                                <div class="form-group col-lg-6">
+                                                    <input class="font-medium" name="coupon_code" placeholder="Enter Your Coupon">
+                                                </div>
+                                                <div class="form-group col-lg-6">
+                                                    <button type="submit" name="apply_coupon" class="btn btn-sm"><i class="fi-rs-label mr-10"></i>Apply</button>
+                                                </div>
+                                            </div>
+                                        </form>
                                     {% endif %}
-                                </tbody>
-                            </table>
+                                   
+                                </div>
+                            </div>
+                            {% if messages %}
+                                <div class="messages">
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }}">
+                                            {{ message }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+
                         </div>
-                        <div class="cart-action text-end">
-                            <!-- <a class="btn  mr-10 mb-sm-15"><i class="fi-rs-shuffle mr-10"></i>Update Cart</a> -->
-                            <a href="{% url 'store:shop' %}" class="btn "><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
-                        </div>
-                        <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>                        <div class="row mb-50">
-                            <div class="col-lg-6 col-md-12">
-                                <div class="mb-30 mt-50">
-                                    <div class="heading_s1 mb-3">
-                                        <h4>Apply Coupon</h4>
-                                    </div>
-                                    <div class="total-amount">
-                                        <div class="left">
-                                            <div class="coupon">
-                                                <form action="#" target="_blank">
-                                                    <div class="form-row row justify-content-center">
-                                                        <div class="form-group col-lg-6">
-                                                            <input class="font-medium" name="Coupon" placeholder="Enter Your Coupon">
-                                                        </div>
-                                                        <div class="form-group col-lg-6">
-                                                            <button class="btn  btn-sm"><i class="fi-rs-label mr-10"></i>Apply</button>
-                                                        </div>
-                                                    </div>
-                                                </form>
+                        <div class="mb-30 mt-50">
+                            <div class="heading_s1 mb-3">
+                                <h4>Available Coupons</h4>
+                            </div>
+                            
+                            <div class="row">
+                                
+                                {% for coupon in coupons %}
+                                    <div class="col-lg-4 mb-3">
+                                        <div class="card border-primary">
+                                            <div class="card-body">
+                                                <h5 class="card-title coupon-code text-primary">{{ coupon.code }}</h5>
+                                                <p class="card-text">Discount: {{ coupon.discount }}%</p>
+                                                <p class="card-text">Expires: {{ coupon.expiry_date }}</p>
+                                                <button class="btn btn-primary copy-coupon-button">Copy</button>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                {% endfor %}
                             </div>
-                            <div class="col-lg-6 col-md-12">
-                                <div class="border p-md-4 p-30 border-radius cart-totals">
-                                    <div class="heading_s1 mb-3">
-                                        <h4>Cart Totals</h4>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="cart_total_label">Cart Subtotal</td>
-                                                    <td class="cart_total_amount"><span id="total_cart_price" class="font-lg fw-900 text-brand">₹{{ total_cart_price }}</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="cart_total_label">Shipping</td>
-                                                    <td class="cart_total_amount"> <i class="ti-gift mr-5"></i> Free Shipping</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="cart_total_label">Total</td>
-                                                    <td class="cart_total_amount"><span id="cart_total" class="font-lg fw-900 text-brand">₹{{ total_cart_price }}</span></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <a href="{% url 'cart:checkout' %}" class="btn "> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
+                        </div>
+                    </div>
+                        <div class="col-lg-6 col-md-12">
+                            <div class="border p-md-4 p-30 border-radius cart-totals">
+                                <div class="heading_s1 mb-3">
+                                    <h4>Cart Totals</h4>
                                 </div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <tbody>
+                                            <tr>
+                                                <td class="cart_total_label">Cart Subtotal</td>
+                                                <td class="cart_total_amount"><span id="total_cart_price" class="font-lg fw-900 text-brand">₹{{ total_cart_price }}</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="cart_total_label">Discount</td>
+                                                <td class="cart_total_amount"><span id="total_discount" class="font-lg fw-900 text-brand">₹{{ discounts }}</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="cart_total_label">Total</td>
+                                                <td class="cart_total_amount"><span id="cart_total" class="font-lg fw-900 text-brand">₹{{ total_after_discount }}</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <a href="{% url 'cart:checkout' %}" class="btn"><i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
- 
-    <script>
-        function increaseQuantity(cartItemId, cart_id) {
-    console.log(cartItemId, cart_id)
-    console.log('coming');
-    console.log('inside increase')
-    let final = document.getElementById('total_cart_price');
-    let quantityInput = document.getElementById(`quantity${cartItemId}`);
-    let currentElement = document.getElementById(`total${cartItemId}`);
-    console.log(quantityInput)
-    fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
-        .then(response => {
-            if (response.status === 200) {
-                console.log('after');
-                return response.json();
-            } else if (response.status === 201) {
-                showToast('info', 'Product is out of stock');
-                throw new Error('Product is out of stock');
-            } else {
-                throw new Error('Failed to increase quantity');
-            }
-        })
-        .then(data => {
-            console.log(data);
-            console.log(data.q, "quantity while increasing")
-            // Update quantity
-            console.log('after2');
-            quantityInput.innerText = data.q;
-            console.log(data.total + "backend");
+        </div>
+    </section>
+</main>
 
-            currentElement.innerText = `₹${data.total}`;
-            let cart_total = document.getElementById("cart_total");
-            cart_total.innerText = `₹${data.total_sum}`;
-            final.innerText = `₹${data.total_sum}`;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('error', error.message);
-        });
+<script>
+    function increaseQuantity(cartItemId, cart_id) {
+console.log(cartItemId, cart_id)
+console.log('coming');
+console.log('inside increase')
+let final = document.getElementById('total_cart_price');
+let quantityInput = document.getElementById(`quantity${cartItemId}`);
+let currentElement = document.getElementById(`total${cartItemId}`);
+console.log(quantityInput)
+fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
+    .then(response => {
+        if (response.status === 200) {
+            console.log('after');
+            return response.json();
+        } else if (response.status === 201) {
+            showToast('info', 'Product is out of stock');
+            throw new Error('Product is out of stock');
+        } else {
+            throw new Error('Failed to increase quantity');
+        }
+    })
+    .then(data => {
+        console.log(data);
+        console.log(data.q, "quantity while increasing")
+        // Update quantity
+        console.log('after2');
+        quantityInput.innerText = data.q;
+        console.log(data.total + "backend");
+
+        currentElement.innerText = `₹${data.total}`;
+        let cart_total = document.getElementById("cart_total");
+        cart_total.innerText = `₹${data.total_sum}`;
+        final.innerText = `₹${data.total_sum}`;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', error.message);
+    });
 }
 
 function decreaseQuantity(cartItemId, cart_id) {
-    console.log("inside decrease ")
-    console.log(cart_id)
-    console.log(cartItemId)
-    let final = document.getElementById('total_cart_price');
-    let currentElement = document.getElementById(`total${cartItemId}`)
-    let quantityInput = document.getElementById(`quantity${cartItemId}`);
-    console.log(quantityInput)
-    fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Failed to decrease quantity');
-            }
-        })
-        .then(data => {
-            // Update quantity
-            console.log(data)
-            console.log(quantityInput)
-            console.log(data.q)
-            quantityInput.innerText = data.q;
+console.log("inside decrease ")
+console.log(cart_id)
+console.log(cartItemId)
+let final = document.getElementById('total_cart_price');
+let currentElement = document.getElementById(`total${cartItemId}`)
+let quantityInput = document.getElementById(`quantity${cartItemId}`);
+console.log(quantityInput)
+fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Failed to decrease quantity');
+        }
+    })
+    .then(data => {
+        // Update quantity
+        console.log(data)
+        console.log(quantityInput)
+        console.log(data.q)
+        quantityInput.innerText = data.q;
 
-            currentElement.innerText = `₹${data.total}`;
-            let cart_total = document.getElementById("cart_total");
-            cart_total.innerText = `₹${data.total_sum}`;
-            final.innerText = `₹${data.total_sum}`;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        currentElement.innerText = `₹${data.total}`;
+        let cart_total = document.getElementById("cart_total");
+        cart_total.innerText = `₹${data.total_sum}`;
+        final.innerText = `₹${data.total_sum}`;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 }
 
-    
-        function removeFromCart(CartItemId) {
-            // Send AJAX request to remove item from wishlist
-            fetch(`/remove_from_cart/${CartItemId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Remove the item from the DOM if the request is successful
-                    const itemElement = document.getElementById(`item-${CartItemId}`);
-                    if (itemElement) {
-                        itemElement.remove();
-                    }
-                    window.location.reload(true)
-                } else {
-                    console.error('Failed to remove item from wishlist');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    
-    </script>
-       
 
-{% endblock content %}
-    
+    function removeFromCart(CartItemId) {
+        // Send AJAX request to remove item from wishlist
+        fetch(`/remove_from_cart/${CartItemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Remove the item from the DOM if the request is successful
+                const itemElement = document.getElementById(`item-${CartItemId}`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                window.location.reload(true)
+            } else {
+                console.error('Failed to remove item from wishlist');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+</script>
+
+{% endblock %}
