@@ -46,4 +46,9 @@ urlpatterns = [
     path('coupons/', views.coupon_list, name='coupon_list'),
     path('edit-coupon/<int:coupon_id>/', views.edit_coupon, name='edit_coupon'),
     path('delete-coupon/<int:coupon_id>/', views.delete_coupon, name='delete_coupon'),
+    # category offer functionalities
+    path('category_offer/', views.category_offer_list, name='category_offer_list'),
+    path('category_offer/add/', views.add_category_offer, name='add_category_offer'),
+    path('category_offer/edit/<int:offer_id>/', views.edit_category_offer, name='edit_category_offer'),
+    path('category_offer/delete/<int:offer_id>/', views.delete_category_offer, name='delete_category_offer'),
 ]

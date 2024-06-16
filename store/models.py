@@ -230,3 +230,41 @@ class Coupon(models.Model):
             discount_amount = (self.discount / 100) * total_amount
             return total_amount - discount_amount
         return total_amount
+
+class CategoryOffer(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    discount_percentage = models.PositiveIntegerField(help_text='discount in percentage')
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def is_active(self):
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+
+    def apply_discount(self, total_amount):
+        if self.is_active():
+            discount_amount = (self.discount_percentage / 100) * total_amount
+            return total_amount - discount_amount
+        return total_amount
+
+    def __str__(self):
+        return f"{self.category} - {self.discount_percentage}% Off"
+
+class SubcategoryOffer(models.Model):
+    subcategory = models.ForeignKey(Subcategory, on_delete=models.CASCADE)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def is_active(self):
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+
+    def apply_discount(self, total_amount):
+        if self.is_active():
+            discount_amount = (self.discount_percentage / 100) * total_amount
+            return total_amount - discount_amount
+        return total_amount
+
+    def __str__(self):
+        return f"{self.subcategory} - {self.discount_percentage}% Off"

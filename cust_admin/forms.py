@@ -44,3 +44,46 @@ class CouponForm(forms.ModelForm):
         if active_date and expiry_date and active_date > expiry_date:
             raise ValidationError("Expiry date must be after the active date.")
         return cleaned_data
+
+class CategoryOfferForm(forms.ModelForm):
+    class Meta:
+        model = CategoryOffer
+        fields = ['category', 'discount_percentage', 'start_date', 'end_date']
+        widgets = {
+            'category':forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Categor', 'required': True}),
+            'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Discount Percentage', 'required': True}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date:
+            if start_date > end_date:
+                raise forms.ValidationError("End date should be after start date.")
+
+        return cleaned_data
+
+class SubcategoryOfferForm(forms.ModelForm):
+    class Meta:
+        model = SubcategoryOffer
+        fields = ['subcategory', 'discount_percentage', 'start_date', 'end_date']
+        widgets = {
+            'subcategory':forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select the product', 'required': True}),
+            'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Discount Percentage', 'required': True}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
+        }
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date:
+            if start_date > end_date:
+                raise forms.ValidationError("End date should be after start date.")
+
+        return cleaned_data

@@ -16,6 +16,7 @@
     <meta property="og:image" content="">
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'admin_side/imgs/theme/favicon.svg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- Template CSS -->
     <link href="{% static 'admin_side/css/main.css' %}" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -75,11 +76,12 @@
                 </li>
                 <li class="menu-item has-submenu">
                     <a class="menu-link" href="page-brands.html"> </i><i class="icon material-icons md-monetization_on"></i>
-                        <span class="text">Coupon Management</span>
+                        <span class="text">Coupon & Offer</span>
                     </a>
                         <div class="submenu">
-                            <a href="{% url 'cust_admin:add_coupon' %}">Add Coupons</a>
-                            <a href="{% url 'cust_admin:coupon_list' %}">List Coupons</a>
+                            <a href="{% url 'cust_admin:coupon_list' %}">Coupons</a>
+                            <a href="{% url 'cust_admin:category_offer_list' %}">Category Offer</a>
+                            <a href="">Product Offer</a>
                         </div>
                 </li>
                 <li class="menu-item has-submenu">
@@ -114,22 +116,6 @@
                     </a>
                 </li>
             </ul>
-            <hr>
-            <ul class="menu-aside">
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="#"> <i class="icon material-icons md-settings"></i>
-                        <span class="text">Settings</span>
-                    </a>
-                    <div class="submenu">
-                        <a href="page-settings-1.html">Setting sample 1</a>
-                        <a href="page-settings-2.html">Setting sample 2</a>
-                    </div>
-                </li>
-                <li class="menu-item">
-                    <a class="menu-link" href="page-blank.html"> <i class="icon material-icons md-local_offer"></i>
-                        <span class="text"> Starter page </span>
-                    </a>
-                </li>
             </ul>
             <br>
             <br>

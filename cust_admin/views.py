@@ -4,7 +4,7 @@ from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
 from django.http import HttpResponseBadRequest
-from cust_admin.forms import ProductVariantAssignForm, CouponForm
+from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm
 from django.contrib import messages
 import sweetify
 from django.contrib.auth.decorators import login_required
@@ -503,3 +503,40 @@ def delete_coupon(request, coupon_id):
     coupon.delete()
     sweetify.toast(request, 'Coupon deleted successfully!', icon='success', timer=3000)
     return redirect('cust_admin:coupon_list')
+
+def category_offer_list(request):
+    category_offers = CategoryOffer.objects.all()
+    return render(request, 'cust_admin/offer/category_offer/list_offer.html', {'category_offers': category_offers})
+
+def add_category_offer(request):
+    if request.method == 'POST':
+        form = CategoryOfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Category offer added successfully', icon='success', timer=3000)
+            return redirect('cust_admin:category_offer_list')
+        else:
+            sweetify.toast(request,"There was an error adding the offer", icon='error', timer=3000)
+    else:
+        form = CategoryOfferForm()
+    return render(request, 'cust_admin/offer/category_offer/add_offer.html', {'form': form, 'title': 'Add Category Offer'})
+
+def edit_category_offer(request, offer_id):
+    offer = CategoryOffer.objects.get(pk=offer_id)
+    if request.method == 'POST':
+        form = CategoryOfferForm(request.POST, instance=offer)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Category offer updated successfully.', icon='success', timer=3000)
+            return redirect('cust_admin:category_offer_list')
+        else:
+            sweetify.toast(request, 'There was an error in updating offer', icon='error', timer=3000)
+    else:
+        form = CategoryOfferForm(instance=offer)
+    return render(request, 'cust_admin/offer/category_offer/edit_offer.html', {'form': form, 'title': 'Edit Category Offer'})
+
+def delete_category_offer(request, offer_id):
+    offer = CategoryOffer.objects.get(pk=offer_id)
+    offer.delete()
+    messages.success(request, 'Category offer deleted successfully.')
+    return redirect('cust_admin:category_offer_list')
