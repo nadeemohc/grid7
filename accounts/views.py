@@ -1,15 +1,13 @@
-import random
-
+import random, sweetify
 from accounts.backends import EmailBackend
-from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
-
 from .forms import SignUpForm
 from .models import User
+
 
 
 def perform_signup(request):
@@ -27,13 +25,13 @@ def perform_signup(request):
 
             try:
                 user_with_email = User.objects.get(email=email)
-                messages.info(request, "Email already used!")
+                sweetify.toast(request, "Email already used!", icon='info', timer=3000)
                 return redirect("accounts:perform_signup")
             except User.DoesNotExist:
                 pass  # Email is not in use, continue with registration
 
             if password1 != password2:
-                messages.info(request, "Entered passwords don't match")
+                sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
                 return redirect("accounts:perform_signup")
 
             user = User.objects.create(
@@ -58,54 +56,10 @@ def perform_signup(request):
     }
     return render(request, "account/signup.html", context)
 
-
-# @never_cache
-# def perform_login(request):
-#     if request.user.is_authenticated:
-#         messages.warning(request, 'You are already logged in')
-#         return redirect("store:home")
-
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-
-
-#         # Check if the user exists and is active
-#         try:
-#             user = User.objects.get(email=email)
-#             if not user.is_active:
-#                 messages.warning(request, "Access restricted!")
-#                 return redirect('accounts:login')
-#         except Exception as e:
-#             messages.warning(request, f"An error occurred: {str(e)}")
-#             return redirect('accounts:login')
-
-#         # Authenticate the user with the provided credentials
-#         user = authenticate(request, username=email, password=password)
-
-#         if user is not None:
-#             if user.verified:
-#                 login(request, user)
-#                 request.session['user_logged_in'] = True
-#                 messages.success(request, f'You have logged in as {user.username}')
-#                 return redirect('store:home')
-
-#             else:
-#                 messages.error(request, 'Please verify your account using OTP')
-#                 request.session["user_id"] = user.id
-#                 sent_otp(request)
-#                 return redirect('accounts:otp_verification')
-
-#     print("Messages:", messages.get_messages(request))
-#     return render(request, 'account/login.html')
-
-from django.contrib.auth import authenticate, login
-
-
 @never_cache
 def perform_login(request):
     if request.user.is_authenticated:
-        messages.warning(request, "You are already logged in")
+        sweetify.toast(request, "You are already logged in", icon='warning', timer=3000)
         return redirect("store:home")
 
     if request.method == "POST":
@@ -116,10 +70,10 @@ def perform_login(request):
         try:
             user = User.objects.get(email=email)
             if not user.is_active:
-                messages.warning(request, "Access restricted!")
+                sweetify.toast(request, "Access restricted!", icon='warning', timer=3000)
                 return redirect("accounts:login")
         except User.DoesNotExist:
-            messages.warning(request, "User doesn't Exist")
+            sweetify.toast(request, "User doesn't Exist", icon='warning', timer=3000)
             return redirect("accounts:login")
 
         # Authenticate the user with the provided credentials
@@ -129,16 +83,16 @@ def perform_login(request):
             if user.verified:
                 login(request, user)
                 request.session["user_logged_in"] = True
-                messages.success(request, f"You have logged in as {user.username}")
+                sweetify.toast(request, f"You have logged in as {user.username}", icon='success', timer=3000)
                 return redirect("store:home")
             else:
-                messages.error(request, "Please verify your account using OTP")
+                sweetify.toast(request, "Please verify your account using OTP", icon='error', timer=3000)
                 request.session["user_id"] = user.id
                 sent_otp(request)
                 return redirect("accounts:otp_verification")
         else:
             # Failed login attempt
-            messages.warning(request, "Invalid username or password")
+            sweetify.toast(request, "Invalid username or password", icon='warning', timer=3000)
             return redirect("accounts:login")
     context = {
         "title": "Login",
@@ -168,41 +122,21 @@ def resend_otp(request):
         email = request.POST.get("email")
         user = User.objects.filter(email=email).first()
         if user:
+            # Generate a new OTP
+            s = "".join([str(random.randint(0, 9)) for _ in range(4)])
+            request.session["otp"] = s
             send_mail(
-                "otp for sign up",
+                "OTP for sign up",
                 s,
                 "mn8697865@gmail.com",
                 [email],
                 fail_silently=False,
             )
-            messages.success(request, "OTP has been resent successfully!")
+            sweetify.toast(request, "OTP has been resent successfully!", icon='success', timer=3000)
         else:
-            messages.error(request, "User with this email does not exist!")
-        return redirect(
-            "account:otp_verification"
-        )  # Redirect to the OTP verification page
+            sweetify.toast(request, "User with this email does not exist!", icon='error', timer=3000)
+        return redirect("accounts:otp_verification")  # Redirect to the OTP verification page
     return render(request, "account/resend_otp.html")
-
-
-# def otp_verification(request):
-#     if request.method=='POST':
-#         otp_=request.POST.get("otp")
-#         user_id = request.session.get('user_id')
-
-#         if otp_ == request.session["otp"]:
-#             user = User.objects.get(id=user_id)
-#             user.verified = True
-#             user.save()
-#             request.session.flush()
-#             messages.success(request, "OTP verified successfully.")
-#             login(request, user)
-#             return redirect('store:home')
-#         else:
-#             messages.error(request, "Invalid OTP. Please try again.")
-#             return redirect('otp_verification')
-#     else:
-#         return render(request, 'account/otp.html')
-
 
 def otp_verification(request):
     if request.method == "POST":
@@ -214,7 +148,7 @@ def otp_verification(request):
             user.verified = True
             user.save()
             request.session.flush()
-            messages.success(request, "OTP verified successfully.")
+            sweetify.toast(request, "OTP verified successfully.", icon='success', timer=3000)
 
             # Authenticate the user
             user = authenticate(request, user=user)
@@ -224,13 +158,10 @@ def otp_verification(request):
                 login(request, user)
                 return redirect("store:home")
             else:
-                # messages.error(request, "Failed to log in. Please try again.")
-                return redirect(
-                    "accounts:login"
-                )  # Redirect to login page or any other appropriate URL
+                return redirect("accounts:login")  # Redirect to login page or any other appropriate URL
         else:
-            messages.error(request, "Invalid OTP. Please try again.")
-            return redirect("otp_verification")
+            sweetify.toast(request, "Invalid OTP. Please try again.", icon='error', timer=3000)
+            return redirect("accounts:otp_verification")
     else:
         return render(request, "account/otp.html")
 
@@ -238,5 +169,5 @@ def otp_verification(request):
 @never_cache
 def perform_logout(request):
     logout(request)
-    messages.success(request, "You have logged out")
+    sweetify.toast(request, "You have logged out", icon='success', timer=3000)
     return redirect("store:home")

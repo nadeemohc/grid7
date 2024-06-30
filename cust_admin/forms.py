@@ -50,7 +50,7 @@ class CategoryOfferForm(forms.ModelForm):
         model = CategoryOffer
         fields = ['category', 'discount_percentage', 'start_date', 'end_date']
         widgets = {
-            'category':forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Categor', 'required': True}),
+            'category': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Category', 'required': True}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Discount Percentage', 'required': True}),
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
@@ -58,12 +58,17 @@ class CategoryOfferForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        category = cleaned_data.get('category')
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
 
         if start_date and end_date:
             if start_date > end_date:
                 raise forms.ValidationError("End date should be after start date.")
+
+            # Check for duplicate offers
+            if CategoryOffer.objects.filter(category=category, start_date=start_date, end_date=end_date).exists():
+                raise ValidationError("An offer for this category with the same dates already exists.")
 
         return cleaned_data
 
@@ -72,18 +77,24 @@ class SubcategoryOfferForm(forms.ModelForm):
         model = SubcategoryOffer
         fields = ['subcategory', 'discount_percentage', 'start_date', 'end_date']
         widgets = {
-            'subcategory':forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select the product', 'required': True}),
+            'subcategory': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select the product', 'required': True}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Discount Percentage', 'required': True}),
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
         }
+
     def clean(self):
         cleaned_data = super().clean()
+        subcategory = cleaned_data.get('subcategory')
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
 
         if start_date and end_date:
             if start_date > end_date:
                 raise forms.ValidationError("End date should be after start date.")
+
+            # Check for duplicate offers
+            if SubcategoryOffer.objects.filter(subcategory=subcategory, start_date=start_date, end_date=end_date).exists():
+                raise ValidationError("An offer for this product with the same dates already exists.")
 
         return cleaned_data

@@ -5,7 +5,7 @@
 <section class="content-main">
     <div class="content-header">
         <div>
-            <h2 class="content-title card-title">Add Subcategory Offer</h2>
+            <h2 class="content-title card-title">Add Product Offer</h2>
         </div>
         <div>
             <input type="text" placeholder="Search Categories" class="form-control bg-white">
@@ -18,7 +18,7 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="id_subcategory" class="form-label">Subcategory</label>
+                            <label for="id_category" class="form-label">Product</label>
                             {{ form.subcategory }}
                             {% if form.subcategory.errors %}
                                 <div class="text-danger">
@@ -53,7 +53,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        <button class="btn btn-primary" type="submit">Add Subcategory Offer</button>
+                        <button class="btn btn-primary" type="submit">Add  Offer</button>
                     </form>
                 </div>
             </div>

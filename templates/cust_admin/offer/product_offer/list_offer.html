@@ -1,14 +1,15 @@
 {% extends "cust_admin/base.html" %}
 {% load static %}
+
 {% block content %}
 <section class="content-main">
     <div class="content-header">
         <div>
-            <h2 class="content-title card-title">Coupon List</h2>
+            <h2 class="content-title card-title">Product Offer List</h2>
         </div>
         <div>
-            <a href="{% url 'cust_admin:add_coupon' %}" class="btn btn-md rounded font-sm">Add New Coupon</a>
-            <!-- <input type="text" placeholder="Search Coupons" class="form-control bg-white"> -->
+            <a href="{% url 'cust_admin:add_product_offer' %}" class="btn btn-md rounded font-sm">Add New Offer</a>
+            <!-- <input type="text" placeholder="Search Categories" class="form-control bg-white"> -->
         </div>
     </div>
     <div class="card">
@@ -16,30 +17,30 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Code</th>
+                        <th>Product</th>
                         <th>Discount (%)</th>
-                        <th>Active</th>
-                        <th>Active Date</th>
-                        <th>Expiry Date</th>
+                        <!-- <th>Active</th> -->
+                        <th>Start Date</th>
+                        <th>End Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for coupon in coupons %}
+                    {% for offer in product_offers %}
                         <tr>
-                            <td>{{ coupon.code }}</td>
-                            <td>{{ coupon.discount }}</td>
-                            <td>{{ coupon.active }}</td>
-                            <td>{{ coupon.active_date }}</td>
-                            <td>{{ coupon.expiry_date }}</td>
+                            <td>{{ offer.subcategory }}</td>
+                            <td>{{ offer.discount_percentage }}%</td>
+                            <!-- <td>{{ offer.active }}</td> -->
+                            <td>{{ offer.start_date }}</td>
+                            <td>{{ offer.end_date }}</td>
                             <td>
-                                <a href="{% url 'cust_admin:edit_coupon' coupon.id %}" class="btn btn-sm btn-warning">Edit</a>
-                                <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ coupon.id }}')">Delete</button>
+                                <a href="{% url 'cust_admin:edit_product_offer' offer.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ offer.id }}')">Delete</button>
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center">No coupons available.</td>
+                            <td colspan="6" class="text-center">No offers available.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -50,7 +51,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function confirmDelete(couponId) {
+    function confirmDelete(offerId) {
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -61,7 +62,7 @@
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = '{% url "cust_admin:delete_coupon" 0 %}'.replace('0', couponId);
+                window.location.href = '{% url "cust_admin:delete_product_offer" 0 %}'.replace('0', offerId);
             }
         })
     }

@@ -4,7 +4,7 @@ from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
 from django.http import HttpResponseBadRequest
-from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm
+from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm,SubcategoryOfferForm
 from django.contrib import messages
 import sweetify
 from django.contrib.auth.decorators import login_required
@@ -516,7 +516,8 @@ def add_category_offer(request):
             sweetify.toast(request, 'Category offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:category_offer_list')
         else:
-            sweetify.toast(request,"There was an error adding the offer", icon='error', timer=3000)
+            error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
+            sweetify.toast(request, error_message, icon='error', timer=3000)
     else:
         form = CategoryOfferForm()
     return render(request, 'cust_admin/offer/category_offer/add_offer.html', {'form': form, 'title': 'Add Category Offer'})
@@ -538,5 +539,43 @@ def edit_category_offer(request, offer_id):
 def delete_category_offer(request, offer_id):
     offer = CategoryOffer.objects.get(pk=offer_id)
     offer.delete()
-    messages.success(request, 'Category offer deleted successfully.')
+    sweetify.toast(request, 'Category offer deleted successfully.', icon='success', timer=3000)
     return redirect('cust_admin:category_offer_list')
+from django.urls import reverse
+def product_offer_list(request):
+    product_offers = SubcategoryOffer.objects.all()
+    return render(request, 'cust_admin/offer/product_offer/list_offer.html', {'product_offers': product_offers})
+
+def add_product_offer(request):
+    if request.method == "POST":
+        form = SubcategoryOfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Product offer added successfully', icon='success', timer=3000)
+            return redirect(reverse('cust_admin:product_offer_list'))
+        else:
+            error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
+            sweetify.toast(request, error_message, icon='error', timer=3000)
+    else:
+        form = SubcategoryOfferForm()
+    return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form})
+
+def edit_product_offer(request, offer_id):
+    offer = SubcategoryOffer.objects.get(id=offer_id)
+    if request.method == "POST":
+        form = SubcategoryOfferForm(request.POST, instance=offer)
+        if form.is_valid():
+            form.save()
+            sweetify.toast(request, 'Product offer updated successfully.', icon='success', timer=3000)
+            return redirect(reverse('cust_admin:product_offer_list'))
+        else:
+            sweetify.toast(request, 'There was an error in updating offer', icon='error', timer=3000)
+    else:
+        form = SubcategoryOfferForm(instance=offer)
+    return render(request, 'cust_admin/offer/product_offer/edit_offer.html', {'form': form})
+    messages.success(request, 'Category offer deleted successfully.')
+def delete_product_offer(request, offer_id):
+    offer = SubcategoryOffer.objects.get(id=offer_id)
+    offer.delete()
+    sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
+    return redirect(reverse('cust_admin:product_offer_list'))
