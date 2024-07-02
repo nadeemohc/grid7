@@ -19,7 +19,6 @@
                     <tr>
                         <th>Product</th>
                         <th>Discount (%)</th>
-                        <!-- <th>Active</th> -->
                         <th>Start Date</th>
                         <th>End Date</th>
                         <th>Actions</th>
@@ -28,9 +27,8 @@
                 <tbody>
                     {% for offer in product_offers %}
                         <tr>
-                            <td>{{ offer.subcategory }}</td>
+                            <td>{{ offer.product }}</td>
                             <td>{{ offer.discount_percentage }}%</td>
-                            <!-- <td>{{ offer.active }}</td> -->
                             <td>{{ offer.start_date }}</td>
                             <td>{{ offer.end_date }}</td>
                             <td>
@@ -40,7 +38,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center">No offers available.</td>
+                            <td colspan="5" class="text-center">No offers available.</td>
                         </tr>
                     {% endfor %}
                 </tbody>

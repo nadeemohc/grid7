@@ -56,7 +56,7 @@ class Subcategory(models.Model):
         return f"{self.sub_name}"
 
 
-class Product(models.Model):    
+class Product(models.Model):
     p_id = models.BigAutoField(unique=True, primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
     sub_category = models.ForeignKey(Subcategory, on_delete=models.CASCADE, null=True, related_name="products")
@@ -67,7 +67,7 @@ class Product(models.Model):
     availability = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
     featured = models.BooleanField(default=False)
-    latest = models.BooleanField(default=False)  
+    latest = models.BooleanField(default=False)
     popular = models.BooleanField(default=False)
     image = models.ImageField(upload_to='product_images', default='product.jpg')
 
@@ -89,7 +89,7 @@ class ProductAttribute(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_attributes')
     size = models.ForeignKey(Size, on_delete=models.CASCADE, default=None, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=1.99)
-    old_price = models.DecimalField(max_digits=10, decimal_places=2, default=2.99)
+    old_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     stock = models.IntegerField(default=1)
     is_blocked = models.BooleanField(default=False)
     status = models.BooleanField(default=True)
@@ -113,6 +113,7 @@ class ProductAttribute(models.Model):
 
     def check_stock(self, quantity):
         return self.stock >= quantity
+
 
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -236,6 +237,7 @@ class CategoryOffer(models.Model):
     discount_percentage = models.PositiveIntegerField(help_text='discount in percentage')
     start_date = models.DateField()
     end_date = models.DateField()
+    is_active = models.BooleanField(default = True)
 
     def is_active(self):
         today = timezone.now().date()
@@ -250,11 +252,12 @@ class CategoryOffer(models.Model):
     def __str__(self):
         return f"{self.category} - {self.discount_percentage}% Off"
 
-class SubcategoryOffer(models.Model):
-    subcategory = models.ForeignKey(Subcategory, on_delete=models.CASCADE)
+class ProductOffer(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
+    is_active = models.BooleanField(default = True)
 
     def is_active(self):
         today = timezone.now().date()
@@ -267,4 +270,4 @@ class SubcategoryOffer(models.Model):
         return total_amount
 
     def __str__(self):
-        return f"{self.subcategory} - {self.discount_percentage}% Off"
+        return f"{self.product.title} - {self.discount_percentage}% Off"

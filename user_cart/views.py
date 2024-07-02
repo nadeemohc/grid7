@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from decimal import Decimal
 from django.db import IntegrityError
-import uuid, store, random, sweetify, logging
+import uuid, store, random, sweetify, logging, razorpay
 from django.conf import settings
 from . import views
 from django.db.models import Sum
@@ -16,6 +16,8 @@ from accounts.models import Address
 from store.models import CartItem
 
 logger = logging.getLogger(__name__)
+
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 @login_required
 def view_cart(request):
@@ -306,10 +308,9 @@ def payment_method_selection(request, order_id):
 
     items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
     
-    # Calculate the total cart price, discount, and total after discount
     total_cart_price = Decimal(0)
     for item in items:
-        item.total_price = item.product.price * item.quantity  # Assuming you have a price field in the product
+        item.total_price = item.product.price * item.quantity
         total_cart_price += item.total_price
 
     applied_coupon_id = request.session.get('applied_coupon_id')
@@ -329,22 +330,55 @@ def payment_method_selection(request, order_id):
         if selected_payment_method == 'COD':
             order.status = 'Pending'
             order.save()
-            order.clear_cart()  # Clear the cart items
+            order.clear_cart()
             return redirect('cart:order_success', order_id=order.id)
         elif selected_payment_method == 'Razorpay':
-            return redirect('cart:razorpay_payment', order_id=order.id)
+            try:
+                razorpay_order = client.order.create({
+                    "amount": int(total_after_discount * 100),  # amount in paise
+                    "currency": "INR",
+                    "payment_capture": "1"
+                })
+                order.razorpay_order_id = razorpay_order['id']
+                order.save()
+                return redirect('cart:razorpay_payment', order_id=order.id)
+            except razorpay.errors.BadRequestError as e:
+                messages.error(request, "Failed to create Razorpay order. Please try again.")
+                return redirect('cart:payment_method_selection', order_id=order.id)
         else:
             messages.error(request, "Invalid payment method selected.")
             return redirect('cart:payment_method_selection', order_id=order.id)
 
     context = {
         'order': order,
-        'items': items, 
+        'items': items,
         'total_cart_price': total_cart_price,
         'discounts': discounts,
         'total_after_discount': total_after_discount,
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,  # Pass the Razorpay key ID to the template
     }
     return render(request, 'user_cart/payment_method_selection.html', context)
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def razorpay_payment(request, order_id):
+    order = CartOrder.objects.get(id=order_id)
+    if request.method == "POST":
+        payment_id = request.POST.get('razorpay_payment_id')
+        if payment_id:
+            try:
+                # Verify the payment and update order status
+                client.payment.fetch(payment_id)
+                order.payment_id = payment_id
+                order.status = 'Completed'
+                order.save()
+                return redirect('cart:order_success', order_id=order.id)
+            except Exception as e:
+                messages.error(request, "Payment verification failed. Please try again.")
+                return redirect('cart:payment_method_selection', order_id=order.id)
+    return redirect('cart:order_failure', order_id=order.id)
+
 
 @login_required
 def order_success(request, order_id):
@@ -484,8 +518,3 @@ def order_confirmation(request, order_id):
 # def success(request):
     
 #     return render(request, 'user_cart/success_page.html')
-
-
-
-
-

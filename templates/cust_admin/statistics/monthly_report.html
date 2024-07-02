@@ -1,0 +1,40 @@
+{% extends 'cust_admin/base.html' %}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Monthly Report </h2>
+        </div>
+        <div>
+            <a href="{% url 'cust_admin:export_pdf' 'daily' %}" class="btn btn-primary">Export to PDF</a>
+            <a href="{% url 'cust_admin:export_excel' 'daily' %}" class="btn btn-primary">Export to Excel</a>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Order Number</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Total</th>
+                            <th scope="col" class="text-end">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in monthly_orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.user.username }}</td>
+                            <td>{{ order.order_total }}</td>
+                            <td class="text-end">{{ order.status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

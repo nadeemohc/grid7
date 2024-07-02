@@ -131,34 +131,34 @@
 </main>
 
 <script>
-document.getElementById('pay-button').addEventListener('click', function(e) {
-    var paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-    if (paymentMethod === 'Razorpay') {
-        e.preventDefault();
-        var options = {
-            "key": "{{ razorpay_key_id }}", // Enter the Key ID generated from the Dashboard
-            "amount": "{{ total_after_discount|floatformat:0|add:'0.00' }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-            "currency": "INR",
-            "name": "Your Company Name",
-            "description": "Test Transaction",
-            "image": "https://example.com/your_logo",
-            "order_id": "{{ razorpay_order_id }}", // This is a sample Order ID. Pass the `id` obtained in the previous step
-            "handler": function (response){
-                document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
-                document.getElementById('payment-form').submit();
-            },
-            "prefill": {
-                "name": "{{ order.user.username }}",
-                "email": "{{ order.user.email }}",
-                "contact": "{{ order.user.phone }}"
-            },
-            "theme": {
-                "color": "#3399cc"
-            }
-        };
-        var rzp1 = new Razorpay(options);
-        rzp1.open();
-    }
-});
+    document.getElementById('pay-button').addEventListener('click', function(e) {
+        var paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        if (paymentMethod === 'Razorpay') {
+            e.preventDefault();
+            var options = {
+                "key": "{{ razorpay_key_id }}", // Enter the Key ID generated from the Dashboard
+                "amount": "{{ total_after_discount|floatformat:0|add:'0.00' }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+                "currency": "INR",
+                "name": "Your Company Name",
+                "description": "Test Transaction",
+                "image": "https://example.com/your_logo",
+                "order_id": "{{ razorpay_order_id }}", // This is a sample Order ID. Pass the `id` obtained in the previous step
+                "handler": function (response){
+                    document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                    document.getElementById('payment-form').submit();
+                },
+                "prefill": {
+                    "name": "{{ order.user.username }}",
+                    "email": "{{ order.user.email }}",
+                    "contact": "{{ order.user.phone }}"
+                },
+                "theme": {
+                    "color": "#3399cc"
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+        }
+    });
 </script>
 {% endblock %}

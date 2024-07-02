@@ -109,11 +109,16 @@
                         <span class="text">Reviews</span>
                     </a>
                 </li>
-
-                <li class="menu-item">
-                    <a class="menu-link" disabled href="#"> <i class="icon material-icons md-pie_chart"></i>
+                <li class="menu-item has-submenu">
+                    <a class="menu-link" href="#"> <i class="icon material-icons md-pie_chart"></i>
                         <span class="text">Statistics</span>
                     </a>
+                    <div class="submenu">
+                        <a href="{% url 'cust_admin:sales_report' %}">Sales Report</a>
+                        <a href="{% url 'cust_admin:daily_report' %}">Daily Report</a>
+                        <a href="{% url 'cust_admin:weekly_report' %}">Weekly Report</a>
+                        <a href="{% url 'cust_admin:monthly_report' %}">Monthly Report</a>
+                    </div>
                 </li>
             </ul>
             </ul>
