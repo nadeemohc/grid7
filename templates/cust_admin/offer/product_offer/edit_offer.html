@@ -18,11 +18,11 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="id_category" class="form-label">Product</label>
-                            {{ form.subcategory }}
-                            {% if form.subcategory.errors %}
+                            <label for="id_product" class="form-label">Product</label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
                                 <div class="text-danger">
-                                    {{ form.subcategory.errors }}
+                                    {{ form.product.errors }}
                                 </div>
                             {% endif %}
                         </div>

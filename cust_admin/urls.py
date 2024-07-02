@@ -56,5 +56,12 @@ urlpatterns = [
     path('product_offer/add/', views.add_product_offer, name='add_product_offer'),
     path('product_offer/edit/<int:offer_id>/', views.edit_product_offer, name='edit_product_offer'),
     path('product_offer/delete/<int:offer_id>/', views.delete_product_offer, name='delete_product_offer'),
-    
+    # sales statistics
+    path('sales-report/', views.sales_report, name='sales_report'),
+    path('daily-report/', views.daily_report, name='daily_report'),
+    path('weekly-report/', views.weekly_report, name='weekly_report'),
+    path('monthly-report/', views.monthly_report, name='monthly_report'),
+    # pdf / excel export
+    path('export-pdf/<str:report_type>/', views.export_to_pdf, name='export_pdf'),
+    path('export-excel/<str:report_type>/', views.export_to_excel, name='export_excel'),
 ]

@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
-from django.http import HttpResponseBadRequest
-from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm,SubcategoryOfferForm
+from django.http import HttpResponseBadRequest, HttpResponse
+from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm, ProductOfferForm
 from django.contrib import messages
 import sweetify
 from django.contrib.auth.decorators import login_required
@@ -13,7 +13,12 @@ from django.core.files.base import ContentFile
 from django.db import IntegrityError
 from PIL import Image
 from django.db.models import Case, CharField, Value, When
-
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+import pandas as pd
+from django.urls import reverse
 
 @admin_required
 def dashboard(request):
@@ -541,14 +546,15 @@ def delete_category_offer(request, offer_id):
     offer.delete()
     sweetify.toast(request, 'Category offer deleted successfully.', icon='success', timer=3000)
     return redirect('cust_admin:category_offer_list')
-from django.urls import reverse
+
 def product_offer_list(request):
-    product_offers = SubcategoryOffer.objects.all()
+    product_offers = ProductOffer.objects.all()
     return render(request, 'cust_admin/offer/product_offer/list_offer.html', {'product_offers': product_offers})
+
 
 def add_product_offer(request):
     if request.method == "POST":
-        form = SubcategoryOfferForm(request.POST)
+        form = ProductOfferForm(request.POST)
         if form.is_valid():
             form.save()
             sweetify.toast(request, 'Product offer added successfully', icon='success', timer=3000)
@@ -557,13 +563,14 @@ def add_product_offer(request):
             error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
             sweetify.toast(request, error_message, icon='error', timer=3000)
     else:
-        form = SubcategoryOfferForm()
+        form = ProductOfferForm()
     return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form})
 
+
 def edit_product_offer(request, offer_id):
-    offer = SubcategoryOffer.objects.get(id=offer_id)
+    offer = ProductOffer.objects.get(id=offer_id)
     if request.method == "POST":
-        form = SubcategoryOfferForm(request.POST, instance=offer)
+        form = ProductOfferForm(request.POST, instance=offer)
         if form.is_valid():
             form.save()
             sweetify.toast(request, 'Product offer updated successfully.', icon='success', timer=3000)
@@ -571,11 +578,149 @@ def edit_product_offer(request, offer_id):
         else:
             sweetify.toast(request, 'There was an error in updating offer', icon='error', timer=3000)
     else:
-        form = SubcategoryOfferForm(instance=offer)
+        form = ProductOfferForm(instance=offer)
     return render(request, 'cust_admin/offer/product_offer/edit_offer.html', {'form': form})
-    messages.success(request, 'Category offer deleted successfully.')
+
 def delete_product_offer(request, offer_id):
-    offer = SubcategoryOffer.objects.get(id=offer_id)
+    offer = ProductOffer.objects.get(id=offer_id)
     offer.delete()
     sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
     return redirect(reverse('cust_admin:product_offer_list'))
+
+
+
+
+def sales_report(request):
+    start_date_value = ""
+    end_date_value = ""
+    orders = CartOrder.objects.filter(status='Delivered')  # Use your appropriate status
+
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        start_date_value = start_date
+        end_date_value = end_date
+
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            orders = CartOrder.objects.filter(created_at__range=(start_date, end_date), status='Delivered').order_by('created_at')
+
+    context = {
+        'orders': orders,
+        'start_date_value': start_date_value,
+        'end_date_value': end_date_value,
+    }
+
+    return render(request, 'cust_admin/statistics/sales_report.html', context)
+
+# def daily_report(request):
+#     today = timezone.now().date()
+#     daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+#     return render(request, 'cust_admin/statistics/daily_report.html', {'daily_orders': daily_orders})
+
+# def weekly_report(request):
+#     today = timezone.now().date()
+#     start_of_week = today - timedelta(days=today.weekday())
+#     end_of_week = start_of_week + timedelta(days=6)
+#     weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+#     return render(request, 'cust_admin/statistics/weekly_report.html', {'weekly_orders': weekly_orders})
+
+# def monthly_report(request):
+#     today = timezone.now().date()
+#     start_of_month = today.replace(day=1)
+#     end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
+#     monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+#     return render(request, 'cust_admin/statistics/monthly_report.html', {'monthly_orders': monthly_orders})
+
+
+############################################################################################################################################################################################################################
+
+
+def daily_report(request):
+    today = timezone.now().date()
+    daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+    context = {'daily_orders': daily_orders}
+    return render(request, 'cust_admin/statistics/daily_report.html', context)
+
+def weekly_report(request):
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+    context = {'weekly_orders': weekly_orders}
+    return render(request, 'cust_admin/statistics/weekly_report.html', context)
+
+def monthly_report(request):
+    today = timezone.now().date()
+    start_of_month = today.replace(day=1)
+    end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
+    monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+    context = {'monthly_orders': monthly_orders}
+    return render(request, 'cust_admin/statistics/monthly_report.html', context)
+
+def export_to_pdf(request, report_type):
+    template_path = 'cust_admin/statistics/pdf_template.html'
+    context = {}
+    
+    if report_type == 'daily':
+        today = timezone.now().date()
+        daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+        context['orders'] = daily_orders
+    elif report_type == 'weekly':
+        today = timezone.now().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+        context['orders'] = weekly_orders
+    elif report_type == 'monthly':
+        today = timezone.now().date()
+        start_of_month = today.replace(day=1)
+        end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
+        monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+        context['orders'] = monthly_orders
+    
+    # Rendered template
+    template = get_template(template_path)
+    html = template.render(context)
+    
+    # Create a PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{report_type}_report.pdf"'
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    # Return PDF file
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
+
+def export_to_excel(request, report_type):
+    if report_type == 'daily':
+        today = timezone.now().date()
+        orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+    elif report_type == 'weekly':
+        today = timezone.now().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+    elif report_type == 'monthly':
+        today = timezone.now().date()
+        start_of_month = today.replace(day=1)
+        end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
+        orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+    
+    # Convert QuerySet to DataFrame
+    data = {
+        'Order Number': [order.order_number for order in orders],
+        'User': [order.user.username for order in orders],
+        'Total': [order.order_total for order in orders],
+        'Status': [order.status for order in orders],
+    }
+    df = pd.DataFrame(data)
+    
+    # Create Excel file
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{report_type}_report.xlsx"'
+    df.to_excel(response, index=False)
+    
+    return response

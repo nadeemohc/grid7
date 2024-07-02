@@ -72,12 +72,12 @@ class CategoryOfferForm(forms.ModelForm):
 
         return cleaned_data
 
-class SubcategoryOfferForm(forms.ModelForm):
+class ProductOfferForm(forms.ModelForm):
     class Meta:
-        model = SubcategoryOffer
-        fields = ['subcategory', 'discount_percentage', 'start_date', 'end_date']
+        model = ProductOffer
+        fields = ['product', 'discount_percentage', 'start_date', 'end_date']
         widgets = {
-            'subcategory': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select the product', 'required': True}),
+            'product': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select the product', 'required': True}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Discount Percentage', 'required': True}),
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
@@ -85,7 +85,7 @@ class SubcategoryOfferForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        subcategory = cleaned_data.get('subcategory')
+        product = cleaned_data.get('product')
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
 
@@ -94,7 +94,7 @@ class SubcategoryOfferForm(forms.ModelForm):
                 raise forms.ValidationError("End date should be after start date.")
 
             # Check for duplicate offers
-            if SubcategoryOffer.objects.filter(subcategory=subcategory, start_date=start_date, end_date=end_date).exists():
+            if ProductOffer.objects.filter(product=product, start_date=start_date, end_date=end_date).exists():
                 raise ValidationError("An offer for this product with the same dates already exists.")
 
         return cleaned_data
