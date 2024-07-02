@@ -72,6 +72,7 @@ class CategoryOfferForm(forms.ModelForm):
 
         return cleaned_data
 
+
 class ProductOfferForm(forms.ModelForm):
     class Meta:
         model = ProductOffer
@@ -95,6 +96,6 @@ class ProductOfferForm(forms.ModelForm):
 
             # Check for duplicate offers
             if ProductOffer.objects.filter(product=product, start_date=start_date, end_date=end_date).exists():
-                raise ValidationError("An offer for this product with the same dates already exists.")
+                raise forms.ValidationError("An offer for this product with the same dates already exists.")
 
         return cleaned_data

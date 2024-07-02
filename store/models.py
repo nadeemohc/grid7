@@ -114,6 +114,7 @@ class ProductAttribute(models.Model):
     def check_stock(self, quantity):
         return self.stock >= quantity
 
+
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -267,4 +268,4 @@ class ProductOffer(models.Model):
         return total_amount
 
     def __str__(self):
-        return f"{self.product} - {self.discount_percentage}% Off"
+        return f"{self.product.title} - {self.discount_percentage}% Off"

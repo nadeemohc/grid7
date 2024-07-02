@@ -553,12 +553,20 @@ def product_offer_list(request):
 
 
 def add_product_offer(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = ProductOfferForm(request.POST)
         if form.is_valid():
-            form.save()
+            product_offer = form.save()
+            
+            # Fetch the product attributes for the selected product
+            product_attributes = ProductAttribute.objects.filter(product=form.cleaned_data['product'])
+            for attribute in product_attributes:
+                attribute.old_price = attribute.price
+                attribute.price = attribute.price - (attribute.price * (product_offer.discount_percentage / 100))
+                attribute.save()
+
             sweetify.toast(request, 'Product offer added successfully', icon='success', timer=3000)
-            return redirect(reverse('cust_admin:product_offer_list'))
+            return redirect('cust_admin:product_offer_list')
         else:
             error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
             sweetify.toast(request, error_message, icon='error', timer=3000)
@@ -572,7 +580,19 @@ def edit_product_offer(request, offer_id):
     if request.method == "POST":
         form = ProductOfferForm(request.POST, instance=offer)
         if form.is_valid():
-            form.save()
+            previous_product_attributes = ProductAttribute.objects.filter(product=offer.product)
+            for attribute in previous_product_attributes:
+                attribute.price = attribute.old_price  # Reset the price to the old price before updating
+                attribute.old_price = 0  # Reset old price
+                attribute.save()
+            
+            product_offer = form.save()
+            product_attributes = ProductAttribute.objects.filter(product__in=form.cleaned_data['products'])
+            for attribute in product_attributes:
+                attribute.old_price = attribute.price
+                attribute.price = attribute.price - (attribute.price * (product_offer.discount_percentage / 100))
+                attribute.save()
+
             sweetify.toast(request, 'Product offer updated successfully.', icon='success', timer=3000)
             return redirect(reverse('cust_admin:product_offer_list'))
         else:
@@ -583,6 +603,11 @@ def edit_product_offer(request, offer_id):
 
 def delete_product_offer(request, offer_id):
     offer = ProductOffer.objects.get(id=offer_id)
+    product_attributes = ProductAttribute.objects.filter(product=offer.product)
+    for attribute in product_attributes:
+        attribute.price = attribute.old_price  # Reset the price to the old price before deleting the offer
+        attribute.old_price = 0  # Reset old price
+        attribute.save()
     offer.delete()
     sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
     return redirect(reverse('cust_admin:product_offer_list'))
@@ -614,24 +639,6 @@ def sales_report(request):
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
 
-# def daily_report(request):
-#     today = timezone.now().date()
-#     daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
-#     return render(request, 'cust_admin/statistics/daily_report.html', {'daily_orders': daily_orders})
-
-# def weekly_report(request):
-#     today = timezone.now().date()
-#     start_of_week = today - timedelta(days=today.weekday())
-#     end_of_week = start_of_week + timedelta(days=6)
-#     weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
-#     return render(request, 'cust_admin/statistics/weekly_report.html', {'weekly_orders': weekly_orders})
-
-# def monthly_report(request):
-#     today = timezone.now().date()
-#     start_of_month = today.replace(day=1)
-#     end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
-#     monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
-#     return render(request, 'cust_admin/statistics/monthly_report.html', {'monthly_orders': monthly_orders})
 
 
 ############################################################################################################################################################################################################################
