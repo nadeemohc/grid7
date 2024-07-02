@@ -237,6 +237,7 @@ class CategoryOffer(models.Model):
     discount_percentage = models.PositiveIntegerField(help_text='discount in percentage')
     start_date = models.DateField()
     end_date = models.DateField()
+    is_active = models.BooleanField(default = True)
 
     def is_active(self):
         today = timezone.now().date()
@@ -256,6 +257,7 @@ class ProductOffer(models.Model):
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
+    is_active = models.BooleanField(default = True)
 
     def is_active(self):
         today = timezone.now().date()

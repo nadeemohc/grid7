@@ -6,6 +6,7 @@ from store.models import *
 from django.http import HttpResponseBadRequest, HttpResponse
 from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm, ProductOfferForm
 from django.contrib import messages
+from decimal import Decimal
 import sweetify
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
@@ -517,7 +518,19 @@ def add_category_offer(request):
     if request.method == 'POST':
         form = CategoryOfferForm(request.POST)
         if form.is_valid():
-            form.save()
+            category_offer = form.save()
+            
+            if category_offer.is_active:
+                # Apply discount to all variants of products in the selected category
+                products = Product.objects.filter(category=form.cleaned_data['category'])
+                for product in products:
+                    product_attributes = ProductAttribute.objects.filter(product=product)
+                    for attribute in product_attributes:
+                        attribute.old_price = attribute.price
+                        discount = Decimal(category_offer.discount_percentage) / Decimal(100)
+                        attribute.price = attribute.price - (attribute.price * discount)
+                        attribute.save()
+
             sweetify.toast(request, 'Category offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:category_offer_list')
         else:
@@ -551,19 +564,20 @@ def product_offer_list(request):
     product_offers = ProductOffer.objects.all()
     return render(request, 'cust_admin/offer/product_offer/list_offer.html', {'product_offers': product_offers})
 
-
 def add_product_offer(request):
     if request.method == 'POST':
         form = ProductOfferForm(request.POST)
         if form.is_valid():
             product_offer = form.save()
             
-            # Fetch the product attributes for the selected product
-            product_attributes = ProductAttribute.objects.filter(product=form.cleaned_data['product'])
-            for attribute in product_attributes:
-                attribute.old_price = attribute.price
-                attribute.price = attribute.price - (attribute.price * (product_offer.discount_percentage / 100))
-                attribute.save()
+            if product_offer.is_active:
+                # Apply discount to all variants of the selected product
+                product_attributes = ProductAttribute.objects.filter(product=form.cleaned_data['product'])
+                for attribute in product_attributes:
+                    attribute.old_price = attribute.price
+                    discount = Decimal(product_offer.discount_percentage) / Decimal(100)
+                    attribute.price = attribute.price - (attribute.price * discount)
+                    attribute.save()
 
             sweetify.toast(request, 'Product offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:product_offer_list')
@@ -572,8 +586,7 @@ def add_product_offer(request):
             sweetify.toast(request, error_message, icon='error', timer=3000)
     else:
         form = ProductOfferForm()
-    return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form})
-
+    return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form, 'title': 'Add Product Offer'})
 
 def edit_product_offer(request, offer_id):
     offer = ProductOffer.objects.get(id=offer_id)
@@ -587,11 +600,13 @@ def edit_product_offer(request, offer_id):
                 attribute.save()
             
             product_offer = form.save()
-            product_attributes = ProductAttribute.objects.filter(product__in=form.cleaned_data['products'])
-            for attribute in product_attributes:
-                attribute.old_price = attribute.price
-                attribute.price = attribute.price - (attribute.price * (product_offer.discount_percentage / 100))
-                attribute.save()
+            
+            if product_offer.is_active:
+                product_attributes = ProductAttribute.objects.filter(product=offer.product)
+                for attribute in product_attributes:
+                    attribute.old_price = attribute.price
+                    attribute.price = attribute.price - (attribute.price * (product_offer.discount_percentage / 100))
+                    attribute.save()
 
             sweetify.toast(request, 'Product offer updated successfully.', icon='success', timer=3000)
             return redirect(reverse('cust_admin:product_offer_list'))

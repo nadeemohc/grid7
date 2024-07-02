@@ -44,7 +44,6 @@ class CouponForm(forms.ModelForm):
         if active_date and expiry_date and active_date > expiry_date:
             raise ValidationError("Expiry date must be after the active date.")
         return cleaned_data
-
 class CategoryOfferForm(forms.ModelForm):
     class Meta:
         model = CategoryOffer
@@ -78,7 +77,7 @@ class ProductOfferForm(forms.ModelForm):
         model = ProductOffer
         fields = ['product', 'discount_percentage', 'start_date', 'end_date']
         widgets = {
-            'product': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select the product', 'required': True}),
+            'product': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Product', 'required': True}),
             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Discount Percentage', 'required': True}),
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
