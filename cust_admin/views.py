@@ -660,7 +660,7 @@ def sales_report(request):
 
 
 def daily_report(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
     context = {'daily_orders': daily_orders}
     return render(request, 'cust_admin/statistics/daily_report.html', context)
