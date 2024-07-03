@@ -25,8 +25,15 @@ from django.urls import reverse
 def dashboard(request):
     product_count = Product.objects.count()
     cat_count = Category.objects.count()
+    orders = CartOrder.objects.all().order_by('id')
+    usr_count = User.objects.count()
+    order_count = CartOrder.objects.count()
     context = {
         'title': 'Admin Dashboard',
+        'title': 'Order List',
+        'usr_count': usr_count,
+        'order_count': order_count,
+        'orders': orders,
         'product_count': product_count,
         'cat_count': cat_count,
     }
@@ -660,7 +667,7 @@ def sales_report(request):
 
 
 def daily_report(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
     context = {'daily_orders': daily_orders}
     return render(request, 'cust_admin/statistics/daily_report.html', context)
@@ -746,3 +753,88 @@ def export_to_excel(request, report_type):
     df.to_excel(response, index=False)
     
     return response
+
+from django.http import JsonResponse
+from django.utils import timezone
+from django.db.models import Count
+# from .models import CartOrder
+from datetime import timedelta
+
+def sales_statistics(request):
+    # Get the count of delivered products per day for the last 7 days
+    today = timezone.now().date()
+    start_date = today - timedelta(days=6)
+
+    daily_sales = (
+        CartOrder.objects.filter(created_at__date__range=[start_date, today], status='Delivered')
+        .extra(select={'day': 'date(created_at)'})
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+
+    # Format the data for Chart.js
+    labels = [day['day'].strftime('%Y-%m-%d') for day in daily_sales]
+    data = [day['count'] for day in daily_sales]
+
+    return JsonResponse({'labels': labels, 'data': data})
+
+def get_daily_sales_data(request):
+    today = timezone.localdate()
+    daily_orders = (
+        CartOrder.objects.filter(created_at__date=today, status='Delivered')
+        .extra(select={'hour': 'strftime("%%H", created_at)'})
+        .values('hour')
+        .annotate(count=Count('id'))
+        .order_by('hour')
+    )
+
+    labels = [f"{int(hour['hour']):02d}:00" for hour in daily_orders]
+    data = [hour['count'] for hour in daily_orders]
+
+    return JsonResponse({'labels': labels, 'data': data})
+
+def get_monthly_sales_data(request):
+    today = timezone.localdate()
+    start_of_month = today.replace(day=1)
+    end_of_month = today.replace(month=today.month % 12 + 1, day=1) - timedelta(days=1)
+    monthly_orders = (
+        CartOrder.objects.filter(created_at__date__range=[start_of_month, end_of_month], status='Delivered')
+        .extra(select={'day': 'date(created_at)'})
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+
+    labels = [day['day'].strftime('%Y-%m-%d') for day in monthly_orders]
+    data = [day['count'] for day in monthly_orders]
+
+    return JsonResponse({'labels': labels, 'data': data})
+
+def get_yearly_sales_data(request):
+    today = timezone.localdate()
+    start_of_year = today.replace(month=1, day=1)
+    yearly_orders = (
+        CartOrder.objects.filter(created_at__date__range=[start_of_year, today], status='Delivered')
+        .extra(select={'month': 'strftime("%%m", created_at)'})
+        .values('month')
+        .annotate(count=Count('id'))
+        .order_by('month')
+    )
+
+    labels = [f"{int(month['month']):02d}" for month in yearly_orders]
+    data = [month['count'] for month in yearly_orders]
+
+    return JsonResponse({'labels': labels, 'data': data})
+
+def get_order_status_data(request):
+    order_status_counts = (
+        CartOrder.objects.values('status')
+        .annotate(count=Count('id'))
+        .order_by('status')
+    )
+
+    labels = [status['status'] for status in order_status_counts]
+    data = [status['count'] for status in order_status_counts]
+
+    return JsonResponse({'labels': labels, 'data': data})

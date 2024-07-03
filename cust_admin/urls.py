@@ -64,4 +64,10 @@ urlpatterns = [
     # pdf / excel export
     path('export-pdf/<str:report_type>/', views.export_to_pdf, name='export_pdf'),
     path('export-excel/<str:report_type>/', views.export_to_excel, name='export_excel'),
+    # graph statistics
+    path('get_daily_sales_data/', views.get_daily_sales_data, name='get_daily_sales_data'),
+    path('get_monthly_sales_data/', views.get_monthly_sales_data, name='get_monthly_sales_data'),
+    path('get_yearly_sales_data/', views.get_yearly_sales_data, name='get_yearly_sales_data'),
+    path('get_order_status_data/', views.get_order_status_data, name='get_order_status_data'),
+    path('sales_statistics/', views.sales_statistics, name='sales_statistics'),
 ]
