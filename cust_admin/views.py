@@ -25,8 +25,15 @@ from django.urls import reverse
 def dashboard(request):
     product_count = Product.objects.count()
     cat_count = Category.objects.count()
+    orders = CartOrder.objects.all().order_by('id')
+    usr_count = User.objects.count()
+    order_count = CartOrder.objects.count()
     context = {
         'title': 'Admin Dashboard',
+        'title': 'Order List',
+        'usr_count': usr_count,
+        'order_count': order_count,
+        'orders': orders,
         'product_count': product_count,
         'cat_count': cat_count,
     }
