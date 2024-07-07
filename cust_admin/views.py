@@ -634,7 +634,7 @@ def delete_product_offer(request, offer_id):
     sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
     return redirect(reverse('cust_admin:product_offer_list'))
 
-
+############################################################################################################################################################################################################################
 
 
 def sales_report(request):
@@ -660,11 +660,6 @@ def sales_report(request):
     }
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
-
-
-
-############################################################################################################################################################################################################################
-
 
 def daily_report(request):
     today = timezone.localdate()
