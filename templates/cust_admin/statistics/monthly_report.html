@@ -6,8 +6,8 @@
             <h2 class="content-title card-title">Monthly Report </h2>
         </div>
         <div>
-            <a href="{% url 'cust_admin:export_pdf' 'daily' %}" class="btn btn-primary">Export to PDF</a>
-            <a href="{% url 'cust_admin:export_excel' 'daily' %}" class="btn btn-primary">Export to Excel</a>
+            <a href="{% url 'cust_admin:export_pdf' 'monthly' %}" class="btn btn-primary">Export to PDF</a>
+            <a href="{% url 'cust_admin:export_excel' 'monthly' %}" class="btn btn-primary">Export to Excel</a>
         </div>
     </div>
     <div class="card mb-4">
@@ -17,6 +17,7 @@
                     <thead>
                         <tr>
                             <th scope="col">Order Number</th>
+                            <th scope="col">Date</th>
                             <th scope="col">User</th>
                             <th scope="col">Total</th>
                             <th scope="col" class="text-end">Status</th>
@@ -26,6 +27,7 @@
                         {% for order in monthly_orders %}
                         <tr>
                             <td>{{ order.order_number }}</td>
+                            <td>{{ order.created_at }}</td>
                             <td>{{ order.user.username }}</td>
                             <td>{{ order.order_total }}</td>
                             <td class="text-end">{{ order.status }}</td>

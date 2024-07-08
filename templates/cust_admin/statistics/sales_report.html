@@ -1,105 +1,61 @@
 {% extends 'cust_admin/base.html' %}
 {% load static %}
 {% block content %}
-    <section class="content-main">
-        <div class="content-header">
-            <div>
-                <h2 class="content-title card-title">Sales Report </h2>
-            </div>
-            <div>
-                <a href="{% url 'cust_admin:export_pdf' 'daily' %}" class="btn btn-primary">Export to PDF</a>
-                <a href="{% url 'cust_admin:export_excel' 'daily' %}" class="btn btn-primary">Export to Excel</a>
-            </div>
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Sales Report </h2>
         </div>
-        <div class="card mb-4">
-            <header class="card-header">
-                <div class="row gx-3">
-                    <div class="col-lg-12">
-                        <form method="post" class="d-flex align-items-center">
-                            {% csrf_token %}
-                            <div class="me-3">
-                                <label for="start_date" class="me-2">Start Date:</label>
-                                <input type="date" id="start_date" name="start_date" value="{{ start_date_value }}" class="form-control d-inline-block" style="width: auto;">
-                            </div>
-                            <div class="me-3">
-                                <label for="end_date" class="me-2">End Date:</label>
-                                <input type="date" id="end_date" name="end_date" value="{{ end_date_value }}" class="form-control d-inline-block" style="width: auto;">
-                            </div>
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                        </form>
-                    </div>
-                </div>
-            </header>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Order Number</th>
-                                <th scope="col">User</th>
-                                <th scope="col">Total</th>
-                                <th scope="col" class="text-end">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                            <tr>
-                                <td>{{ order.order_number }}</td>
-                                <td>{{ order.user.username }}</td>
-                                <td>{{ order.order_total }}</td>
-                                <td class="text-end">{{ order.status }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div>
+            <button type="submit" name="export_pdf" class="btn btn-primary">Export to PDF</button>
+            <button type="submit" name="export_excel" class="btn btn-primary">Export to Excel</button>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <header class="card-header">
+            <div class="row gx-3">
+                <div class="col-lg-12">
+                    <form method="post" class="d-flex align-items-center">
+                        {% csrf_token %}
+                        <div class="me-3">
+                            <label for="start_date" class="me-2">Start Date:</label>
+                            <input type="date" id="start_date" name="start_date" value="{{ start_date_value }}" class="form-control d-inline-block" style="width: auto;">
+                        </div>
+                        <div class="me-3">
+                            <label for="end_date" class="me-2">End Date:</label>
+                            <input type="date" id="end_date" name="end_date" value="{{ end_date_value }}" class="form-control d-inline-block" style="width: auto;">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </form>
                 </div>
             </div>
+        </header>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Order Number</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Total</th>
+                            <th scope="col" class="text-end">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.created_at }}</td>
+                            <td>{{ order.user.username }}</td>
+                            <td>{{ order.order_total }}</td>
+                            <td class="text-end">{{ order.status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="pagination-area mt-15 mb-50">
-            <nav aria-label="Page navigation example">
-                <ul class="pagination justify-content-start">
-                    <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                    <li class="page-item"><a class="page-link" href="#">02</a></li>
-                    <li class="page-item"><a class="page-link" href="#">03</a></li>
-                    <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                    <li class="page-item"><a class="page-link" href="#">16</a></li>
-                    <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
-                </ul>
-            </nav>
-        </div>
-    </section>
-    <script>
-        function exportToPDF() {
-            const element = document.getElementById('container_content');
-            const opt = {
-                margin: 10,
-                filename: 'sales_report.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }  // 'landscape' instead of 'Landscape'
-            };
-
-            html2pdf().from(element).set(opt).save();
-        }
-
-        
-        
-        
-        function export_data() {
-        const table = document.getElementById('container_content');
-        const wb = XLSX.utils.table_to_book(table, { sheet: 'SalesReport' });
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-
-        function s2ab(s) {
-            const buf = new ArrayBuffer(s.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-            return buf;
-        }
-
-        saveAs(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }), 'sales_report.xlsx');
-        }
-
-        </script>
+    </div>
+</section>
 {% endblock content %}
-
