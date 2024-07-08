@@ -69,28 +69,20 @@
                                             {% endif %}
                                         </a>
                                     </div>
-                                    <!-- {% if product.featured %}
                                     <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="best">Best Sell</span>
+                                        {% if product.get_applicable_offer_percentage > 0 %}
+                                            <span class="discount">{{ product.get_applicable_offer_percentage }}% Off</span>
+                                        {% endif %}
                                     </div>
-                                    {% elif product.popular %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="hot">Hot</span>
-                                    </div>
-                                    {% elif product.latest %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="new">New</span>
-                                    </div>
-                                    {% endif %} -->
                                 </div>
                                 <div class="product-content-wrap">
                                     <div class="product-category"></div>
                                     <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title|truncatechars:30 }}</a></h2>
-                                    <div class="rating-result" title="90%">
+                                    <!-- <div class="rating-result" title="90%">
                                         <span>
                                             <span>95%</span>
                                         </span>
-                                    </div>
+                                    </div> -->
                                     <div class="product-price">
                                         <span>&#8377;{{ product.product_attributes.first.price }}</span>
                                         <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>

@@ -10,63 +10,68 @@
                     <h2 class="content-title card-title">Admin Dashboard </h2>
                     <p>Whole data about your business here</p>
                 </div>
-                <div>
-                    <a href="#" class="btn btn-primary"><i class="text-muted material-icons md-post_add"></i>Create report</a>
-                </div>
+
             </div>
             <div class="row">
                 <div class="col-lg-3">
-                    <div class="card card-body mb-4">
-                        <article class="icontext">
-                            <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
-                            <div class="text">
-                                <h6 class="mb-1 card-title">Revenue</h6>
-                                <span>$13,456.5</span>
-                                <span class="text-sm">
-                                    Shipping fees are not included
-                                </span>
-                            </div>
-                        </article>
-                    </div>
+                    <a href="{% url 'cust_admin:sales_report' %}">
+                        <div class="card card-body mb-4">
+                            <article class="icontext">
+                                <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
+                                <div class="text">
+                                    <h6 class="mb-1 card-title">Revenue</h6>
+                                    <span>&#8377;{{ total_revenue }}</span>
+                                    <span class="text-sm">Shipping fees are not included</span>
+                                </div>
+                            </article>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="col-lg-3">
+                    <a href="{% url 'cust_admin:list_order' %}">
+                        <div class="card card-body mb-4">
+                            <article class="icontext">
+                                <span class="icon icon-sm rounded-circle bg-success-light"><i class="text-success material-icons md-local_shipping"></i></span>
+                                <div class="text">
+                                    <h6 class="mb-1 card-title">Orders</h6> <span>{{ order_count }}</span>
+                                    <span class="text-sm">
+                                        Excluding orders in transit
+                                    </span>
+                                </div>
+                            </article>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-lg-3">
-                    <div class="card card-body mb-4">
-                        <article class="icontext">
-                            <span class="icon icon-sm rounded-circle bg-success-light"><i class="text-success material-icons md-local_shipping"></i></span>
-                            <div class="text">
-                                <h6 class="mb-1 card-title">Orders</h6> <span>{{ order_count }}</span>
-                                <span class="text-sm">
-                                    Excluding orders in transit
-                                </span>
-                            </div>
-                        </article>
-                    </div>
+                    <a href="{% url 'cust_admin:prod_list' %}">
+                        <div class="card card-body mb-4">
+                            <article class="icontext">
+                                <span class="icon icon-sm rounded-circle bg-warning-light"><i class="text-warning material-icons md-qr_code"></i></span>
+                                <div class="text">
+                                    <h6 class="mb-1 card-title">Products</h6> <span>{{product_count}}</span>
+                                    <span class="text-sm">
+                                        In  {{cat_count}} Categories
+                                    </span>
+                                </div>
+                            </article>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-lg-3">
-                    <div class="card card-body mb-4">
-                        <article class="icontext">
-                            <span class="icon icon-sm rounded-circle bg-warning-light"><i class="text-warning material-icons md-qr_code"></i></span>
-                            <div class="text">
-                                <h6 class="mb-1 card-title">Products</h6> <span>{{product_count}}</span>
-                                <span class="text-sm">
-                                    In  {{cat_count}} Categories
-                                </span>
-                            </div>
-                        </article>
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="card card-body mb-4">
-                        <article class="icontext">
-                            <span class="icon icon-sm rounded-circle bg-info-light"><i class="text-info material-icons material-icons md-person"></i></span>
-                            <div class="text">
-                                <h6 class="mb-1 card-title">Users</h6> <span>{{ usr_count }}</span>
-                                <span class="text-sm">
-                                    Based in your user list.
-                                </span>
-                            </div>
-                        </article>
-                    </div>
+                    <a href="{% url 'cust_admin:user_list' %}">
+                        <div class="card card-body mb-4">
+                            <article class="icontext">
+                                <span class="icon icon-sm rounded-circle bg-info-light"><i class="text-info material-icons material-icons md-person"></i></span>
+                                <div class="text">
+                                    <h6 class="mb-1 card-title">Users</h6> <span>{{ usr_count }}</span>
+                                    <span class="text-sm">
+                                        Based in your user list.
+                                    </span>
+                                </div>
+                            </article>
+                        </div>
+                </a>
                 </div>
             </div>
             <div class="row">
@@ -188,31 +193,7 @@
             
             <div class="card mb-4">
                 <header class="card-header">
-                    <div class="row gx-3">
-                        <div class="col-lg-4 col-md-6 me-auto">
-                            <input type="text" placeholder="Search..." class="form-control">
-                        </div>
-                        <div class="col-lg-2 col-6 col-md-3">
-                            <select class="form-select">
-                                <option>Status</option>
-                                <option>New</option>
-                                <option>Paid</option>
-                                <option>Shipped</option>
-                                <option>Delivered</option>
-                                <option>Cancelled</option>
-                                <option>Return</option>
-                                <option>Show all</option>
-                            </select>
-                        </div>
-                        <div class="col-lg-2 col-6 col-md-3">
-                            <select class="form-select">
-                                <option>Show 20</option>
-                                <option>Show 30</option>
-                                <option>Show 40</option>
-                            </select>
-                        </div>
-                    </div>
-                </header>
+                    <h2>Order List</h2></header>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -237,7 +218,7 @@
                                             <a href="{% url 'cust_admin:order_detail' order.id %}" class="btn btn-light rounded btn-sm font-sm">View</a>
                                         </td>
                                         <td class="text-end">
-                                            <a href="{% url 'cust_admin:order_update_status' order.id %}" class="btn btn-primary rounded btn-sm font-sm">Update Status</a>
+                                            <a href="{% url 'cust_admin:order_update_status' order.id %}" class="btn btn-primary rounded btn-sm font-sm">Update</a>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -246,18 +227,7 @@
                     </div>
                 </div>
             </div>
-            <div class="pagination-area mt-30 mb-50">
-                <nav aria-label="Page navigation example">
-                    <ul class="pagination justify-content-start">
-                        <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                        <li class="page-item"><a class="page-link" href="#">02</a></li>
-                        <li class="page-item"><a class="page-link" href="#">03</a></li>
-                        <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                        <li class="page-item"><a class="page-link" href="#">16</a></li>
-                        <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
-                    </ul>
-                </nav>
-            </div>
+    
         </section> <!-- content-main end// -->
 
 

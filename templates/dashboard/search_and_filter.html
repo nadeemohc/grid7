@@ -7,7 +7,7 @@
         <div class="container">
             <div class="breadcrumb">
                 <a href="{% url 'store:home' %}" rel="nofollow">Home</a>
-                <span></span> {{ category.c_name }}
+                <span></span> Search Results
             </div>
         </div>
     </div>
@@ -17,10 +17,12 @@
                 <div class="col-lg-9">
                     <div class="shop-product-fillter">
                         <div class="totall-product">
-                            <p>We found <strong class="text-brand">{{ prod_count }}</strong> items for you!</p>
+                            <p>We found <strong class="text-brand">{{ products|length }}</strong> items for you!</p>
                         </div>
                         <form class="sort-by-product-area" method="get" id="filter-form">
-                            <div class="sort-by-cover mr-10">
+                            <input type="hidden" name="search_field" value="{{ search_field }}">
+                            <input type="hidden" name="category_id" value="{{ category.c_id }}">
+                            <div class="sort-by-cover">
                                 <div class="sort-by-product-wrap">
                                     <div class="sort-by">
                                         <span><i class="fi-rs-apps"></i>Show:</span>
@@ -46,7 +48,6 @@
                                             <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
                                             <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
                                             <option value="new_arrivals" {% if sort_by == 'new_arrivals' %}selected{% endif %}>New Arrivals</option>
-                                            <option value="avg_rating" {% if sort_by == 'avg_rating' %}selected{% endif %}>Avg. Rating</option>
                                             <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: Aa-Zz</option>
                                             <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name: Zz-Aa</option>
                                         </select>
@@ -57,103 +58,49 @@
                     </div>
                     <div class="row product-grid-3">
                         {% for product in products %}
+                        {% if not product.is_blocked %}
                         <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                             <div class="product-cart-wrap mb-30">
                                 <div class="product-img-action-wrap">
                                     <div class="product-img product-img-zoom">
                                         <a href="{% url 'store:product_view' product.p_id %}">
                                             <img class="default-img" src="{{ product.image.url }}" alt="{{ product.title }}">
-                                            {% if product.images.first %}
-                                            <img class="hover-img" src="{{ product.images.first.images.url }}" alt="">
-                                            {% endif %}
+                                            <img class="hover-img" src="{{ product.image.url }}" alt="{{ product.title }}">
                                         </a>
                                     </div>
-                                    {% if product.featured %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="best">Best Sell</span>
-                                    </div>
-                                    {% elif product.popular %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="hot">Hot</span>
-                                    </div>
-                                    {% elif product.latest %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="new">New</span>
-                                    </div>
-                                    {% endif %}
+                                    <!-- Other product actions and details -->
                                 </div>
                                 <div class="product-content-wrap">
-                                    <div class="product-category"></div>
-                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title|truncatechars:30 }}</a></h2>
-                                    <!-- <div class="rating-result" title="90%">
-                                        <span>
-                                            <span>95%</span>
-                                        </span>
-                                    </div> -->
+                                    <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:30 }}</a></h2>
                                     <div class="product-price">
-                                        <span>&#8377;{{ product.product_attributes.first.price }}</span>
-                                        <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
-                                    </div>
-                                    <div class="product-action-1 show">
-                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
+                                        <span>&#8377;{{ product.min_price }}</span>
+                                        <span class="old-price">&#8377;{{ product.max_price }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
-                    <!-- Pagination Area -->
-                    <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
-                        <nav aria-label="Page navigation example">
-                            <ul class="pagination justify-content-start">
-                                {% if page_obj.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </a>
-                                </li>
-                                {% endif %}
-                                {% for num in page_obj.paginator.page_range %}
-                                {% if page_obj.number == num %}
-                                <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
-                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                {% elif num == 1 %}
-                                <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                                {% if page_obj.number > 6 %}
-                                <li class="page-item disabled"><a class="page-link dot" href="#">...</a></li>
-                                {% endif %}
-                                {% elif num == page_obj.paginator.num_pages %}
-                                {% if page_obj.number < page_obj.paginator.num_pages|add:'-5' %}
-                                <li class="page-item disabled"><a class="page-link dot" href="#">...</a></li>
-                                {% endif %}
-                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                {% endif %}
-                                {% endfor %}
-                                {% if page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    </div>
+                    <!-- Pagination -->
                 </div>
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
                     <div class="widget-category mb-30">
                         <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                         <ul class="categories">
                             {% for category in categories %}
-                            <li>
-                                <a href="{% url 'store:product_list_by_category' category.c_id %}"> {{ category.c_name }}</a></li>
+                            {% if not category.is_blocked %}
+                            <li><a href="{% url 'store:product_list_by_category' category.c_id %}?search_field={{ search_field }}&price_filter={{ price_filter }}">{{ category.c_name }}</a></li>
+                            {% endif %}
                             {% endfor %}
                         </ul>
                     </div>
+                    <!-- Additional filters and widgets -->
                     <div class="sidebar-widget price_range range mb-30">
                         <h5 class="section-title style-1 mb-30">Filter by price</h5>
                         <form method="get" id="price-filter-form">
+                            <input type="hidden" name="search_field" value="{{ search_field }}">
+                            <input type="hidden" name="category_id" value="{{ category.c_id }}">
                             <div class="price-filter">
                                 <input type="radio" name="price_filter" value="below_500" id="below_500" class="form-check-input" {% if price_filter == 'below_500' %}checked{% endif %}>
                                 <label for="below_500" class="form-check-label">Below ₹500</label>
@@ -174,14 +121,7 @@
                                 <input type="radio" name="price_filter" value="above_2000" id="above_2000" class="form-check-input" {% if price_filter == 'above_2000' %}checked{% endif %}>
                                 <label for="above_2000" class="form-check-label">Above ₹2000</label>
                             </div>
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="all" id="all" class="form-check-input" {% if price_filter == 'all' %}checked{% endif %}>
-                                <label for="all" class="form-check-label">All</label>
-                            </div>
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Filter</button>
-                                <a href="{% url 'store:product_list_by_category' category.c_id %}" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Clear Filter</a>
-                            </div>
+                            <button type="submit" class="btn btn-sm btn-default">Apply</button>
                         </form>
                     </div>
                 </div>
@@ -189,4 +129,4 @@
         </div>
     </section>
 </main>
-{% endblock content %}
+{% endblock %}

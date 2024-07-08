@@ -144,7 +144,7 @@
                                                 <h5 class="card-title coupon-code text-primary">{{ coupon.code }}</h5>
                                                 <p class="card-text">Discount: {{ coupon.discount }}%</p>
                                                 <p class="card-text">Expires: {{ coupon.expiry_date }}</p>
-                                                <button class="btn btn-primary copy-coupon-button">Copy</button>
+                                                <button class="btn btn-primary copy-coupon-button" onclick="copyCoupon('{{ coupon.code }}')">Copy</button>
                                             </div>
                                         </div>
                                     </div>
@@ -187,7 +187,7 @@
 
 <script>
     function increaseQuantity(cartItemId, cart_id) {
-console.log(cartItemId, cart_id)
+        console.log(cartItemId, cart_id)
 console.log('coming');
 console.log('inside increase')
 let final = document.getElementById('total_cart_price');
@@ -283,6 +283,28 @@ fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
         .catch(error => console.error('Error:', error));
     }
 
+    function copyCoupon(code) {
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Coupon code copied: ' + code,
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+    }
 </script>
 
 {% endblock %}

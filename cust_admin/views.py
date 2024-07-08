@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from accounts.models import User
 from cust_auth_admin.views import admin_required
 from store.models import *
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOfferForm, ProductOfferForm
 from django.contrib import messages
 from decimal import Decimal
@@ -13,13 +13,14 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import IntegrityError
 from PIL import Image
-from django.db.models import Case, CharField, Value, When
+from django.db.models import Case, CharField, Value, When, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import pandas as pd
 from django.urls import reverse
+
 
 @admin_required
 def dashboard(request):
@@ -28,14 +29,19 @@ def dashboard(request):
     orders = CartOrder.objects.all().order_by('id')
     usr_count = User.objects.count()
     order_count = CartOrder.objects.count()
+    
+    # Calculate total revenue from delivered orders
+    delivered_orders = CartOrder.objects.filter(status='Delivered')
+    total_revenue = delivered_orders.aggregate(total=Sum('order_total'))['total'] or 0
+    
     context = {
         'title': 'Admin Dashboard',
-        'title': 'Order List',
         'usr_count': usr_count,
         'order_count': order_count,
         'orders': orders,
         'product_count': product_count,
         'cat_count': cat_count,
+        'total_revenue': total_revenue,
     }
     return render(request, 'cust_admin/index.html', context)
 
@@ -634,13 +640,13 @@ def delete_product_offer(request, offer_id):
     sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
     return redirect(reverse('cust_admin:product_offer_list'))
 
-
+############################################################################################################################################################################################################################
 
 
 def sales_report(request):
     start_date_value = ""
     end_date_value = ""
-    orders = CartOrder.objects.filter(status='Delivered')  # Use your appropriate status
+    orders = CartOrder.objects.filter(status='Delivered')
 
     if request.method == 'POST':
         start_date = request.POST.get('start_date')
@@ -653,6 +659,11 @@ def sales_report(request):
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
             orders = CartOrder.objects.filter(created_at__range=(start_date, end_date), status='Delivered').order_by('created_at')
 
+        if 'export_pdf' in request.POST:
+            return export_to_pdf(request, 'custom', orders)
+        elif 'export_excel' in request.POST:
+            return export_to_excel(request, 'custom', orders)
+
     context = {
         'orders': orders,
         'start_date_value': start_date_value,
@@ -660,11 +671,6 @@ def sales_report(request):
     }
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
-
-
-
-############################################################################################################################################################################################################################
-
 
 def daily_report(request):
     today = timezone.localdate()
@@ -688,6 +694,8 @@ def monthly_report(request):
     context = {'monthly_orders': monthly_orders}
     return render(request, 'cust_admin/statistics/monthly_report.html', context)
 
+from django.db.models import Sum
+
 def export_to_pdf(request, report_type):
     template_path = 'cust_admin/statistics/pdf_template.html'
     context = {}
@@ -695,19 +703,28 @@ def export_to_pdf(request, report_type):
     if report_type == 'daily':
         today = timezone.now().date()
         daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+        total_sum = daily_orders.aggregate(Sum('order_total'))['order_total__sum']
+        total_count = daily_orders.count()
         context['orders'] = daily_orders
     elif report_type == 'weekly':
         today = timezone.now().date()
         start_of_week = today - timedelta(days=today.weekday())
         end_of_week = start_of_week + timedelta(days=6)
         weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+        total_sum = weekly_orders.aggregate(Sum('order_total'))['order_total__sum']
+        total_count = weekly_orders.count()
         context['orders'] = weekly_orders
     elif report_type == 'monthly':
         today = timezone.now().date()
         start_of_month = today.replace(day=1)
         end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
         monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+        total_sum = monthly_orders.aggregate(Sum('order_total'))['order_total__sum']
+        total_count = monthly_orders.count()
         context['orders'] = monthly_orders
+
+    context['total_sum'] = total_sum or 0
+    context['total_count'] = total_count
     
     # Rendered template
     template = get_template(template_path)
@@ -747,6 +764,10 @@ def export_to_excel(request, report_type):
     }
     df = pd.DataFrame(data)
     
+    # Add aggregate rows
+    df.loc['Total'] = ['Total', '', '', df['Total'].sum(), '']
+    df.loc['Count'] = ['Count', '', '', len(orders), '']
+    
     # Create Excel file
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="{report_type}_report.xlsx"'
@@ -754,11 +775,9 @@ def export_to_excel(request, report_type):
     
     return response
 
-from django.http import JsonResponse
-from django.utils import timezone
-from django.db.models import Count
-# from .models import CartOrder
-from datetime import timedelta
+
+
+
 
 def sales_statistics(request):
     # Get the count of delivered products per day for the last 7 days

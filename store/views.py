@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from .models import Coupon
 from accounts.models import User, Address
-from django.db.models import Sum
+from django.db.models import Sum, Min, Max
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -16,6 +16,27 @@ from user_cart.views import checkout
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import sweetify
 
+def apply_offers(product):
+    product_attributes = ProductAttribute.objects.filter(product=product)
+    if not product_attributes.exists():
+        return product
+
+    product_attribute = product_attributes.first()  # Adjust logic if necessary to handle multiple attributes
+
+    product_offer = ProductOffer.objects.filter(product=product).first()
+    category_offer = CategoryOffer.objects.filter(category=product.category).first()
+
+    if product_offer and product_offer.is_active():
+        discount = product_offer.discount_percentage
+        product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
+    elif category_offer and category_offer.is_active():
+        discount = category_offer.discount_percentage
+        product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
+    else:
+        product.final_price = product_attribute.price
+
+    return product
+
 
 
 # for the home page 
@@ -25,13 +46,17 @@ def get_common_context():
     }
 
 @never_cache
-def home(request): 
+def home(request):
     categories = Category.objects.all()
     products = Product.objects.all()
     prod_count = products.count()
     featured_products = products.filter(featured=True)
     popular_products = products.filter(popular=True)
     new_added_products = products.filter(latest=True)
+
+    featured_products = [apply_offers(p) for p in featured_products]
+    popular_products = [apply_offers(p) for p in popular_products]
+    new_added_products = [apply_offers(p) for p in new_added_products]
 
     context = {
         'categories': categories,
@@ -41,8 +66,12 @@ def home(request):
         'new_added_products': new_added_products,
         'popular_products': popular_products,
         'title': 'Home',
-        }
+    }
     return render(request, 'dashboard/home.html', context)
+
+
+
+
 
 # For displaying the 404 page
 def handler404(request, exception):
@@ -51,84 +80,104 @@ def handler404(request, exception):
 # For listing the products in shop page
 def list_prod(request):
     categories = Category.objects.all()
-    Products = Product.objects.all()
+    products = Product.objects.all()
     product_attributes = ProductAttribute.objects.all()
     prod_count = Product.objects.count()
     featured_products = Product.objects.filter(featured=True)
     popular_products = Product.objects.filter(popular=True)
     new_added_products = Product.objects.filter(latest=True)
+
+    featured_products = [apply_offers(p) for p in featured_products]
+    popular_products = [apply_offers(p) for p in popular_products]
+    new_added_products = [apply_offers(p) for p in new_added_products]
+
     context = {
         'categories': categories,
-        'products': Products,
+        'products': products,
         'product_attributes': product_attributes,
         'prod_count': prod_count,
         'featured_products': featured_products,
-        'new_added_products':new_added_products,
+        'new_added_products': new_added_products,
         'popular_products': popular_products,
         'title': 'Shop',
     }
     return render(request, 'dashboard/shop.html', context)
 
+
+
+
+
+
 def product_list_by_category(request, category_cid):
     category = get_object_or_404(Category, c_id=category_cid)
+    search_field = request.GET.get('search_field', '')
     products = Product.objects.filter(category=category, is_blocked=False)
-    
-    # Handle filtering by price
+
+    if search_field:
+        products = products.filter(title__icontains=search_field)
+
+    products = [apply_offers(p) for p in products]
+
     price_filter = request.GET.get('price_filter')
     if price_filter:
         if price_filter == 'below_500':
-            products = products.filter(product_attributes__price__lt=500)
+            products = [p for p in products if p.final_price < 500]
         elif price_filter == '500_1000':
-            products = products.filter(product_attributes__price__gte=500, product_attributes__price__lt=1000)
+            products = [p for p in products if 500 <= p.final_price < 1000]
         elif price_filter == '1000_1500':
-            products = products.filter(product_attributes__price__gte=1000, product_attributes__price__lt=1500)
+            products = [p for p in products if 1000 <= p.final_price < 1500]
         elif price_filter == '1500_2000':
-            products = products.filter(product_attributes__price__gte=1500, product_attributes__price__lt=2000)
+            products = [p for p in products if 1500 <= p.final_price < 2000]
         elif price_filter == 'above_2000':
-            products = products.filter(product_attributes__price__gte=2000)
+            products = [p for p in products if p.final_price >= 2000]
 
-    # Pagination logic
     items_per_page = request.GET.get('items_per_page', 9)
     paginator = Paginator(products, items_per_page)
     page = request.GET.get('page')
-    page_obj = paginator.get_page(page)
+
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
 
     context = {
         'category': category,
         'products': page_obj,
         'categories': Category.objects.all(),
-        'prod_count': products.count(),
+        'prod_count': paginator.count,
         'items_per_page': items_per_page,
         'price_filter': price_filter,
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'search_field': search_field,
     }
     return render(request, 'dashboard/product_list.html', context)
 
 
+
+
 # for viewing the product details 
 def product_detailed_view(request, product_pid):
-    # Get the product or return 404 if not found
     product = get_object_or_404(Product, p_id=product_pid)
-    
-    # Replace newline characters with HTML line break tags
     specifications_lines = product.specifications.split('\n')
-    
-    # Get product images ordered by upload timestamp
     product_images = ProductImages.objects.filter(product=product).order_by('images')
-    
-    # Get product attributes including size
     product_attributes = ProductAttribute.objects.filter(product=product)
     title = product.title
-    
+
+    product = apply_offers(product)
+
     context = {
         'product': product,
         'title': title,
-        'specifications_lines': specifications_lines,  # Pass the modified specifications to the template
+        'specifications_lines': specifications_lines,
         'product_images': product_images,
         'product_attributes': product_attributes,
     }
-
     return render(request, 'dashboard/product_detailed_view.html', context)
+
+
+
 
 def get_price(request, size_id):
     try:
@@ -320,8 +369,6 @@ def filter_product(request):
 
 def shop(request, category_id=None):
     categories = Category.objects.filter(is_blocked=False)
-    
-    # Handle selected category
     selected_category = None
     if category_id:
         selected_category = get_object_or_404(Category, c_id=category_id)
@@ -329,47 +376,41 @@ def shop(request, category_id=None):
         category_id = request.POST.get('category_id')
         if category_id:
             selected_category = get_object_or_404(Category, c_id=category_id)
-    
-    # Filter products based on the selected category
+
     products = Product.objects.filter(is_blocked=False)
     if selected_category:
         products = products.filter(category=selected_category)
 
-    # Handle price range filtering
+    products = [apply_offers(p) for p in products]
+
     price_filter = request.GET.get('price_filter')
     if price_filter:
         if price_filter == 'below_500':
-            products = products.filter(product_attributes__price__lt=500)
+            products = [p for p in products if p.final_price < 500]
         elif price_filter == '500_1000':
-            products = products.filter(product_attributes__price__gte=500, product_attributes__price__lt=1000)
+            products = [p for p in products if 500 <= p.final_price < 1000]
         elif price_filter == '1000_1500':
-            products = products.filter(product_attributes__price__gte=1000, product_attributes__price__lt=1500)
+            products = [p for p in products if 1000 <= p.final_price < 1500]
         elif price_filter == '1500_2000':
-            products = products.filter(product_attributes__price__gte=1500, product_attributes__price__lt=2000)
+            products = [p for p in products if 1500 <= p.final_price < 2000]
         elif price_filter == 'above_2000':
-            products = products.filter(product_attributes__price__gte=2000)
+            products = [p for p in products if p.final_price >= 2000]
 
-    # Handle sorting
-    sort_by = request.GET.get('sort_by', 'featured')
-    if sort_by == 'price_asc':
-        products = products.order_by('product_attributes__price')
+    sort_by = request.GET.get('sort_by', 'title_asc')
+    if sort_by == 'title_asc':
+        products = sorted(products, key=lambda x: x.title)
+    elif sort_by == 'title_desc':
+        products = sorted(products, key=lambda x: x.title, reverse=True)
+    elif sort_by == 'price_asc':
+        products = sorted(products, key=lambda x: x.final_price)
     elif sort_by == 'price_desc':
-        products = products.order_by('-product_attributes__price')
-    elif sort_by == 'new_arrivals':
-        products = products.order_by('-product_attributes__date')  # Change here
-    elif sort_by == 'avg_rating':
-        products = products.order_by('-avg_rating')
-    elif sort_by == 'name_asc':
-        products = products.order_by('title')
-    elif sort_by == 'name_desc':
-        products = products.order_by('-title')
+        products = sorted(products, key=lambda x: x.final_price, reverse=True)
 
-    # Handle items per page
     items_per_page = request.GET.get('items_per_page', 9)
-    paginator = Paginator(products.distinct(), items_per_page)
-    page_number = request.GET.get('page')
+    paginator = Paginator(products, items_per_page)
+    page = request.GET.get('page')
     try:
-        page_obj = paginator.page(page_number)
+        page_obj = paginator.page(page)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
@@ -379,13 +420,17 @@ def shop(request, category_id=None):
         'categories': categories,
         'selected_category': selected_category,
         'products': page_obj,
-        'prod_count': paginator.count,
-        'page_obj': page_obj,
-        'sort_by': sort_by,
         'items_per_page': items_per_page,
         'price_filter': price_filter,
+        'sort_by': sort_by,
+        'page_obj': page_obj,
     }
     return render(request, 'dashboard/shop.html', context)
+
+
+
+
+
 
 
 
@@ -400,18 +445,74 @@ def order_cancel(request, order_id):
     sweetify.toast(request, 'Order status updated successfully.', timer=3000, icon='success')
     return redirect('store:user_order_detail', order_id = order_id)
 
-def search_products(request):
-    query = request.GET.get('search_field', '')
-    products = Product.objects.filter(title__icontains=query) if query else Product.objects.none()
-    prod_count = products.count()
-    categories = Category.objects.filter(is_blocked=False)  # Add this line to fetch categories for the sidebar
+
+
+from django.db.models import Min, Max
+
+def search_and_filter(request):
+    search_field = request.GET.get('search_field', '')
+    category_id = request.GET.get('category_id')
+    subcategory_id = request.GET.get('subcategory_id', None)
+    price_filter = request.GET.get('price_filter', None)
+    sort_by = request.GET.get('sort_by', None)
+    items_per_page = request.GET.get('items_per_page', '9')
+
+    products = Product.objects.all()
+    categories = Category.objects.all()
+
+    if search_field:
+        products = products.filter(title__icontains=search_field)
+
+    if category_id and category_id != 'None':
+        products = products.filter(category_id=category_id)
+
+    if subcategory_id:
+        products = products.filter(sub_category_id=subcategory_id)
+
+    if price_filter:
+        if price_filter == 'below_500':
+            products = products.filter(product_attributes__price__lt=500)
+        elif price_filter == '500_1000':
+            products = products.filter(product_attributes__price__gte=500, product_attributes__price__lte=1000)
+        elif price_filter == '1000_1500':
+            products = products.filter(product_attributes__price__gte=1000, product_attributes__price__lte=1500)
+        elif price_filter == '1500_2000':
+            products = products.filter(product_attributes__price__gte=1500, product_attributes__price__lte=2000)
+        elif price_filter == 'above_2000':
+            products = products.filter(product_attributes__price__gt=2000)
+
+    # Apply sorting
+    if sort_by == 'price_asc':
+        products = products.order_by('product_attributes__price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-product_attributes__price')
+    elif sort_by == 'title_asc':
+        products = products.order_by('title')
+    elif sort_by == 'title_desc':
+        products = products.order_by('-title')
+
+    # Annotate products with min and max price
+    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+
+    # Pagination logic
+    if items_per_page != 'all':
+        products = products[:int(items_per_page)]
+
     context = {
         'products': products,
-        'prod_count': prod_count,
         'categories': categories,
-        'category': 'Search Results'  # or any other context you need
+        'search_field': search_field,
+        'category_id': category_id,
+        'subcategory_id': subcategory_id,
+        'price_filter': price_filter,
+        'sort_by': sort_by,
+        'items_per_page': items_per_page,
     }
-    return render(request, 'dashboard/product_search_results.html', context)
+
+    return render(request, 'dashboard/search_and_filter.html', context)
+
+
+
 
 @login_required
 def get_wishlist_count(request):

@@ -77,6 +77,16 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
+    def get_applicable_offer_percentage(self):
+        product_offer = ProductOffer.objects.filter(product=self, is_active=True).first()
+        category_offer = CategoryOffer.objects.filter(category=self.category, is_active=True).first()
+        
+        product_discount = product_offer.discount_percentage if product_offer else 0
+        category_discount = category_offer.discount_percentage if category_offer else 0
+        
+        total_discount = product_discount + category_discount
+        return total_discount
+
 class ProductImages(models.Model):
     images = models.ImageField(upload_to='product_images', default='product.jpg')
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
@@ -232,42 +242,31 @@ class Coupon(models.Model):
             return total_amount - discount_amount
         return total_amount
 
+class ProductOffer(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    discount_percentage = models.PositiveIntegerField(help_text='discount in percentage')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+
+    def is_active(self):
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+
+    def __str__(self):
+        return f"{self.product.title} - {self.discount_percentage}%"
+
 class CategoryOffer(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     discount_percentage = models.PositiveIntegerField(help_text='discount in percentage')
     start_date = models.DateField()
     end_date = models.DateField()
-    is_active = models.BooleanField(default = True)
+    is_active = models.BooleanField(default=True)
 
     def is_active(self):
         today = timezone.now().date()
         return self.start_date <= today <= self.end_date
-
-    def apply_discount(self, total_amount):
-        if self.is_active():
-            discount_amount = (self.discount_percentage / 100) * total_amount
-            return total_amount - discount_amount
-        return total_amount
 
     def __str__(self):
         return f"{self.category} - {self.discount_percentage}% Off"
 
-class ProductOffer(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    is_active = models.BooleanField(default = True)
-
-    def is_active(self):
-        today = timezone.now().date()
-        return self.start_date <= today <= self.end_date
-
-    def apply_discount(self, total_amount):
-        if self.is_active():
-            discount_amount = (self.discount_percentage / 100) * total_amount
-            return total_amount - discount_amount
-        return total_amount
-
-    def __str__(self):
-        return f"{self.product.title} - {self.discount_percentage}% Off"

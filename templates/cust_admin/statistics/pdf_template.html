@@ -1,37 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>{{ report_type|capfirst }} Report</title>
+    <title>Sales Report</title>
     <style>
-        /* Add your styles here */
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
         }
         table, th, td {
-            border: 1px solid #ccc;
+            border: 1px solid black;
         }
         th, td {
             padding: 8px;
             text-align: left;
         }
-        th {
-            background-color: #f2f2f2;
+        tfoot {
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>{{ report_type|capfirst }} Report</h1>
+    <h1>Sales Report</h1>
     <table>
         <thead>
             <tr>
                 <th>Order Number</th>
+                <th>Date</th>
                 <th>User</th>
                 <th>Total</th>
                 <th>Status</th>
@@ -41,12 +35,23 @@
             {% for order in orders %}
             <tr>
                 <td>{{ order.order_number }}</td>
+                <td>{{ order.created_at }}</td>
                 <td>{{ order.user.username }}</td>
                 <td>{{ order.order_total }}</td>
                 <td>{{ order.status }}</td>
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total Orders</td>
+                <td colspan="2">{{ total_count }}</td>
+            </tr>
+            <tr>
+                <td colspan="3">Total Sum</td>
+                <td colspan="2">{{ total_sum }}</td>
+            </tr>
+        </tfoot>
     </table>
 </body>
 </html>
