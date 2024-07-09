@@ -259,6 +259,7 @@ fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
 }
 
 
+
     function removeFromCart(CartItemId) {
         // Send AJAX request to remove item from wishlist
         fetch(`/remove_from_cart/${CartItemId}/`, {
@@ -303,6 +304,18 @@ fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
             }
+        });
+    }
+
+    function showToast(icon, title) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: icon,
+            title: title,
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
         });
     }
 </script>
