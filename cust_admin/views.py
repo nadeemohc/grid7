@@ -554,8 +554,7 @@ def add_category_offer(request):
             sweetify.toast(request, 'Category offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:category_offer_list')
         else:
-            error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
-            sweetify.toast(request, error_message, icon='error', timer=3000)
+            sweetify.error(request, 'There was an error adding the Offer.', timer=3000)
     else:
         form = CategoryOfferForm()
     return render(request, 'cust_admin/offer/category_offer/add_offer.html', {'form': form, 'title': 'Add Category Offer'})
@@ -575,7 +574,12 @@ def edit_category_offer(request, offer_id):
     return render(request, 'cust_admin/offer/category_offer/edit_offer.html', {'form': form, 'title': 'Edit Category Offer'})
 
 def delete_category_offer(request, offer_id):
-    offer = CategoryOffer.objects.get(pk=offer_id)
+    offer = CategoryOffer.objects.get(id=offer_id)
+    product_attributes = ProductAttribute.objects.filter(product__category=offer.category)
+    for attribute in product_attributes:
+        attribute.price = attribute.old_price  # Reset the price to the old price before deleting the offer
+        attribute.old_price = 0  # Reset old price
+        attribute.save()
     offer.delete()
     sweetify.toast(request, 'Category offer deleted successfully.', icon='success', timer=3000)
     return redirect('cust_admin:category_offer_list')
@@ -604,11 +608,12 @@ def add_product_offer(request):
             sweetify.toast(request, 'Product offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:product_offer_list')
         else:
-            error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
-            sweetify.toast(request, error_message, icon='error', timer=3000)
+                        sweetify.error(request, 'There was an error adding the Offer.', timer=3000)
     else:
         form = ProductOfferForm()
     return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form, 'title': 'Add Product Offer'})
+
+
 
 def edit_product_offer(request, offer_id):
     offer = ProductOffer.objects.get(id=offer_id)
