@@ -2,6 +2,7 @@ from django import forms
 from store.models import *
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from datetime import date
 
 class ProductVariantAssignForm(forms.Form):
     product = forms.ModelChoiceField(queryset=Product.objects.all(), empty_label="Select Product", widget=forms.Select(attrs={'class': 'form-select', 'required': True}))
@@ -44,6 +45,7 @@ class CouponForm(forms.ModelForm):
         if active_date and expiry_date and active_date > expiry_date:
             raise ValidationError("Expiry date must be after the active date.")
         return cleaned_data
+
 class CategoryOfferForm(forms.ModelForm):
     class Meta:
         model = CategoryOffer
@@ -54,6 +56,18 @@ class CategoryOfferForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
         }
+
+    def clean_discount_percentage(self):
+        discount_percentage = self.cleaned_data.get('discount_percentage')
+        if discount_percentage is not None and (discount_percentage <= 0 or discount_percentage >= 100):
+            raise ValidationError("Discount percentage must be between 1 and 99.")
+        return discount_percentage
+
+    def clean_start_date(self):
+        start_date = self.cleaned_data.get('start_date')
+        if start_date and start_date < date.today():
+            raise ValidationError("Start date cannot be in the past.")
+        return start_date
 
     def clean(self):
         cleaned_data = super().clean()
@@ -72,6 +86,7 @@ class CategoryOfferForm(forms.ModelForm):
         return cleaned_data
 
 
+
 class ProductOfferForm(forms.ModelForm):
     class Meta:
         model = ProductOffer
@@ -82,6 +97,18 @@ class ProductOfferForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date', 'required': True}),
         }
+
+    def clean_discount_percentage(self):
+        discount_percentage = self.cleaned_data.get('discount_percentage')
+        if discount_percentage is not None and (discount_percentage <= 0 or discount_percentage >= 100):
+            raise ValidationError("Discount percentage must be between 1 and 99.")
+        return discount_percentage
+
+    def clean_start_date(self):
+        start_date = self.cleaned_data.get('start_date')
+        if start_date and start_date < date.today():
+            raise ValidationError("Start date cannot be in the past.")
+        return start_date
 
     def clean(self):
         cleaned_data = super().clean()

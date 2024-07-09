@@ -336,6 +336,32 @@ def product_list_unlist(request, p_id):
     messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
     return redirect('cust_admin:prod_list')
 
+
+
+
+
+def prod_catalogue_list(request):    
+    products = ProductAttribute.objects.all().order_by('product')
+    prods = Product.objects.all()
+    
+    context = {
+        'prods': prods,
+        'products': products,
+        'title': 'Product Catalogue',
+    }
+    return render(request, 'cust_admin/product/product_catalogue.html', context)
+
+def catalogue_list_unlist(request, pk):
+    product = get_object_or_404(ProductAttribute, pk=pk)
+    product.is_blocked = not product.is_blocked
+    product.save()
+    action = 'unblocked' if not product.is_blocked else 'blocked'
+    sweetify.toast(request, f"The product variant with ID {product.pk} has been {action} successfully.", timer=3000, icon='success')
+    return redirect('cust_admin:prod_catalogue')
+
+#=========================================== admin product variant assign, edit =========================================================================================================
+
+
 def prod_variant_assign(request):
     form = ProductVariantAssignForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -409,27 +435,8 @@ def prod_variant_edit(request, pk):
     }
 
     return render(request, 'cust_admin/product/prod_variant_edit.html', context)
-
-
-
-def prod_catalogue_list(request):    
-    products = ProductAttribute.objects.all().order_by('product')
-    prods = Product.objects.all()
     
-    context = {
-        'prods': prods,
-        'products': products,
-        'title': 'Product Catalogue',
-    }
-    return render(request, 'cust_admin/product/product_catalogue.html', context)
-
-def catalogue_list_unlist(request, pk):
-    product = get_object_or_404(ProductAttribute, pk=pk)
-    product.is_blocked = not product.is_blocked
-    product.save()
-    action = 'unblocked' if not product.is_blocked else 'blocked'
-    sweetify.toast(request, f"The product variant with ID {product.pk} has been {action} successfully.", timer=3000, icon='success')
-    return redirect('cust_admin:prod_catalogue')
+#=========================================== admin list, detail, status update of orders =========================================================================================================
 
 def list_order(request):
     orders = CartOrder.objects.all().order_by('id')
@@ -467,9 +474,6 @@ def order_detail(request, order_id):
     }
     return render(request, 'cust_admin/order/order_dtls.html', context)
 
-
-
-
 def order_update_status(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     if request.method == 'POST':
@@ -484,6 +488,7 @@ def order_update_status(request, order_id):
     }
     return render(request, 'cust_admin/order/order_update_status.html', context)
 
+#=========================================== admin add, list, edit, delete coupons =========================================================================================================
 
 def add_coupon(request):
     if request.method == 'POST':
@@ -523,6 +528,8 @@ def delete_coupon(request, coupon_id):
     sweetify.toast(request, 'Coupon deleted successfully!', icon='success', timer=3000)
     return redirect('cust_admin:coupon_list')
 
+#=========================================== admin add, list, edit, delete category offers =========================================================================================================
+
 def category_offer_list(request):
     category_offers = CategoryOffer.objects.all()
     return render(request, 'cust_admin/offer/category_offer/list_offer.html', {'category_offers': category_offers})
@@ -547,8 +554,7 @@ def add_category_offer(request):
             sweetify.toast(request, 'Category offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:category_offer_list')
         else:
-            error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
-            sweetify.toast(request, error_message, icon='error', timer=3000)
+            sweetify.error(request, 'There was an error adding the Offer.', timer=3000)
     else:
         form = CategoryOfferForm()
     return render(request, 'cust_admin/offer/category_offer/add_offer.html', {'form': form, 'title': 'Add Category Offer'})
@@ -568,10 +574,17 @@ def edit_category_offer(request, offer_id):
     return render(request, 'cust_admin/offer/category_offer/edit_offer.html', {'form': form, 'title': 'Edit Category Offer'})
 
 def delete_category_offer(request, offer_id):
-    offer = CategoryOffer.objects.get(pk=offer_id)
+    offer = CategoryOffer.objects.get(id=offer_id)
+    product_attributes = ProductAttribute.objects.filter(product__category=offer.category)
+    for attribute in product_attributes:
+        attribute.price = attribute.old_price  # Reset the price to the old price before deleting the offer
+        attribute.old_price = 0  # Reset old price
+        attribute.save()
     offer.delete()
     sweetify.toast(request, 'Category offer deleted successfully.', icon='success', timer=3000)
     return redirect('cust_admin:category_offer_list')
+
+#=========================================== admin add, list, edit, delete product offer =========================================================================================================
 
 def product_offer_list(request):
     product_offers = ProductOffer.objects.all()
@@ -595,11 +608,12 @@ def add_product_offer(request):
             sweetify.toast(request, 'Product offer added successfully', icon='success', timer=3000)
             return redirect('cust_admin:product_offer_list')
         else:
-            error_message = " ".join([str(error) for error in form.errors.get('__all__', [])])
-            sweetify.toast(request, error_message, icon='error', timer=3000)
+                        sweetify.error(request, 'There was an error adding the Offer.', timer=3000)
     else:
         form = ProductOfferForm()
     return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form, 'title': 'Add Product Offer'})
+
+
 
 def edit_product_offer(request, offer_id):
     offer = ProductOffer.objects.get(id=offer_id)
@@ -640,8 +654,7 @@ def delete_product_offer(request, offer_id):
     sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
     return redirect(reverse('cust_admin:product_offer_list'))
 
-############################################################################################################################################################################################################################
-
+#=========================================== sales, weekly, daily, monthly reports =========================================================================================================
 
 def sales_report(request):
     start_date_value = ""
@@ -776,7 +789,7 @@ def export_to_excel(request, report_type):
     return response
 
 
-
+#=========================================== admin home bar and pie graphs =========================================================================================================
 
 
 def sales_statistics(request):
