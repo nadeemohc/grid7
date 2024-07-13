@@ -13,7 +13,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import IntegrityError
 from PIL import Image
-from django.db.models import Case, CharField, Value, When, Count
+from django.db.models import Case, CharField, Value, When, Count, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.template.loader import get_template
@@ -656,6 +656,16 @@ def delete_product_offer(request, offer_id):
 
 #=========================================== sales, weekly, daily, monthly reports =========================================================================================================
 
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.utils import timezone
+from datetime import datetime, timedelta
+# from .models import CartOrder
+from django.db.models import Sum
+import pandas as pd
+
 def sales_report(request):
     start_date_value = ""
     end_date_value = ""
@@ -673,9 +683,9 @@ def sales_report(request):
             orders = CartOrder.objects.filter(created_at__range=(start_date, end_date), status='Delivered').order_by('created_at')
 
         if 'export_pdf' in request.POST:
-            return export_to_pdf(request, 'custom', orders)
+            return export_to_pdf(request, 'custom', orders, start_date, end_date)
         elif 'export_excel' in request.POST:
-            return export_to_excel(request, 'custom', orders)
+            return export_to_excel(request, 'custom', orders, start_date, end_date)
 
     context = {
         'orders': orders,
@@ -685,36 +695,21 @@ def sales_report(request):
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
 
-def daily_report(request):
-    today = timezone.localdate()
-    daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
-    context = {'daily_orders': daily_orders}
-    return render(request, 'cust_admin/statistics/daily_report.html', context)
-
-def weekly_report(request):
-    today = timezone.now().date()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
-    weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
-    context = {'weekly_orders': weekly_orders}
-    return render(request, 'cust_admin/statistics/weekly_report.html', context)
-
-def monthly_report(request):
-    today = timezone.now().date()
-    start_of_month = today.replace(day=1)
-    end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
-    monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
-    context = {'monthly_orders': monthly_orders}
-    return render(request, 'cust_admin/statistics/monthly_report.html', context)
-
-from django.db.models import Sum
-
-def export_to_pdf(request, report_type):
+def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=None):
     template_path = 'cust_admin/statistics/pdf_template.html'
     context = {}
     
-    if report_type == 'daily':
-        today = timezone.now().date()
+    total_sum = 0
+    total_count = 0
+
+    if report_type == 'custom' and orders is not None:
+        context['orders'] = orders
+        context['start_date'] = start_date
+        context['end_date'] = end_date
+        total_sum = orders.aggregate(Sum('order_total'))['order_total__sum']
+        total_count = orders.count()
+    elif report_type == 'daily':
+        today = timezone.localdate()
         daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
         total_sum = daily_orders.aggregate(Sum('order_total'))['order_total__sum']
         total_count = daily_orders.count()
@@ -738,6 +733,9 @@ def export_to_pdf(request, report_type):
 
     context['total_sum'] = total_sum or 0
     context['total_count'] = total_count
+
+    # Debug: Print the context to check if orders are present
+    print(context)
     
     # Rendered template
     template = get_template(template_path)
@@ -753,9 +751,11 @@ def export_to_pdf(request, report_type):
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
 
-def export_to_excel(request, report_type):
-    if report_type == 'daily':
-        today = timezone.now().date()
+def export_to_excel(request, report_type, orders=None, start_date=None, end_date=None):
+    if report_type == 'custom' and orders is not None:
+        pass  # orders are already filtered
+    elif report_type == 'daily':
+        today = timezone.localdate()
         orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
     elif report_type == 'weekly':
         today = timezone.now().date()
@@ -778,8 +778,8 @@ def export_to_excel(request, report_type):
     df = pd.DataFrame(data)
     
     # Add aggregate rows
-    df.loc['Total'] = ['Total', '', '', df['Total'].sum(), '']
-    df.loc['Count'] = ['Count', '', '', len(orders), '']
+    df.loc['Total'] = ['Total', '', df['Total'].sum(), '']
+    df.loc['Count'] = ['Count', '', len(orders), '']
     
     # Create Excel file
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -787,6 +787,28 @@ def export_to_excel(request, report_type):
     df.to_excel(response, index=False)
     
     return response
+
+def daily_report(request):
+    today = timezone.localdate()
+    daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+    context = {'daily_orders': daily_orders}
+    return render(request, 'cust_admin/statistics/daily_report.html', context)
+
+def weekly_report(request):
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+    context = {'weekly_orders': weekly_orders}
+    return render(request, 'cust_admin/statistics/weekly_report.html', context)
+
+def monthly_report(request):
+    today = timezone.now().date()
+    start_of_month = today.replace(day=1)
+    end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
+    monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+    context = {'monthly_orders': monthly_orders}
+    return render(request, 'cust_admin/statistics/monthly_report.html', context)
 
 
 #=========================================== admin home bar and pie graphs =========================================================================================================

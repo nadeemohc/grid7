@@ -8,6 +8,7 @@ from django.contrib import messages
 from decimal import Decimal
 from django.db import IntegrityError
 import uuid, store, random, sweetify, logging, razorpay
+from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from . import views
 from django.db.models import Sum
@@ -297,6 +298,14 @@ def checkout(request):
     return render(request, 'user_cart/checkout.html', context)
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.conf import settings
+import razorpay
+# from .models import CartOrder, CartItem
+from django.utils import timezone
+from decimal import Decimal
+from django.contrib.auth.decorators import login_required
 
 @login_required
 def payment_method_selection(request, order_id):
@@ -327,24 +336,46 @@ def payment_method_selection(request, order_id):
 
     if request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
+        print(f'Selected payment method: {selected_payment_method}')  # Debug print statement
+        
         if selected_payment_method == 'COD':
+            print('Inside COD selection')
             order.status = 'Pending'
+            order.payment_method = selected_payment_method
             order.save()
             order.clear_cart()
             return redirect('cart:order_success', order_id=order.id)
         elif selected_payment_method == 'Razorpay':
+            print('Inside Razorpay selection')  # Debug print statement
             try:
+                client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+                print('Inside Razorpay client initialization')
+                
+                # Create a Razorpay order
                 razorpay_order = client.order.create({
-                    "amount": int(total_after_discount * 100),  # amount in paise
+                    "amount": int(total_after_discount * 100),  # Amount in paise
                     "currency": "INR",
                     "payment_capture": "1"
                 })
+                
+                # Log the Razorpay order creation details
+                print(f'Razorpay order created: {razorpay_order}')
+                
+                order.payment_method = selected_payment_method
                 order.razorpay_order_id = razorpay_order['id']
                 order.save()
-                return redirect('cart:razorpay_payment', order_id=order.id)
+                
+                # Verify if the order is saved with razorpay_order_id
+                saved_order = CartOrder.objects.get(id=order.id)
+                print(f'Saved Razorpay order ID: {saved_order.razorpay_order_id}')
+                
+                # Redirect to razorpay_payment view with order_id and razorpay_order_id
+                return redirect('cart:razorpay_payment', order_id=order.id, razorpay_order_id=order.razorpay_order_id)
+            
             except razorpay.errors.BadRequestError as e:
                 messages.error(request, "Failed to create Razorpay order. Please try again.")
                 return redirect('cart:payment_method_selection', order_id=order.id)
+        
         else:
             messages.error(request, "Invalid payment method selected.")
             return redirect('cart:payment_method_selection', order_id=order.id)
@@ -359,25 +390,62 @@ def payment_method_selection(request, order_id):
     }
     return render(request, 'user_cart/payment_method_selection.html', context)
 
-from django.views.decorators.csrf import csrf_exempt
-
 @csrf_exempt
-def razorpay_payment(request, order_id):
-    order = CartOrder.objects.get(id=order_id)
-    if request.method == "POST":
+def razorpay_payment(request, order_id, razorpay_order_id):
+    print("Entering razorpay_payment view")
+    order = get_object_or_404(CartOrder, id=order_id)
+
+    if request.method == 'POST':
+        print('Inside the if statement of POST')
         payment_id = request.POST.get('razorpay_payment_id')
-        if payment_id:
-            try:
-                # Verify the payment and update order status
-                client.payment.fetch(payment_id)
-                order.payment_id = payment_id
+        posted_razorpay_order_id = request.POST.get('razorpay_order_id')
+
+        print(f"Posted Razorpay order ID: {posted_razorpay_order_id}")
+        print(f"Expected Razorpay order ID: {razorpay_order_id}")
+
+        if not payment_id or posted_razorpay_order_id != razorpay_order_id:
+            print("Payment ID is missing or Order ID mismatch in POST data.")
+            return redirect('cart:payment_method_selection', order_id=order.id)
+
+        try:
+            # Verify the payment using Razorpay API
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            payment_response = client.payment.fetch(payment_id)
+
+            print(f"Fetched payment response: {payment_response}")
+            print(f"Razorpay order ID from response: {payment_response['order_id']}")
+
+            if payment_response['order_id'] != razorpay_order_id:
+                raise razorpay.errors.BadRequestError("Order ID mismatch")
+
+            if payment_response['status'] == 'captured':
+                payment = Payments.objects.create(
+                    user=request.user,
+                    payment_id=payment_id,
+                    payment_method='Razorpay',
+                    amount_paid=order.order_total,
+                    status='Completed'
+                )
+                order.payment = payment
                 order.status = 'Completed'
                 order.save()
+                order.clear_cart()
+                print('Razorpay payment complete')
                 return redirect('cart:order_success', order_id=order.id)
-            except Exception as e:
-                messages.error(request, "Payment verification failed. Please try again.")
+            else:
+                messages.error(request, "Payment verification failed. Payment status is not captured.")
                 return redirect('cart:payment_method_selection', order_id=order.id)
-    return redirect('cart:order_failure', order_id=order.id)
+
+        except razorpay.errors.BadRequestError as e:
+            logger.error(f'Razorpay Error: {e}')
+            messages.error(request, f"Payment verification failed. Please try again. Error: {str(e)}")
+            return redirect('cart:payment_method_selection', order_id=order.id)
+
+    return redirect('cart:payment_method_selection', order_id=order.id)
+
+
+
+
 
 
 @login_required

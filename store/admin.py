@@ -40,3 +40,5 @@ admin.site.register(Cart)
 admin.site.register(CartOrder)
 
 admin.site.register(ProductOrder)
+
+# admin.site.register(Payments)

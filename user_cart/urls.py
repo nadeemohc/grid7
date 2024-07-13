@@ -14,5 +14,5 @@ urlpatterns = [
     path('order_success/<int:order_id>/', views.order_success, name='order_success'),
     path('select_payment_method/<int:order_id>/', views.payment_method_selection, name='payment_method_selection'),
     path('order_confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
-
+    path('razorpay_payment/<int:order_id>/<str:razorpay_order_id>/', views.razorpay_payment, name='razorpay_payment'),
 ]

@@ -1,5 +1,6 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
+
 {% block content %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <main class="main">
@@ -76,7 +77,7 @@
                                         <td class="image product-thumbnail"><img src="{{ item.product.product.image.url }}" alt="#"></td>
                                         <td><h5><a href="shop-product-full.html">{{ item.product.product.title }}</a></h5></td>
                                         <td>{{ item.quantity }}</td>
-                                        <td>₹{{ item.total_price }}</td> <!-- Updated to show the total price per item -->
+                                        <td>₹{{ item.total_price }}</td>
                                     </tr>
                                     {% endfor %}
                                     <tr>
@@ -85,7 +86,7 @@
                                     </tr>
                                     <tr>
                                         <td class="cart_total_label">Discount</td>
-                                        <td colspan="2" class="cart_total_amount"> ₹{{ discounts }}</td>
+                                        <td colspan="2" class="cart_total_amount">₹{{ discounts }}</td>
                                     </tr>
                                     <tr>
                                         <td class="cart_total_label">Total After Discount</td>
@@ -95,34 +96,43 @@
                             </table>
                         </div>
                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                        <h4>Select Payment Method</h4>
-                        <form method="post" action="{% url 'cart:payment_method_selection' order.id %}" id="payment-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="order_id" value="{{ order.id }}">
-                            <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="cod" value="COD" checked>
-                                <label class="form-check-label" for="cod">
-                                    Cash on Delivery
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="razorpay" value="Razorpay">
-                                <label class="form-check-label" for="razorpay">
-                                    Razorpay
-                                </label>
-                            </div>
-                            <button type="submit" class="btn btn-primary mt-3" id="pay-button">Proceed</button>
-                        </form>
                         {% if messages %}
-                            <div class="messages">
-                                <ul class="messages">
-                                    {% for message in messages %}
-                                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                                    {% endfor %}
-                                </ul>
+                        <div class="messages">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
                             </div>
+                            {% endfor %}
+                        </div>
                         {% endif %}
+                        <!-- Payment Method Selection Form -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <form id="cod-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="COD">
+                                    <button type="submit" class="btn btn-primary btn-block">Cash on Delivery</button>
+                                </form>
+                             </div>
+                             <div class="col-md-4 mb-3">
+                                <form id="wallet-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="Wallet">
+                                    <button type="submit" class="btn btn-primary btn-block">Wallet</button>
+                                </form>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <form id="razorpay-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="Razorpay">
+                                    <input type="hidden" name="razorpay_order_id" value="{{ order.razorpay_order_id }}">
+                                    <button id="razorpay-button" type="submit" class="btn btn-primary btn-block">Razorpay</button>
+                                </form>
+                                
+                                
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -131,34 +141,32 @@
 </main>
 
 <script>
-    document.getElementById('pay-button').addEventListener('click', function(e) {
-        var paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        if (paymentMethod === 'Razorpay') {
-            e.preventDefault();
-            var options = {
-                "key": "{{ razorpay_key_id }}", // Enter the Key ID generated from the Dashboard
-                "amount": "{{ total_after_discount|floatformat:0|add:'0.00' }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-                "currency": "INR",
-                "name": "Your Company Name",
-                "description": "Test Transaction",
-                "image": "https://example.com/your_logo",
-                "order_id": "{{ razorpay_order_id }}", // This is a sample Order ID. Pass the `id` obtained in the previous step
-                "handler": function (response){
-                    document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
-                    document.getElementById('payment-form').submit();
-                },
-                "prefill": {
-                    "name": "{{ order.user.username }}",
-                    "email": "{{ order.user.email }}",
-                    "contact": "{{ order.user.phone }}"
-                },
-                "theme": {
-                    "color": "#3399cc"
-                }
-            };
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
+document.getElementById('razorpay-button').addEventListener('click', function(e) {
+    e.preventDefault();
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": "{{ total_after_discount|floatformat:0|add:'00.0' }}",
+        "currency": "INR",
+        "name": "GRID 7",
+        "description": "Order Payment",
+        "image": "{% static 'store/imgs/theme/logo.png' %}",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response){
+            var razorpayForm = document.getElementById('razorpay-form');
+            razorpayForm.innerHTML += '<input type="hidden" name="razorpay_payment_id" value="' + response.razorpay_payment_id + '">';
+            razorpayForm.submit();
+        },
+        "prefill": {
+            "name": "{{ order.user.username }}",
+            "email": "{{ order.user.email }}",
+            "contact": "{{ order.user.phone }}"
+        },
+        "theme": {
+            "color": "#3399cc"
         }
-    });
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+});
 </script>
 {% endblock %}

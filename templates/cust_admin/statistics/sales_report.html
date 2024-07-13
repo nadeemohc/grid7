@@ -7,9 +7,8 @@
             <h2 class="content-title card-title">Sales Report </h2>
         </div>
         <div>
-            <button type="submit" name="export_pdf" class="btn btn-primary">Export to PDF</button>
-            <button type="submit" name="export_excel" class="btn btn-primary">Export to Excel</button>
-        </div>
+            <a href="{% url 'cust_admin:export_pdf' 'custom' %}" class="btn btn-primary">Export to PDF</a>
+            <a href="{% url 'cust_admin:export_excel' 'custom' %}" class="btn btn-primary">Export to Excel</a>        </div>
     </div>
     <div class="card mb-4">
         <header class="card-header">
