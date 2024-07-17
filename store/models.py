@@ -146,6 +146,7 @@ class CartItem(models.Model):
     quantity = models.PositiveBigIntegerField(default=1)
     is_deleted = models.BooleanField(default=False)
     size = models.CharField(max_length=10, blank=True, null=True)
+    
 
     def product_image(self):
         first_image = self.product.p._images.first()

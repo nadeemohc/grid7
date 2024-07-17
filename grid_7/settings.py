@@ -228,8 +228,8 @@ LOGOUT_URL = 'accounts:logout'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
 
-RAZORPAY_KEY_ID = 'rzp_test_TFXJczUeSyoF49'
-RAZORPAY_KEY_SECRET = 'B5yxLGdv6KQ6gr7bbsNEwFYq'
+RAZORPAY_KEY_ID = 'rzp_test_FiQnzhxijIl6oI'
+RAZORPAY_KEY_SECRET = 'DdfkNltUp1F7nee6QDuCkS'
 
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"

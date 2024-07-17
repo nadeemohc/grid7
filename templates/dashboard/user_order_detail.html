@@ -1,5 +1,6 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block content %}
 
 <style>
@@ -35,7 +36,6 @@
         border-radius: 5px;
     }
 </style>
-
 
 <div class="container order-container">
     <!-- <div class="order-header">
@@ -79,15 +79,11 @@
             <tr>
                 <td>{{ item.product.title }}</td>
                 <td>{{ item.quantity }}</td>
-                <td>₹{{ item.product_price }}</td>
+                <td>₹{{ item.quantity|multiply:item.product_price|floatformat:2 }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
-            <!-- <tr>
-                <th colspan="2">Sub Total Price:</th>
-                <td>₹{{ order.sub_total }}</td>
-            </tr> -->
             {% if order.coupon %}
             <tr>
                 <th colspan="2">Discount Price:</th>
@@ -104,7 +100,7 @@
     <div class="button-container">
         <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
         
-        {% if order.status == Cancelled %}
+        {% if order.status == 'Cancelled' %}
         <a href="{% url 'store:order_cancel' order.id %}" class="cancel-order-btn">Cancel Order</a>
         {% else %}
         
