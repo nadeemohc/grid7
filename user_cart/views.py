@@ -307,90 +307,6 @@ from django.utils import timezone
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 
-# @login_required
-# def payment_method_selection(request, order_id):
-#     try:
-#         order = CartOrder.objects.get(id=order_id, user=request.user)
-#     except CartOrder.DoesNotExist:
-#         messages.error(request, "Order does not exist.")
-#         return redirect('cart:checkout')
-
-#     items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
-    
-#     total_cart_price = Decimal(0)
-#     for item in items:
-#         item.total_price = item.product.price * item.quantity
-#         total_cart_price += item.total_price
-
-#     applied_coupon_id = request.session.get('applied_coupon_id')
-#     discounts = Decimal(0)
-#     if applied_coupon_id:
-#         try:
-#             applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
-#                                                 active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
-#             discounts = (total_cart_price * applied_coupon.discount) / 100
-#         except Coupon.DoesNotExist:
-#             request.session.pop('applied_coupon_id', None)
-
-#     total_after_discount = total_cart_price - discounts
-
-#     if request.method == 'POST':
-#         selected_payment_method = request.POST.get('payment_method')
-#         print(f'Selected payment method: {selected_payment_method}')  # Debug print statement
-        
-#         if selected_payment_method == 'COD':
-#             print('Inside COD selection')
-#             order.status = 'Pending'
-#             order.payment_method = selected_payment_method
-#             order.save()
-#             order.clear_cart()
-#             return redirect('cart:order_success', order_id=order.id)
-#         elif selected_payment_method == 'Razorpay':
-#             print('Inside Razorpay selection')  # Debug print statement
-#             try:
-#                 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-#                 print('Inside Razorpay client initialization')
-                
-#                 # Create a Razorpay order
-#                 razorpay_order = client.order.create({
-#                     "amount": int(total_after_discount * 100),  # Amount in paise
-#                     "currency": "INR",
-#                     "payment_capture": "1"
-#                 })
-                
-#                 # Log the Razorpay order creation details
-#                 print(f'Razorpay order created: {razorpay_order}')
-                
-#                 order.payment_method = selected_payment_method
-#                 order.razorpay_order_id = razorpay_order['id']
-#                 order.save()
-                
-#                 # Verify if the order is saved with razorpay_order_id
-#                 saved_order = CartOrder.objects.get(id=order.id)
-#                 print(f'Saved Razorpay order ID: {saved_order.razorpay_order_id}')
-                
-#                 # Redirect to razorpay_payment view with order_id and razorpay_order_id
-#                 return redirect('cart:razorpay_payment', order_id=order.id, razorpay_order_id=order.razorpay_order_id)
-            
-#             except razorpay.errors.BadRequestError as e:
-#                 messages.error(request, "Failed to create Razorpay order. Please try again.")
-#                 return redirect('cart:payment_method_selection', order_id=order.id)
-        
-#         else:
-#             messages.error(request, "Invalid payment method selected.")
-#             return redirect('cart:payment_method_selection', order_id=order.id)
-
-#     context = {
-#         'order': order,
-#         'items': items,
-#         'total_cart_price': total_cart_price,
-#         'discounts': discounts,
-#         'total_after_discount': total_after_discount,
-#         'razorpay_key_id': settings.RAZORPAY_KEY_ID,  # Pass the Razorpay key ID to the template
-#     }
-#     return render(request, 'user_cart/payment_method_selection.html', context)
-
-
 @login_required
 def payment_method_selection(request, order_id):
     try:
@@ -427,43 +343,49 @@ def payment_method_selection(request, order_id):
             order.status = 'Pending'
             order.payment_method = selected_payment_method
             order.save()
-            create_product_orders(order)
-            return redirect('cart:order_success', order_id=order.id)
-
-        elif selected_payment_method == 'Razorpay':
-            print('Inside Razorpay selection')  # Debug print statement
-            try:
-                client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-                print('Inside Razorpay client initialization')
-                
-                # Create a Razorpay order
-                razorpay_order = client.order.create({
-                    "amount": int(total_after_discount * 100),  # Amount in paise
-                    "currency": "INR",
-                    "payment_capture": "1"
-                })
-                
-                # Log the Razorpay order creation details
-                print(f'Razorpay order created: {razorpay_order}')
-                
+            order.clear_cart()
+            return redirect('cart:order_success', order.id)
+        
+        elif selected_payment_method == 'Wallet':
+            print('Inside Wallet selection')
+            if request.user.wallet_balance >= total_after_discount:
+                request.user.wallet_balance -= total_after_discount
+                request.user.save()
+                order.status = 'Pending'
                 order.payment_method = selected_payment_method
-                order.razorpay_order_id = razorpay_order['id']
                 order.save()
-                
-                # Verify if the order is saved with razorpay_order_id
-                saved_order = CartOrder.objects.get(id=order.id)
-                print(f'Saved Razorpay order ID: {saved_order.razorpay_order_id}')
-                
-                # Redirect to razorpay_payment view with order_id and razorpay_order_id
-                return redirect('cart:razorpay_payment', order_id=order.id, razorpay_order_id=order.razorpay_order_id)
-            
-            except razorpay.errors.BadRequestError as e:
-                messages.error(request, "Failed to create Razorpay order. Please try again.")
-                return redirect('cart:payment_method_selection', order_id=order.id)
+                order.clear_cart()
+                return redirect('cart:order_success', order.id)
+            else:
+                messages.error(request, 'Insufficient wallet balance.')
+        
+        elif selected_payment_method == 'Razorpay':
+            print('Inside Razorpay selection')
+            razorpay_payment_id = request.POST.get('razorpay_payment_id')
+            print(f'payment id: {razorpay_payment_id}')
+            if not razorpay_payment_id:
+                messages.error(request, 'Payment failed. Please try again.')
+                return redirect('cart:payment_method_selection', order.id)
+            order.status = 'Completed'
+            order.payment_method = selected_payment_method
+            order.razorpay_payment_id = razorpay_payment_id
+            order.save()
+            order.clear_cart()
+            return redirect('cart:order_success', order.id)
         
         else:
-            messages.error(request, "Invalid payment method selected.")
-            return redirect('cart:payment_method_selection', order_id=order.id)
+            messages.error(request, 'Invalid payment method selected.')
+            return redirect('cart:payment_method_selection', order.id)
+
+    # Razorpay Order Creation
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    data = {
+        "amount": int(total_after_discount * 100),  # amount in paise
+        "currency": "INR",
+        "payment_capture": 1,
+    }
+    razorpay_order = client.order.create(data=data)
+    razorpay_order_id = razorpay_order['id']
 
     context = {
         'order': order,
@@ -471,73 +393,13 @@ def payment_method_selection(request, order_id):
         'total_cart_price': total_cart_price,
         'discounts': discounts,
         'total_after_discount': total_after_discount,
-        'razorpay_key_id': settings.RAZORPAY_KEY_ID,  # Pass the Razorpay key ID to the template
+        'razorpay_order_id': razorpay_order_id,
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,
     }
+
     return render(request, 'user_cart/payment_method_selection.html', context)
 
 
-
-@csrf_exempt
-def razorpay_payment(request, order_id, razorpay_order_id):
-    print("Entering razorpay_payment view")
-    order = get_object_or_404(CartOrder, id=order_id)
-
-    payment_id = request.GET.get('payment_id')
-    print('payment_id', payment_id)
-    posted_razorpay_order_id = request.POST.get('razorpay_order_id')  # Changed from GET to POST
-
-    print(f"Posted Razorpay order ID: {posted_razorpay_order_id}")
-    print(f"Expected Razorpay order ID: {razorpay_order_id}")
-    print('razorpay 1', settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-
-    try:
-        # Verify the payment using Razorpay API
-        print('razorpay 2', settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        print('client', client)
-        payment_response = client.payment.fetch(payment_id)
-        print('payment id', payment_id)
-        print('response', payment_response)
-        print(f"Payment ID from response: {payment_response['order_id']}")
-
-        if payment_response['status'] == 'captured':
-            payment = Payments.objects.create(
-                user=request.user,
-                payment_id=payment_id,
-                payment_method='Razorpay',
-                amount_paid=order.order_total,
-                status='Completed'
-            )
-            order.payment = payment
-            order.status = 'Completed'
-            order.save()
-            create_product_orders(order)
-            print('Razorpay payment complete')
-            return redirect('cart:order_success', order_id=order.id)
-        else:
-            messages.error(request, "Payment verification failed. Payment status is not captured.")
-            return redirect('cart:payment_method_selection', order_id=order.id)
-
-    except razorpay.errors.BadRequestError as e:
-        logger.error(f'Razorpay Error: {e}')
-        messages.error(request, f"Payment verification failed. Please try again. Error: {str(e)}")
-        return redirect('cart:payment_method_selection', order_id=order.id)
-
-    return redirect('cart:payment_method_selection', order_id=order.id)
-
-def create_product_orders(order):
-    cart = Cart.objects.get(user=order.user)
-    for item in cart.items.all():
-        ProductOrder.objects.create(
-            order=order,
-            user=order.user,
-            product=item.product.product,
-            quantity=item.quantity,
-            product_price=item.product.price,
-            ordered=True,
-            variations=item.product
-        )
-    cart.items.all().delete()
 
 
 @login_required

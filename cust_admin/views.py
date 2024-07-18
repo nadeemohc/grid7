@@ -666,6 +666,9 @@ from datetime import datetime, timedelta
 from django.db.models import Sum
 import pandas as pd
 
+from django.utils import timezone
+from datetime import datetime
+
 def sales_report(request):
     start_date_value = ""
     end_date_value = ""
@@ -678,8 +681,8 @@ def sales_report(request):
         end_date_value = end_date
 
         if start_date and end_date:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+            end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'))
             orders = CartOrder.objects.filter(created_at__range=(start_date, end_date), status='Delivered').order_by('created_at')
 
         if 'export_pdf' in request.POST:
@@ -695,10 +698,19 @@ def sales_report(request):
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
 
+
+
+from django.template.loader import get_template
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.db.models import Sum
+
 def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=None):
     template_path = 'cust_admin/statistics/pdf_template.html'
     context = {}
-    
+
     total_sum = 0
     total_count = 0
 
@@ -735,22 +747,23 @@ def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=N
     context['total_count'] = total_count
 
     # Debug: Print the context to check if orders are present
-    print(context)
-    
+    print("Context for PDF:", context)
+
     # Rendered template
     template = get_template(template_path)
     html = template.render(context)
-    
+
     # Create a PDF response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{report_type}_report.pdf"'
     pisa_status = pisa.CreatePDF(html, dest=response)
-    
+
     # Return PDF file
     if pisa_status.err:
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
 
+    
 def export_to_excel(request, report_type, orders=None, start_date=None, end_date=None):
     if report_type == 'custom' and orders is not None:
         pass  # orders are already filtered

@@ -113,8 +113,8 @@
                                     <input type="hidden" name="payment_method" value="COD">
                                     <button type="submit" class="btn btn-primary btn-block">Cash on Delivery</button>
                                 </form>
-                             </div>
-                             <div class="col-md-4 mb-3">
+                            </div>
+                            <div class="col-md-4 mb-3">
                                 <form id="wallet-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="payment_method" value="Wallet">
@@ -125,11 +125,9 @@
                                 <form id="razorpay-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="payment_method" value="Razorpay">
-                                    <input type="hidden" name="razorpay_order_id" value="{{ order.razorpay_order_id }}">
-                                    <button id="razorpay-button" type="submit" class="btn btn-primary btn-block">Razorpay</button>
+                                    <input type="hidden" name="razorpay_order_id" value="{{ razorpay_order_id }}">
+                                    <button id="rzp-button1" type="button" class="btn btn-primary btn-block">Razorpay</button>
                                 </form>
-                                
-                                
                             </div>
                         </div>
                         
@@ -141,32 +139,36 @@
 </main>
 
 <script>
-document.getElementById('razorpay-button').addEventListener('click', function(e) {
-    e.preventDefault();
-    var options = {
-        "key": "{{ razorpay_key_id }}",
-        "amount": "{{ total_after_discount|floatformat:0|add:'00.0' }}",
-        "currency": "INR",
-        "name": "GRID 7",
-        "description": "Order Payment",
-        "image": "{% static 'store/imgs/theme/logo.png' %}",
-        "order_id": "{{ razorpay_order_id }}",
-        "handler": function (response){
-            var razorpayForm = document.getElementById('razorpay-form');
-            razorpayForm.innerHTML += '<input type="hidden" name="razorpay_payment_id" value="' + response.razorpay_payment_id + '">';
-            razorpayForm.submit();
-        },
-        "prefill": {
-            "name": "{{ order.user.username }}",
-            "email": "{{ order.user.email }}",
-            "contact": "{{ order.user.phone }}"
-        },
-        "theme": {
-            "color": "#3399cc"
-        }
-    };
-    var rzp1 = new Razorpay(options);
+var options = {
+    "key": "{{ razorpay_key_id }}", // Enter the Key ID generated from the Dashboard
+    "amount": "{{ total_after_discount|floatformat:0|add:'00.0' }}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+    "currency": "INR",
+    "name": "GRID7", //your business name
+    "description": "Order Payment",
+    "image": "{% static 'store/imgs/theme/logo.png' %}",
+    "order_id": "{{ razorpay_order_id }}", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+    "handler": function (response){
+        var razorpayForm = document.getElementById('razorpay-form');
+        razorpayForm.innerHTML += '<input type="hidden" name="razorpay_payment_id" value="' + response.razorpay_payment_id + '">';
+        razorpayForm.submit();
+    },
+    "prefill": { 
+        "name": "{{ order.user.username }}",
+        "email": "{{ order.user.email }}",
+        "contact": "{{ order.user.phone }}"
+    },
+    "notes": {
+        "address": "Razorpay Corporate Office"
+    },
+    "theme": {
+        "color": "#3399cc"
+    }
+};
+var rzp1 = new Razorpay(options);
+document.getElementById('rzp-button1').onclick = function(e){
     rzp1.open();
-});
+    e.preventDefault();
+}
 </script>
+
 {% endblock %}

@@ -206,6 +206,7 @@ class CartOrder(models.Model):
     # Add these fields for Razorpay integration
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, default='Pending')
 
     class Meta:
         verbose_name_plural = "Cart Orders"
