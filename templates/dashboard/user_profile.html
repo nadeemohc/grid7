@@ -27,7 +27,7 @@
                                         <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false"><i class="fi-rs-shopping-bag mr-10"></i>Orders</a>
                                     </li>
                                     <li class="nav-item">
-                                        <!-- <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#track-orders" role="tab" aria-controls="track-orders" aria-selected="false"><i class="fi-rs-shopping-cart-check mr-10"></i>Track Your Order</a> -->
+                                        <a class="nav-link" id="wallet-tab" data-bs-toggle="tab" href="#wallet" role="tab" aria-controls="wallet" aria-selected="false"><i class="fa fa-credit-card mr-10"></i>Wallet</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#address" role="tab" aria-controls="address" aria-selected="true"><i class="fi-rs-marker mr-10"></i>My Address</a>
@@ -83,6 +83,132 @@
                                           </div>
                                       </div>
                                   </div>
+
+                                  <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Wallet</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>User</th>
+                                                            <th>Balance (₹)</th>
+                                                            <!-- <th>Active Date</th>
+                                                            <th>Expiry Date</th> -->
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for wal in wallet %}
+                                                        <tr>
+                                                            <td>{{ wal.user.username }}</td>
+                                                            <td>{{ wal.balance }}</td>
+                                                            <!-- <td>{{ coupon.active_date }}</td>
+                                                            <td>{{ coupon.expiry_date }}</td> -->
+                                                        </tr>
+                                                        {% empty %}
+                                                        <tr>
+                                                            <td colspan="4">Your Wallet is empty</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Cancelled orders</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Order Id</th>
+                                                            <th>Products</th>
+                                                            <th>Total Price</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for order in orders %}
+                                                        {% if order.status == 'Cancelled' %}
+                                                        <tr>
+                                                            <td>{{ order.id }}</td>
+                                                            <td>
+                                                                <ul>
+                                                                    {% for item in order.items.all %}
+                                                                    <li>{{ item.product.title }}</li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </td>
+                                                            <td>{{ order.order_total }}</td>
+                                                            <td>
+                                                                <a href="{% url 'store:user_order_detail' order.id %}" class="btn btn-small d-block">View</a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                    {% empty %}
+                                                    <tr>
+                                                        <td colspan="4">There's no Orders Cancelled</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Returned Orders</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Order Id</th>
+                                                            <th>Products</th>
+                                                            <th>Total Price</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for order in orders %}
+                                                        {% if order.status == 'Return' %}
+                                                        <tr>
+                                                            <td>{{ order.id }}</td>
+                                                            <td>
+                                                                <ul>
+                                                                    {% for item in order.items.all %}
+                                                                    <li>{{ item.product.title }}</li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </td>
+                                                            <td>{{ order.order_total }}</td>
+                                                            <td>
+                                                                <a href="{% url 'store:user_order_detail' order.id %}" class="btn btn-small d-block">View</a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                    {% empty %}
+                                                    <tr>
+                                                        <td colspan="4">There's no Orders Returned</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
                                   <div class="tab-pane fade" id="coupon" role="tabpanel" aria-labelledby="coupon-tab">
                                     <div class="card">
                                         <div class="card-header">

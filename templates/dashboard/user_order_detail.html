@@ -60,6 +60,10 @@
             <td>₹{{ order.order_total }}</td>
         </tr>
         <tr>
+            <th>Payment Method</th>
+            <td>{{ order.payment_method }}</td>
+        </tr>
+        <tr>
             <th>Order Status</th>
             <td>{{ order.status }}</td>
         </tr>
@@ -100,7 +104,9 @@
     <div class="button-container">
         <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
         
-        {% if order.status == 'Cancelled' %}
+        {% if order.status == 'Delivered' %}
+        <a href="{% url 'store:order_return' order.id %}" class="cancel-order-btn">Return Order</a>
+        {% elif order.status != 'Cancelled' and order.status != 'Return' %}
         <a href="{% url 'store:order_cancel' order.id %}" class="cancel-order-btn">Cancel Order</a>
         {% else %}
         

@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, Http
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from .models import Coupon
+from decimal import Decimal
 from accounts.models import User, Address
 from django.db.models import Sum, Min, Max
 from django.core.mail import send_mail
@@ -194,7 +195,7 @@ def user_profile(request):
     address = Address.objects.filter(user=user)
     orders = CartOrder.objects.filter(user=user).order_by('-id')
     today = timezone.now().date()
-    # coupons = Coupon.objects.filter(active=True, active_date__lte=today, expiry_date__gte=today)
+    wallet = Wallet.objects.filter(user=user)
     coupons = Coupon.objects.all()
     print('coupons=', coupons)
     context = {
@@ -202,6 +203,7 @@ def user_profile(request):
         'address':address,
         'orders': orders,
         'title': 'User Profile',
+        'wallet': wallet,
         'coupons': coupons
     }
 
@@ -431,19 +433,36 @@ def shop(request, category_id=None):
 
 
 
-
-
-
-
+@login_required
 def order_cancel(request, order_id):
-    print('inside cancel')
-    order = get_object_or_404(CartOrder, id=order_id)
-    order.status = 'Cancelled'
-    bv = order.status
-    order.save()
-    print(bv)
-    sweetify.toast(request, 'Order status updated successfully.', timer=3000, icon='success')
-    return redirect('store:user_order_detail', order_id = order_id)
+    order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+    if order.status != 'Cancelled':
+        if order.payment_method == 'Razorpay':
+            # Logic for Razorpay refund to wallet
+            wallet, created = Wallet.objects.get_or_create(user=request.user)
+            wallet.balance += Decimal(order.order_total)
+            wallet.save()
+        order.status = 'Cancelled'
+        order.save()
+        sweetify.toast(request, 'Your order has been cancelled and amount refunded to your wallet.',icon='success', timer=3000)
+    else:
+        sweetify.toast(request, 'Your order is already cancelled.',icon='warning', timer=3000)
+    return redirect('store:user_order_detail', order_id=order.id)
+
+@login_required
+def order_return(request, order_id):
+    order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+    if order.status == 'Delivered':
+        # Logic for refund to wallet for all payment methods
+        wallet, created = Wallet.objects.get_or_create(user=request.user)
+        wallet.balance += Decimal(order.order_total)
+        wallet.save()
+        order.status = 'Return'
+        order.save()
+        sweetify.toast(request, 'Your order has been marked for return and amount refunded to your wallet.',icon='success', timer=3000)
+    else:
+        sweetify.toast(request, 'Your order is not eligible for return.',icon='warning', timer=3000)
+    return redirect('store:user_order_detail', order_id=order.id)
 
 
 

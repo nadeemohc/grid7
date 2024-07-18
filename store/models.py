@@ -157,24 +157,6 @@ class CartItem(models.Model):
     def __str__(self):
         return f'{self.quantity} x {self.product} in {self.cart}'
 
-# class Payments(models.Model):
-#     payment_choices=(
-#         ('COD','COD'),
-#         ('Razorpay','Razorpay'),
-#         ('Wallet','Wallet'),
-#     )
-
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     payment_id = models.CharField(max_length=100)
-#     payment_method = models.CharField(max_length=100,choices=payment_choices)
-#     amount_paid = models.CharField(max_length=100)
-#     status = models.CharField(max_length=100)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return self.user.first_name
-
-
 class CartOrder(models.Model):
     STATUS = (
         ('New', 'New'),
@@ -283,3 +265,13 @@ class CategoryOffer(models.Model):
     def __str__(self):
         return f"{self.category} - {self.discount_percentage}% Off"
 
+class Wallet(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, default=0.00, decimal_places=2)
+
+    class Meta:
+        verbose_name_plural='Wallet'
+
+    def __str__(self):
+        return self.user.email
+        
