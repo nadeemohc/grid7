@@ -45,30 +45,18 @@
                                         <div class="pro-details-brand">
                                             <span> Brands: <a href="shop-grid-right.html">{{ product.category }}</a></span>
                                         </div>
-                                        <div class="product-rate-cover text-end">
-                                            <div class="product-rate d-inline-block">
-                                                <div class="product-rating" style="width:90%">
-                                                </div>
-                                            </div>
-                                            <span class="font-small ml-5 text-muted"> (25 reviews)</span>
-                                        </div>
                                     </div>
                                     <div class="product-price primary-color float-left">
                                         <!-- Display the current price -->
                                         <div class="product-price primary-color float-left">
-                                            <!-- Display the product price here -->
-                                            <ins><span id="product-price">₹{{ product_attributes.first.price }}</span></ins>
+                                            <ins><span id="product-price">₹{{ product_attributes.0.price }}</span></ins>
                                         </div>
                                         
                                         <!-- Check if the product has an old price -->
-                                        {% if product_attributes.first.old_price %}
+                                        {% if product_attributes.0.old_price %}
                                             <!-- Display the old price -->
-                                            <ins><span class="old-price font-md ml-15">₹{{ product_attributes.first.old_price }}</span></ins>
-                                            
-                                            <!-- Hardcoded discount percentage -->
-                                            <span class="save-price font-md color3 ml-15">25% Off</span>
+                                            <ins><span class="old-price font-md ml-15">₹{{ product_attributes.0.old_price }}</span></ins>
                                         {% endif %}
-                                    </div>
                                     </div>
                                     <div class="bt-1 border-color-1 mt-15 mb-15"></div>
                                     <div class="short-desc mb-30">
@@ -81,7 +69,6 @@
                                             <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
                                         </ul>
                                     </div>
-                                   
                                    
                                     <form id="add-to-cart-form" action="{% url 'cart:add_to_cart' %}" method="post">
                                         {% csrf_token %}
@@ -97,7 +84,7 @@
                                                 {% endif %}
                                                 {% endfor %}
                                             </div>
-                                            <input type="hidden" name="selected_size" id="selected-size" value="{{ product_attributes.first.size }}">
+                                            <input type="hidden" name="selected_size" id="selected-size" value="{{ product_attributes.0.size }}">
                                         </div><br>
                                         
                                         <div class="quantity">
@@ -105,32 +92,31 @@
                                             <input type="number" name="quantity" id="quantity" value="1" min="1" style="width: 70px;">
                                         </div><br>
                                         <div class="product-extra-link2">
-                                        <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
-                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
+                                            <button type="submit" id="add-cart" class="button button-add-to-cart">Add to cart</button>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                         </div>
                                     </form>
-                                    
                                     
                                     <style>
                                         .size-button {
                                             background-color: transparent;
-                                            border: 1px solid #ccc; /* Border color */
-                                            color: #333; /* Text color */
-                                            padding: 2px 10px; /* Padding */
-                                            margin-right: 10px; /* Margin between buttons */
+                                            border: 1px solid #ccc;
+                                            color: #333;
+                                            padding: 2px 10px;
+                                            margin-right: 10px;
                                             cursor: pointer;
-                                            transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition */
-                                            font-size: 13px; /* Adjust the text size */
+                                            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+                                            font-size: 13px;
                                         }
 
                                         .size-button:hover {
-                                            background-color: #f2f2f2; /* Background color on hover */
+                                            background-color: #f2f2f2;
                                         }
 
                                         .size-button.selected {
-                                            background-color: #088178; /* Background color for selected state */
-                                            color: white; /* Text color for selected state */
-                                            border-color: #088178; /* Border color for selected state */
+                                            background-color: #088178;
+                                            color: white;
+                                            border-color: #088178;
                                         }
                                     </style>
                                     
@@ -164,79 +150,30 @@
                                             });
                                         });
                                     </script>
-                                    
-                                
-                                    
-                                    </div>
-                                    <ul class="product-meta font-xs color-grey mt-50">
-                                        <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
-                                        <li class="mb-5">Tags: <a href="#" rel="tag">{{ product.category }}</a>, <a href="#" rel="tag">{{ product.sub_category }}</a>, <a href="#" rel="tag">{{ product.title | truncatechars:10}}</a> </li>
-                                        <li>Availability:<span class="in-stock text-success ml-5">{{ prod_count }} Items In Stock</span></li>
-                                    </ul>
                                 </div>
-                                <!-- Detail Info -->
+                                
+                                <ul class="product-meta font-xs color-grey mt-50">
+                                    <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
+                                    <li class="mb-5">Tags: <a href="#" rel="tag">{{ product.category }}</a>, <a href="#" rel="tag">{{ product.sub_category }}</a>, <a href="#" rel="tag">{{ product.title|truncatechars:10 }}</a></li>
+                                </ul>
                             </div>
                         </div>
+                        
                         <div class="row">
                             <div class="col-lg-10 m-auto entry-main-content">
                                 <h2 class="section-title style-1 mb-30">Description</h2>
                                 <div class="description mb-50">
                                     <p>{{product.description}}</p>
-                                    <!-- <h3 class="section-title style-1 mt-40 mb-30">Packaging & Delivery</h3>
-                                    <p>{{product.shipping}}</p> -->
                                 </div>
                                 <h3 class="section-title style-1 mt-40 mb-30">Additional info</h3>
                                 <ul class="product-more-infor">
-                                    {% for line  in specifications_lines %}
+                                    {% for line in specifications_lines %}
                                     <li><span>{{ line }}</span></li>
                                     {% endfor %}
                                 </ul>
-                                
-                                <div class="social-icons single-share mt-40">
-                                    <ul class="text-grey-5 d-inline-block">
-                                        <li><strong class="mr-10">Share this:</strong></li>
-                                        <li class="social-facebook"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-facebook.svg' %}" alt=""></a></li>
-                                        <li class="social-twitter"> <a href="#"><img src="{% static 'store/imgs/theme/icons/icon-twitter.svg' %}" alt=""></a></li>
-                                        <li class="social-instagram"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-instagram.svg' %}" alt=""></a></li>
-                                        <li class="social-linkedin"><a href="#"><img src="{% static 'store/imgs/theme/icons/icon-pinterest.svg' %}" alt=""></a></li>
-                                    </ul>
-                                </div>
                             </div>
-                        </div>
-                    </div>
                 </div>
-        </section>
-
-        <script>
-            document.querySelectorAll('.size-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove the 'selected' class from all buttons
-                    document.querySelectorAll('.size-button').forEach(btn => {
-                        btn.classList.remove('selected');
-                    });
-
-                    // Add the 'selected' class to the clicked button
-                    button.classList.add('selected');
-
-                    // Get the selected size ID
-                    const sizeId = button.dataset.sizeId;
-
-                    // Update the hidden input field with the selected size ID
-                    document.getElementById('selected-size').value = sizeId;
-
-                    // Make an AJAX request to fetch the price for the selected size
-                    fetch(`/get_price/${sizeId}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            // Update the displayed price with the fetched price
-                            document.getElementById('product-price').innerText = `₹${data.price}`;
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
-                });
-            });
-
-        </script>
-
+            </div>
+        </div>
+    </section>
 {% endblock content %}

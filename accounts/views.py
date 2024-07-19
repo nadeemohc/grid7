@@ -7,21 +7,24 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from .forms import SignUpForm
 from .models import User
+from store.models import Wallet
 
 
 
+# accounts/views.py
 def perform_signup(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get("username")
             email = form.cleaned_data.get("email")
-            phone_number = request.POST.get("phone_number")
+            phone_number = request.POST.get("phone_number", "")  # Default to empty string if not provided
             password1 = form.cleaned_data["password1"]
             password2 = form.cleaned_data["password2"]
             encryptedpassword = make_password(form.cleaned_data.get("password1"))
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
+            referral_code = request.POST.get("referral_code")
 
             try:
                 user_with_email = User.objects.get(email=email)
@@ -34,6 +37,7 @@ def perform_signup(request):
                 sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
                 return redirect("accounts:perform_signup")
 
+            # Create the new user
             user = User.objects.create(
                 username=username,
                 email=email,
@@ -42,6 +46,26 @@ def perform_signup(request):
                 first_name=first_name,
                 last_name=last_name,
             )
+
+            # Process the referral code
+            if referral_code:
+                try:
+                    referrer = User.objects.get(profile__referral_code=referral_code)
+                    # Update referrer points and wallet
+                    referrer.profile.points += 5
+                    if referrer.profile.points >= 10:
+                        referrer.profile.wallet += 250
+                        referrer.profile.points -= 10
+                    referrer.profile.save()
+                    # Update referred user's wallet
+                    user.profile.wallet += 250
+                    user.profile.save()
+                    # Save referral information
+                    Referral.objects.create(referrer=referrer, referred=user)
+                except User.DoesNotExist:
+                    sweetify.toast(request, "Invalid referral code", icon='error', timer=3000)
+                    user.delete()
+                    return redirect("accounts:perform_signup")
 
             request.session["user_id"] = user.id
             sent_otp(request)
@@ -55,6 +79,8 @@ def perform_signup(request):
         "form": form,
     }
     return render(request, "account/signup.html", context)
+
+
 
 @never_cache
 def perform_login(request):

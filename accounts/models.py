@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin, Group, Permission
-
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -43,14 +43,12 @@ class User(AbstractBaseUser,PermissionsMixin):
   last_name = models.CharField(max_length=50)
   username = models.CharField(max_length=100, unique=True)
   email = models.EmailField(max_length=100, unique=True)
-  phone_number = models.CharField(max_length=15,blank=True)
+  phone_number = models.CharField(max_length=15,blank=True, null=True)
   verified = models.BooleanField(default=False)
   email_verified = models.BooleanField(default = False)
-  
+  referral_code = models.CharField(max_length=50, null=True, blank=True)
+  referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
 
-
-
-  #required field
 
   date_joined = models.DateTimeField(auto_now_add=True)
   last_login = models.DateTimeField(auto_now_add=True)
@@ -114,3 +112,24 @@ class Address(models.Model):
     
   def __str__(self):
       return f"{self.street_address}, {self.city}, {self.state} - {self.postal_code}" 
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, default=0.00, decimal_places=2)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name_plural='Wallet'
+
+    def __str__(self):
+        return self.user.email
+        
+class Referral(models.Model):
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_referrals')
+    referred = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_referrals')
+    referral_code = models.CharField(max_length=50)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.referrer.username} referred {self.referred.username}"

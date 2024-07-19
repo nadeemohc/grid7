@@ -166,16 +166,24 @@ def product_detailed_view(request, product_pid):
     product_attributes = ProductAttribute.objects.filter(product=product)
     title = product.title
 
+    # Apply offers to the product
     product = apply_offers(product)
+
+    # Define the order of sizes
+    size_order = {'S': 0, 'M': 1, 'L': 2}
+
+    # Sort the product_attributes based on the size_order
+    sorted_product_attributes = sorted(product_attributes, key=lambda attr: size_order.get(attr.size, 99))
 
     context = {
         'product': product,
         'title': title,
         'specifications_lines': specifications_lines,
         'product_images': product_images,
-        'product_attributes': product_attributes,
+        'product_attributes': sorted_product_attributes,
     }
     return render(request, 'dashboard/product_detailed_view.html', context)
+
 
 
 

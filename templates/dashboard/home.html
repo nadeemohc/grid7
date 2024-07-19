@@ -103,19 +103,6 @@
                                             </a>
                                         </div>
                                         
-                                        {% if product.featured == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="best">Best Sell</span>
-                                        </div>
-                                        {% elif product.popular == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="hot">Hot</span>
-                                        </div>
-                                        {% elif product.latest == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="new">New</span>
-                                        </div>
-                                        {% endif %}
 <!-- 
                                         <div class="product-badges product-badges-position product-badges-mrg">
                                             <span class="hot">Hot</span>
@@ -128,14 +115,12 @@
                                             <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
                                         </div>
                                         <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:35 }}</a></h2>
-                                        <div class="rating-result" title="90%">
-                                            <span>
-                                                <span>95%</span>
-                                            </span>
-                                        </div>
+                                         
                                         <div class="product-price">
-                                            <span>&#8377;{{ product.product_attributes.first.price }} </span>
+                                            <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                            {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                             <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                            {% endif %}
                                         </div>
                                         <div class="product-action-1 show">
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
@@ -170,21 +155,9 @@
                                             </a>
                                         </div>
                                         
-                                        {% if product.featured == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="best">Best Sell</span>
-                                        </div>
-                                        {% elif product.popular == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="hot">Hot</span>
-                                        </div>
-                                        {% elif product.latest == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="new">New</span>
-                                        </div>
-                                        {% endif %}
-<!-- 
-                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                       
+                                         
+                                        <!--<div class="product-badges product-badges-position product-badges-mrg">
                                             <span class="hot">Hot</span>
                                         </div> -->
 
@@ -195,14 +168,12 @@
                                             <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
                                         </div>
                                         <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:35 }}</a></h2>
-                                        <div class="rating-result" title="90%">
-                                            <span>
-                                                <span>95%</span>
-                                            </span>
-                                        </div>
-                                        <div class="product-price">1
-                                            <span>&#8377;{{ product.product_attributes.first.price }} </span>
+                                         
+                                        <div class="product-price">
+                                            <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                            {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                             <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                            {% endif %}
                                         </div>
                                         <div class="product-action-1 show">
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
@@ -239,19 +210,7 @@
                                             </a>
                                         </div>
                                         
-                                        {% if product.featured == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="best">Best Sell</span>
-                                        </div>
-                                        {% elif product.popular == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="hot">Hot</span>
-                                        </div>
-                                        {% elif product.latest == True %}
-                                        <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="new">New</span>
-                                        </div>
-                                        {% endif %}
+                                        
 <!-- 
                                         <div class="product-badges product-badges-position product-badges-mrg">
                                             <span class="hot">Hot</span>
@@ -264,14 +223,11 @@
                                             <!-- <a href="{% url 'store:product_view' product.p_id %}">{{ product.sub_category }}</a> -->
                                         </div>
                                         <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:35 }}</a></h2>
-                                        <div class="rating-result" title="90%">
-                                            <span>
-                                                <span>95%</span>
-                                            </span>
-                                        </div>
                                         <div class="product-price">
-                                            <span>&#8377;{{ product.product_attributes.first.price }} </span>
+                                            <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                            {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                             <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                            {% endif %}
                                         </div>
                                         <div class="product-action-1 show">
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
@@ -341,7 +297,7 @@
             <div class="container pt-25 pb-25">
                 <div class="heading-tab d-flex">
                     <div class="heading-tab-left wow fadeIn animated">
-                        <h3 class="section-title mb-20"><span>Monthly</span> Best Sell</h3>
+                        <!-- <h3 class="section-title mb-20"><span>Monthly</span> Best Sell</h3> -->
                     </div>
                     <div class="heading-tab-right wow fadeIn animated">
                         
@@ -453,7 +409,7 @@
                                                     <a aria-label="Compare" class="action-btn small hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                                 </div>
                                                 <div class="product-badges product-badges-position product-badges-mrg">
-                                                    <span class="best">Best Sell</span>
+                                                    <!-- <span class="best">Best Sell</span> -->
                                                 </div>
                                             </div>
                                             <div class="product-content-wrap">
@@ -646,7 +602,7 @@
                                                     <a aria-label="Compare" class="action-btn small hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                                 </div>
                                                 <div class="product-badges product-badges-position product-badges-mrg">
-                                                    <span class="best">Best Sell</span>
+                                                    <!-- <span class="best">Best Sell</span> -->
                                                 </div>
                                             </div>
                                             <div class="product-content-wrap">
@@ -838,7 +794,7 @@
                                                     <a aria-label="Compare" class="action-btn small hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                                 </div>
                                                 <div class="product-badges product-badges-position product-badges-mrg">
-                                                    <span class="best">Best Sell</span>
+                                                    <!-- <span class="best">Best Sell</span> -->
                                                 </div>
                                             </div>
                                             <div class="product-content-wrap">

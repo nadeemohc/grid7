@@ -73,8 +73,10 @@
                                 <div class="product-content-wrap">
                                     <h2><a href="{% url 'store:product_view' product.p_id %}">{{ product.title | truncatechars:30 }}</a></h2>
                                     <div class="product-price">
-                                        <span>&#8377;{{ product.min_price }}</span>
-                                        <span class="old-price">&#8377;{{ product.max_price }}</span>
+                                        <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                        {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
+                                        <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

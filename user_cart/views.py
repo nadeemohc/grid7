@@ -14,8 +14,7 @@ from . import views
 from django.db.models import Sum
 from datetime import datetime
 from accounts.models import Address
-from store.models import CartItem
-
+from accounts.models import Wallet
 logger = logging.getLogger(__name__)
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -334,6 +333,12 @@ def payment_method_selection(request, order_id):
 
     total_after_discount = total_cart_price - discounts
 
+    try:
+        wallet = Wallet.objects.get(user=request.user)
+        wallet_balance = wallet.balance
+    except Wallet.DoesNotExist:
+        wallet_balance = Decimal(0)
+
     if request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
         print(f'Selected payment method: {selected_payment_method}')  # Debug print statement
@@ -348,16 +353,16 @@ def payment_method_selection(request, order_id):
         
         elif selected_payment_method == 'Wallet':
             print('Inside Wallet selection')
-            if request.user.wallet_balance >= total_after_discount:
-                request.user.wallet_balance -= total_after_discount
-                request.user.save()
+            if wallet_balance >= total_after_discount:
+                wallet.balance -= total_after_discount
+                wallet.save()
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
                 order.save()
                 order.clear_cart()
                 return redirect('cart:order_success', order.id)
             else:
-                messages.error(request, 'Insufficient wallet balance.')
+                sweetify.toast(request, 'Insufficient wallet balance.', icon='error', timer=3000)
         
         elif selected_payment_method == 'Razorpay':
             print('Inside Razorpay selection')

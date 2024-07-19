@@ -7,7 +7,7 @@
         <div class="container">
             <div class="breadcrumb">
                 <a href="{% url 'store:home' %}" rel="nofollow">Home</a>
-                <span></span> Shop
+                <span></span> Catalogue
             </div>
         </div>
     </div>
@@ -85,7 +85,9 @@
                                     </div> -->
                                     <div class="product-price">
                                         <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                        {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                         <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="product-action-1 show">
                                         <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>

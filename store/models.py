@@ -264,14 +264,3 @@ class CategoryOffer(models.Model):
 
     def __str__(self):
         return f"{self.category} - {self.discount_percentage}% Off"
-
-class Wallet(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=10, default=0.00, decimal_places=2)
-
-    class Meta:
-        verbose_name_plural='Wallet'
-
-    def __str__(self):
-        return self.user.email
-        
