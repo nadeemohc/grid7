@@ -7,65 +7,76 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from .forms import SignUpForm
 from .models import User
-from store.models import Wallet
-
-
+from store.models import Wallet, Referral
+from django.contrib.auth import get_user_model
+from .models import Wallet, Referral
+import sweetify
 
 # accounts/views.py
+User = get_user_model()
+
+def generate_unique_referral_code():
+    length = 8
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+        if not User.objects.filter(referral_code=code).exists():
+            return code
+
 def perform_signup(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get("username")
             email = form.cleaned_data.get("email")
-            phone_number = request.POST.get("phone_number", "")  # Default to empty string if not provided
+            phone_number = request.POST.get("phone_number", "")
             password1 = form.cleaned_data["password1"]
             password2 = form.cleaned_data["password2"]
-            encryptedpassword = make_password(form.cleaned_data.get("password1"))
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
-            referral_code = request.POST.get("referral_code")
-
-            try:
-                user_with_email = User.objects.get(email=email)
-                sweetify.toast(request, "Email already used!", icon='info', timer=3000)
-                return redirect("accounts:perform_signup")
-            except User.DoesNotExist:
-                pass  # Email is not in use, continue with registration
+            referral_code = request.POST.get("referral_code", "")
 
             if password1 != password2:
                 sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
                 return redirect("accounts:perform_signup")
 
-            # Create the new user
+            if User.objects.filter(email=email).exists():
+                sweetify.toast(request, "Email already used!", icon='info', timer=3000)
+                return redirect("accounts:perform_signup")
+
+            # Create the new user with a unique referral code
             user = User.objects.create(
                 username=username,
                 email=email,
                 phone_number=phone_number,
-                password=encryptedpassword,
+                password=make_password(password1),  
                 first_name=first_name,
                 last_name=last_name,
+                referral_code=generate_unique_referral_code(),  # Ensure unique referral code
             )
+
+            # Create a profile and wallet for the new user
+            Wallet.objects.create(user=user)
 
             # Process the referral code
             if referral_code:
                 try:
-                    referrer = User.objects.get(profile__referral_code=referral_code)
+                    referrer = User.objects.get(referral_code=referral_code)
                     # Update referrer points and wallet
-                    referrer.profile.points += 5
-                    if referrer.profile.points >= 10:
-                        referrer.profile.wallet += 250
-                        referrer.profile.points -= 10
-                    referrer.profile.save()
+                    referrer.wallet.points += 5
+                    if referrer.wallet.points >= 10:
+                        referrer.wallet.balance += 250
+                        referrer.wallet.points -= 10
+                    referrer.wallet.save()
                     # Update referred user's wallet
-                    user.profile.wallet += 250
-                    user.profile.save()
+                    user.wallet.balance += 250
+                    user.wallet.save()
                     # Save referral information
                     Referral.objects.create(referrer=referrer, referred=user)
                 except User.DoesNotExist:
                     sweetify.toast(request, "Invalid referral code", icon='error', timer=3000)
                     user.delete()
                     return redirect("accounts:perform_signup")
+                
 
             request.session["user_id"] = user.id
             sent_otp(request)

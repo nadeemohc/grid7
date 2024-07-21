@@ -1,0 +1,28 @@
+  <!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#referralModal">
+    
+  </button> -->
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#referralsend">
+    Send Referral Code
+  </button>
+  <!-- The Modal -->
+  <div class="modal fade" id="referralsend" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="staticBackdropLabel">Send Referral Code</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <button type="submit" class="btn btn-light rounded btn-sm font-sm">Send Referral Code</button>
+            <button type="button" class="btn btn-secondary rounded btn-sm font-sm" data-bs-dismiss="modal">Cancel</button>
+          </form>
+        </div>
+    </div>
+  </div>
+</div>

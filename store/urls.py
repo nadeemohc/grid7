@@ -25,6 +25,6 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('shop/', views.shop, name='shop'),
     path('shop/<int:category_id>/', views.shop, name='shop_by_category'),
-    path('list_coupons/', views.list_coupon, name='list_coupon'),    
-
+    path('list_coupons/', views.list_coupon, name='list_coupon'),
+    # path('send-referral-code/', views.send_referral_code, name='send_referral_code'),
 ]

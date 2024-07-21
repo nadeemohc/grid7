@@ -16,6 +16,8 @@ from django.template.defaultfilters import linebreaksbr
 from user_cart.views import checkout
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import sweetify
+from django.conf import settings
+from django.utils import timezone
 
 def apply_offers(product):
     product_attributes = ProductAttribute.objects.filter(product=product)
@@ -184,10 +186,6 @@ def product_detailed_view(request, product_pid):
     }
     return render(request, 'dashboard/product_detailed_view.html', context)
 
-
-
-
-
 def get_price(request, size_id):
     try:
         product_attribute = ProductAttribute.objects.get(pk=size_id)
@@ -196,19 +194,43 @@ def get_price(request, size_id):
     except ProductAttribute.DoesNotExist:
         return JsonResponse({'error': 'Product attribute not found'}, status=404)
 
+
+# @login_required
+# def send_referral_code(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         if email:
+#             referral_code = request.user.profile.referral_code  # assuming referral_code is in the profile
+#             subject = 'Your Referral Code'
+#             message = f'Your referral code is {referral_code}. Share it with your friends!'
+#             from_email = settings.EMAIL_FROM
+#             recipient_list = [email]
+#             print('from_email: ', from_email)
+
+#             try:
+#                 send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+#                 sweetify.toast(request, 'Referral code sent successfully.', icon='success', timer=3000)
+#             except Exception as e:
+#                 sweetify.toast(request, f'Failed to send email: {e}', icon='error', timer=3000)
+#         else:
+#             sweetify.toast(request, 'Please provide an email address.', icon='error', timer=3000)
+
+#     return render(request, 'dashboard/user_profile.html', {'referral_code': referral_code})
+
 # for viewing the user details
 @login_required
 def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
     orders = CartOrder.objects.filter(user=user).order_by('-id')
-    today = timezone.now().date()
     wallet = Wallet.objects.filter(user=user)
+    referral_code = user.referral_code  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
-    print('coupons=', coupons)
+    
     context = {
         'user': user,
-        'address':address,
+        'referral_code': referral_code,
+        'address': address,
         'orders': orders,
         'title': 'User Profile',
         'wallet': wallet,

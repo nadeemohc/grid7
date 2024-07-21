@@ -21,8 +21,8 @@ class SignUpForm(UserCreationForm):
                                 required=True, help_text='Required. 30 characters or fewer.')
     username = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Username"}), required=True,
                                help_text='Required. 30 characters or fewer.')
-    referral_code = forms.CharField(max_length=50, widget=forms.TextInput(attrs={"placeholder": "Referral Code (optional)"}),
-                                    required=False, help_text='Optional. Enter referral code if you have one.')
+    # referral_code = forms.CharField(max_length=50, widget=forms.TextInput(attrs={"placeholder": "Referral Code (optional)"}),
+    #                                 required=False, help_text='Optional. Enter referral code if you have one.')
 
     class Meta:
         model = User
@@ -68,9 +68,9 @@ class SignUpForm(UserCreationForm):
 
         return cleaned_data
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.referral_code = self.cleaned_data['referral_code']
-        if commit:
-            user.save()
-        return user
+    # def save(self, commit=True):
+    #     user = super().save(commit=False)
+#         user.referral_code = self.cleaned_data['referral_code']
+    #     if commit:
+    #         user.save()
+    #     return user
