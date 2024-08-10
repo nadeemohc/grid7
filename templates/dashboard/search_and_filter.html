@@ -48,9 +48,9 @@
                                             <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
                                             <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
                                             <option value="new_arrivals" {% if sort_by == 'new_arrivals' %}selected{% endif %}>New Arrivals</option>
-                                            <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: Aa-Zz</option>
-                                            <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name: Zz-Aa</option>
-                                        </select>
+                                            <option value="title_asc" {% if sort_by == 'title_asc' %}selected{% endif %}>Name: Aa-Zz</option>
+                                            <option value="title_desc" {% if sort_by == 'title_desc' %}selected{% endif %}>Name: Zz-Aa</option>
+                                        </select>                                        
                                     </div>
                                 </div>
                             </div>
@@ -77,6 +77,9 @@
                                         {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                         <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
                                         {% endif %}
+                                    </div>
+                                    <div class="product-action-1 show">
+                                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                     </div>
                                 </div>
                             </div>

@@ -20,20 +20,32 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import pandas as pd
 from django.urls import reverse
-
+from .utils import paginate_queryset
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 @admin_required
 def dashboard(request):
     product_count = Product.objects.count()
     cat_count = Category.objects.count()
-    orders = CartOrder.objects.all().order_by('id')
     usr_count = User.objects.count()
     order_count = CartOrder.objects.count()
-    
+
     # Calculate total revenue from delivered orders
     delivered_orders = CartOrder.objects.filter(status='Delivered')
     total_revenue = delivered_orders.aggregate(total=Sum('order_total'))['total'] or 0
-    
+
+    # Paginate the orders
+    orders_list = CartOrder.objects.all().order_by('id')
+    paginator = Paginator(orders_list, 10)  # Show 10 orders per page
+
+    page = request.GET.get('page')
+    try:
+        orders = paginator.page(page)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+
     context = {
         'title': 'Admin Dashboard',
         'usr_count': usr_count,
@@ -50,9 +62,13 @@ def dashboard(request):
 @admin_required
 def user_list(request):
     users = User.objects.all().order_by('id')
+    page_obj, paginator = paginate_queryset(request, users, items_per_page=20)  # Adjust items_per_page as needed
+
     context={
         'title':'User List',
          'users': users,
+         'page_obj': page_obj,
+         'paginator': paginator
          }
     return render(request, 'cust_admin/user/user_list.html', context)
 
@@ -83,9 +99,14 @@ def user_block_unblock(request, username):
 @admin_required
 def category_list(request):
     categories = Category.objects.all().order_by('c_id')
+    page_obj, paginator = paginate_queryset(request, categories, items_per_page=20)  # Adjust items_per_page as needed
+
     context = {
         'title':'Category List',
         'categories':categories,
+        'page_obj': page_obj,
+        'paginator': paginator,
+
         }
     return render(request, 'cust_admin/category/category_list.html', context)
 
@@ -234,10 +255,13 @@ def edit_variant(request, id):
 @admin_required
 def prod_list(request):
     products = Product.objects.all().order_by('p_id')
+    page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
     
     context = {
         'products': products,
         'title': 'Product Lobby',
+        'paginator': paginator,
+        'page_obj': page_obj
     }
     return render(request, 'cust_admin/product/product_list.html', context)
 
@@ -342,12 +366,15 @@ def product_list_unlist(request, p_id):
 
 def prod_catalogue_list(request):    
     products = ProductAttribute.objects.all().order_by('product')
+    page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
     prods = Product.objects.all()
     
     context = {
         'prods': prods,
         'products': products,
         'title': 'Product Catalogue',
+        'page_obj': page_obj,
+        'paginator': paginator
     }
     return render(request, 'cust_admin/product/product_catalogue.html', context)
 
@@ -439,19 +466,24 @@ def prod_variant_edit(request, pk):
 #=========================================== admin list, detail, status update of orders =========================================================================================================
 
 def list_order(request):
-    orders = CartOrder.objects.all().order_by('id')
+    orders = CartOrder.objects.all().order_by('-id')
+    page_obj, paginator = paginate_queryset(request, orders, items_per_page=20)  # Adjust items_per_page as needed
+
     context = {
         'title': 'Order List',
-        'orders': orders,
+        'orders': page_obj,
+        'paginator': paginator,
+        'page_obj': page_obj,
     }
     return render(request, 'cust_admin/order/order_list.html', context)
+
 
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
     product_images = []
     sub_total = 0  # Initialize sub_total here
-    
+    print('order=',order.payment_method)
     for item in items:
         product = item.product
         price = item.product_price
@@ -498,7 +530,11 @@ def add_coupon(request):
             sweetify.toast(request, 'Coupon added successfully!', icon='success', timer=3000)
             return redirect('cust_admin:coupon_list')
         else:
-            sweetify.error(request, 'There was an error adding the coupon.', timer=3000)
+            # Check if the discount field has errors
+            if form.errors.get('discount'):
+                sweetify.toast(request, 'Discount must be between 1 and 99 percent.', icon='error', timer=3000)
+            else:
+                sweetify.toast(request, 'There was an error adding the coupon.', icon='error', timer=3000)
     else:
         form = CouponForm()
     
@@ -520,7 +556,14 @@ def edit_coupon(request, coupon_id):
 
 def coupon_list(request):
     coupons = Coupon.objects.all()
-    return render(request, 'cust_admin/coupon/coupon_list.html', {'coupons': coupons})
+    page_obj, paginator = paginate_queryset(request, coupons, items_per_page=20)  # Adjust items_per_page as needed
+    
+    context = {
+        'coupons': coupons,
+        'page_obj': page_obj,
+        'paginator': paginator
+    }
+    return render(request, 'cust_admin/coupon/coupon_list.html',context)
 
 def delete_coupon(request, coupon_id):
     coupon = get_object_or_404(Coupon, id=coupon_id)
@@ -532,7 +575,14 @@ def delete_coupon(request, coupon_id):
 
 def category_offer_list(request):
     category_offers = CategoryOffer.objects.all()
-    return render(request, 'cust_admin/offer/category_offer/list_offer.html', {'category_offers': category_offers})
+    page_obj, paginator = paginate_queryset(request, category_offers, items_per_page=20)  # Adjust items_per_page as needed
+
+    context = {
+        'category_offers': category_offers,
+        'page_obj': page_obj,
+        'paginator': paginator
+    }
+    return render(request, 'cust_admin/offer/category_offer/list_offer.html', context)
 
 def add_category_offer(request):
     if request.method == 'POST':
@@ -588,7 +638,14 @@ def delete_category_offer(request, offer_id):
 
 def product_offer_list(request):
     product_offers = ProductOffer.objects.all()
-    return render(request, 'cust_admin/offer/product_offer/list_offer.html', {'product_offers': product_offers})
+    page_obj, paginator = paginate_queryset(request, product_offers, items_per_page=20)  # Adjust items_per_page as needed
+
+    context = {
+        'product_offers': product_offers,
+        'page_obj': page_obj,
+        'paginator': paginator
+    }
+    return render(request, 'cust_admin/offer/product_offer/list_offer.html', context)
 
 def add_product_offer(request):
     if request.method == 'POST':

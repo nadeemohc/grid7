@@ -193,7 +193,8 @@
             
             <div class="card mb-4">
                 <header class="card-header">
-                    <h2>Order List</h2></header>
+                    <h2>Order List</h2>
+                </header>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -227,7 +228,33 @@
                     </div>
                 </div>
             </div>
-    
+            <div class="pagination-area mt-30 mb-50">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-start">
+                        {% if orders.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ orders.previous_page_number }}" aria-label="Previous">
+                                    <i class="material-icons md-chevron_left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for num in orders.paginator.page_range %}
+                            {% if orders.number == num %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                            {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if orders.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ orders.next_page_number }}" aria-label="Next">
+                                    <i class="material-icons md-chevron_right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
         </section> <!-- content-main end// -->
 
 

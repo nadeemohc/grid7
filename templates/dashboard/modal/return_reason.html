@@ -1,0 +1,52 @@
+<button type="button" class="cancel-order-btn" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+    Return Order
+</button>
+
+<style>
+    .form-check-input.align-middle {
+        vertical-align: middle;
+    }
+</style>
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Return Order</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'store:order_return' order.id %}">
+                    {% csrf_token %}
+                    <div class="col-sm-6 mb-1">
+                        <input type="checkbox" name="sizing_issues" class="form-check-input align-middle" id="sizing-issues">
+                        <label for="sizing-issues" class="form-check-label">Sizing or fit issues</label>
+                    </div>
+                    <div class="col-sm-6 mb-1">
+                        <input type="checkbox" name="damaged_item" class="form-check-input align-middle" id="damaged-item">
+                        <label for="damaged-item" class="form-check-label">Damaged or Defective item</label>
+                    </div>
+                    <div class="col-sm-6 mb-1">
+                        <input type="checkbox" name="incorrect_order" class="form-check-input align-middle" id="incorrect-order">
+                        <label for="incorrect-order" class="form-check-label">Incorrect Order</label>
+                    </div>
+                    <div class="col-sm-6 mb-1">
+                        <input type="checkbox" name="delivery_delays" class="form-check-input align-middle" id="delivery-delays">
+                        <label for="delivery-delays" class="form-check-label">Delivery Delays</label>
+                    </div>
+                    <div class="col-sm-6 mb-1">
+                        <input type="checkbox" name="customer_service" class="form-check-input align-middle" id="customer-service">
+                        <label for="customer-service" class="form-check-label">Unacceptable Customer Service</label>
+                    </div>
+                    <div class="mb-3" style="text-align: left;">
+                        <label for="description" class="form-label"><b>Other:</b></label>
+                        <textarea placeholder="Enter the reason for returning" name="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary rounded btn-sm font-sm">Submit</button>
+                    <button type="button" class="btn btn-secondary rounded btn-sm font-sm" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

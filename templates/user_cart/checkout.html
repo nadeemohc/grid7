@@ -26,7 +26,7 @@
                     <form method="post" action="{% url 'cart:checkout' %}">
                         {% csrf_token %}
                         <div class="form-group">
-                            <label for="existing_address">Select Existing Address:</label>
+                            <label for="existing_ ress">Select Existing Address:</label>
                             <select class="form-control" name="existing_address" id="existing_address">
                                 {% for address in user_addresses %}
                                     <option value="{{ address.id }}">{{ address.street_address }} {{ address.city }} {{ address.postal_code }} {{ address.state }} {{ address.country }}</option>

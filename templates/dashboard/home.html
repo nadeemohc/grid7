@@ -176,7 +176,11 @@
                                             {% endif %}
                                         </div>
                                         <div class="product-action-1 show">
+                                        {% if product.id in user_wishlist %}
+                                            <a aria-label="Remove from Wishlist" class="action-btn hover-up active" href="{% url 'store:delete_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
+                                        {% else %}
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
+                                        {% endif %}                                        
                                         </div>
                                     </div>
                                 </div>
@@ -255,7 +259,7 @@
         <section class="deals section-padding">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-6 deal-co">
+                    <!-- <div class="col-lg-6 deal-co">
                         <div class="deal wow fadeIn animated mb-md-4 mb-sm-4 mb-lg-0" style="background-image: url('{% static 'store/imgs/banner/vers-banner.png' %}');">
                             <div class="deal-top">
                                 <h2 class="text-brand">2024 Red Bull Teamwear</h2>
@@ -289,7 +293,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </section>
         

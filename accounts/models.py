@@ -4,29 +4,24 @@ from django.utils import timezone
 import random
 import string
 
-
-# def generate_referral_code(length=8):
-#     import random
-#     import string
-#     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
 class UserManager(BaseUserManager):
-    def create_user(self, first_name, last_name, username, email, password=None):
+    def create_user(self, first_name, last_name, username, email, password=None, referral_code=None):
         if not email:
             raise ValueError('User must have an email address')
 
         if not username:
             raise ValueError('User must have a username')
 
-        # Automatically generate referral code
-        # referral_code = generate_referral_code()
+        # Generate unique referral code if not provided
+        if not referral_code:
+            referral_code = self.generate_unique_referral_code()
 
         user = self.model(
             email=self.normalize_email(email),
             username=username,
             first_name=first_name,
             last_name=last_name,
-            # referral_code=referral_code  # Assign generated referral code
+            referral_code=referral_code  # Assign generated referral code
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -51,6 +46,14 @@ class UserManager(BaseUserManager):
         user.is_superadmin = True
         user.save(using=self._db)
         return user
+
+    def generate_unique_referral_code(self):
+        # length = 8
+        # while True:
+        #     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+        #     if not User.objects.filter(referral_code=code).exists():
+        return 'gjjth3'
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50)
@@ -120,6 +123,13 @@ class Wallet(models.Model):
     def __str__(self):
         return self.user.email
 
+class WalletHistory(models.Model):
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    transaction_type = models.CharField(null=True, blank=True, max_length=20)
+    created_at = models.DateTimeField(default=timezone.now)
+    amount = models.IntegerField(null=True)
+    reason = models.CharField(null=True, blank=True, max_length=200)
+
 class Referral(models.Model):
     referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_referrals')
     referred = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_referrals')
@@ -128,12 +138,3 @@ class Referral(models.Model):
 
     def __str__(self):
         return f"{self.referrer.username} referred {self.referred.username}"
-
-class Userform(models.Model):
-  # user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
-  username = models.CharField(null=True, max_length=100)
-  email = models.EmailField(null=True)
-  password = models.CharField(null=True, max_length=255)
-
-  def _str_(self):
-    return self.username

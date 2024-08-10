@@ -165,6 +165,7 @@ class CartOrder(models.Model):
         ('Conformed', 'Conformed'),
         ('Pending', 'Pending'),
         ('Delivered', 'Delivered'),
+        ('Completed', 'Completed'),
         ('Cancelled', 'Cancelled'),
         ('Return', 'Return')
     )
@@ -178,7 +179,7 @@ class CartOrder(models.Model):
     payment_method = models.CharField(max_length=100,choices=payment_choices)
     order_number = models.CharField(max_length=20, default=None)
     order_total = models.FloatField(null=True, blank=True)
-    status = models.CharField(max_length=10, choices=STATUS, default='New')
+    # status = models.CharField(max_length=10, choices=STATUS, default='New')
     # ip = models.CharField(blank=True, max_length=20)
     is_ordered = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, editable=True)
@@ -264,3 +265,17 @@ class CategoryOffer(models.Model):
 
     def __str__(self):
         return f"{self.category} - {self.discount_percentage}% Off"
+
+class ReturnReason(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(CartOrder, on_delete=models.CASCADE)
+    sizing_issues = models.BooleanField(default=False)
+    damaged_item = models.BooleanField(default=False)
+    incorrect_order = models.BooleanField(default=False)
+    delivery_delays = models.BooleanField(default=False)
+    customer_service = models.BooleanField(default=False)
+    other_reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Return Reason for Order {self.order.id} by {self.user.username}'

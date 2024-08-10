@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from store.models import *
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -15,6 +15,11 @@ from django.db.models import Sum
 from datetime import datetime
 from accounts.models import Address
 from accounts.models import Wallet
+from django.utils import timezone
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from io import BytesIO
+
 logger = logging.getLogger(__name__)
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -81,6 +86,7 @@ def view_cart(request):
     }
 
     return render(request, 'user_cart/cart.html', context)
+
 
 @login_required
 @require_POST
@@ -256,25 +262,21 @@ def checkout(request):
                     status='New'
                 )
 
-                # Create ProductOrder entries and reduce stock
+                # Create ProductOrder entries without reducing stock
                 for item in items:
                     product_attribute = item.product
-                    if product_attribute.reduce_stock(item.quantity):
-                        ProductOrder.objects.create(
-                            order=new_order,
-                            user=user,
-                            product=product_attribute.product,
-                            quantity=item.quantity,
-                            product_price=item.product.price,
-                            ordered=True,
-                            variations=item.product
-                        )
-                    else:
-                        messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
-                        return redirect('store:product_view', product_pid=product_attribute.product.id)
+                    ProductOrder.objects.create(
+                        order=new_order,
+                        user=user,
+                        product=product_attribute.product,
+                        quantity=item.quantity,
+                        product_price=item.product.price,
+                        ordered=True,
+                        variations=item.product
+                    )
 
-                # Clear cart after successful order creation
-                user_cart.items.all().delete
+                # Clear the coupon from the session
+                request.session.pop('applied_coupon_id', None)
 
                 # Redirect to the payment method selection page
                 return redirect('cart:payment_method_selection', order_id=new_order.id)
@@ -297,14 +299,6 @@ def checkout(request):
     return render(request, 'user_cart/checkout.html', context)
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.conf import settings
-import razorpay
-# from .models import CartOrder, CartItem
-from django.utils import timezone
-from decimal import Decimal
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def payment_method_selection(request, order_id):
@@ -345,20 +339,45 @@ def payment_method_selection(request, order_id):
         
         if selected_payment_method == 'COD':
             print('Inside COD selection')
-            order.status = 'Pending'
-            order.payment_method = selected_payment_method
-            order.save()
-            order.clear_cart()
-            return redirect('cart:order_success', order.id)
-        
+            if total_after_discount <= 1000:
+                    
+                order.status = 'Pending'
+                order.payment_method = selected_payment_method
+                order.save()
+                # Reduce stock
+                for item in items:
+                    product_attribute = item.product
+                    if product_attribute.reduce_stock(item.quantity):
+                        product_attribute.save()
+                    else:
+                        messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                        return redirect('store:product_view', product_pid=product_attribute.product.id)
+                order.clear_cart()
+                return redirect('cart:order_success', order.id)
+            else:
+                sweetify.toast(request, "Purchases above 1000 rupees can't be payed Cash on Delivery", icon='error', timer=5000)    
         elif selected_payment_method == 'Wallet':
             print('Inside Wallet selection')
             if wallet_balance >= total_after_discount:
                 wallet.balance -= total_after_discount
                 wallet.save()
+                WalletHistory.objects.create(
+                    wallet=wallet,
+                    transaction_type='Debit',
+                    amount=total_after_discount,
+                    reason='Purchased Products'
+                )
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
                 order.save()
+                # Reduce stock
+                for item in items:
+                    product_attribute = item.product
+                    if product_attribute.reduce_stock(item.quantity):
+                        product_attribute.save()
+                    else:
+                        messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                        return redirect('store:product_view', product_pid=product_attribute.product.id)
                 order.clear_cart()
                 return redirect('cart:order_success', order.id)
             else:
@@ -369,12 +388,24 @@ def payment_method_selection(request, order_id):
             razorpay_payment_id = request.POST.get('razorpay_payment_id')
             print(f'payment id: {razorpay_payment_id}')
             if not razorpay_payment_id:
-                messages.error(request, 'Payment failed. Please try again.')
+                order.status = 'Pending'
+                order.payment_method = selected_payment_method
+                order.razorpay_payment_id = razorpay_payment_id
+                order.save()
+                sweetify.toast(request, 'Payment failed. Please try again.', icon='error', timer=3000)
                 return redirect('cart:payment_method_selection', order.id)
             order.status = 'Completed'
             order.payment_method = selected_payment_method
             order.razorpay_payment_id = razorpay_payment_id
             order.save()
+            # Reduce stock
+            for item in items:
+                product_attribute = item.product
+                if product_attribute.reduce_stock(item.quantity):
+                    product_attribute.save()
+                else:
+                    messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                    return redirect('store:product_view', product_pid=product_attribute.product.id)
             order.clear_cart()
             return redirect('cart:order_success', order.id)
         
@@ -407,13 +438,14 @@ def payment_method_selection(request, order_id):
 
 
 
+
 @login_required
 def order_success(request, order_id):
     try:
         order = CartOrder.objects.get(id=order_id, user=request.user)
         product_orders = ProductOrder.objects.filter(order=order)
     except CartOrder.DoesNotExist:
-        messages.error(request, "Order does not exist.")
+        sweetify.toast(request, 'Order does not exist', icon='error', timer=3000)
         return redirect('store:home')
 
     context = {
@@ -421,6 +453,22 @@ def order_success(request, order_id):
         'product_orders': product_orders,
     }
     return render(request, 'user_cart/order_success.html', context)
+    return redirect('store:home')
+
+    context = {
+        'order': order,
+        'product_orders': product_orders
+    }
+    return render(request, 'user_cart/order_failure', context)
+    return redirect('store:home')
+
+@login_required
+def order_failure(request, order_id):
+    try:
+        order = CartOrder.objects.get(id=order_id, user=request.user)
+        product_orders = ProductOrder.objects.filter(order=order)
+    except CartOrder.DoesNotExist:
+        sweetify.toast(request, 'Order does not exist', icon='error', timer=3000)
 
 
 @login_required
@@ -464,84 +512,25 @@ def order_confirmation(request, order_id):
     return render(request, 'user_cart/order_confirmation.html', context)
 
 
-# def place_order(request):
-#     user = request.user 
-#     items = CartItem.objects.filter(user=user, is_deleted=False)
-#     request.session.get('applied_coupon_id', None)  
-#     request.session.get('totals', 0)
-#     total = request.session.get('total', 0)
-#     request.session.get('discounts', 0)
-   
+def render_to_pdf(template_src, context_dict):
+    template = get_template(template_src)
+    html = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
 
-#     # user_addresses = items.first().address
-
-#     short_id = str(random.randint(1000, 9999))
-#     yr = datetime.now().year
-#     dt = int(datetime.today().strftime('%d'))
-#     mt = int(datetime.today().strftime('%m'))
-#     d = datetime(yr, mt, dt).date()
-#     payment_id = f"PAYMENT-{timezone.now().strftime('%Y%m%d%H%M%S')}"
-
-#     current_date = d.strftime("%Y%m%d")
-#     short_id = str(random.randint(1000, 9999))
-#     order_numbers = current_date + short_id 
-#     coupons = []
-
-#     for item in items:
-#         coupon = item.coupon
-#         coupons.append(coupon)
-
-#     if coupons:
-#         coupon = coupons[0]
-#     else:
-#         coupon = None
-
-#     var=CartOrder.objects.create(
-#         user=request.user,
-#         order_number=order_numbers,
-#         order_total= total,
-#         coupen=coupon,
-#         selected_address=user_addresses,
-#         ip=request.META.get('REMOTE_ADDR')    
-#     )
-#     var.save()
-#     payment_instance=Payments.objects.create(
-#         user=request.user,
-#         payment_id=payment_id,
-#         payment_method='COD',
-#         amount_paid= total,
-#         status='Pending',
-                
-#     )
-        
-#     var.payment=payment_instance
-#     var.save()
-            
-#     cart=CartItem.objects.filter(user=request.user)
-            
-#     for item in cart:
-#         orderedproduct=ProductOrder()
-#         item.product.stock-=item.quantity
-#         item.product.save()
-#         orderedproduct.order=var
-#         orderedproduct.payment=payment_instance
-#         orderedproduct.user=request.user
-#         orderedproduct.product=item.product.product
-#         orderedproduct.quantity=item.quantity
-#         orderedproduct.product_price=item.product.price
-#         product_attribute = ProductAttribute.objects.get(product=item.product.product, color=item.product.color)
-#         orderedproduct.variations = product_attribute
-#         orderedproduct.ordered=True
-#         orderedproduct.save()
-#         item.delete()  
-#     if 'applied_coupon_id' in request.session:
-#         request.session.pop('applied_coupon_id')     
-#     request.session.pop('totals')
-#     total = request.session.pop('total')
-#     request.session.pop('discounts')
-        
-#     return redirect('cart:success')
-
-# def success(request):
-    
-#     return render(request, 'user_cart/success_page.html')
+def order_invoice(request, order_id):
+    order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+    product_orders = ProductOrder.objects.filter(order=order)
+    context = {
+        'order': order,
+        'product_orders': product_orders,
+    }
+    pdf = render_to_pdf('user_cart/invoice.html', context)
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
+        return response
+    return HttpResponse("Error generating PDF")

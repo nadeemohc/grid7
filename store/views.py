@@ -18,6 +18,8 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import sweetify
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import F, ExpressionWrapper, DecimalField
+
 
 def apply_offers(product):
     product_attributes = ProductAttribute.objects.filter(product=product)
@@ -111,6 +113,7 @@ def list_prod(request):
 
 
 
+
 def product_list_by_category(request, category_cid):
     category = get_object_or_404(Category, c_id=category_cid)
     search_field = request.GET.get('search_field', '')
@@ -134,6 +137,22 @@ def product_list_by_category(request, category_cid):
         elif price_filter == 'above_2000':
             products = [p for p in products if p.final_price >= 2000]
 
+    # Sort by
+    sort_by = request.GET.get('sort_by')
+    if sort_by:
+        if sort_by == 'price_asc':
+            products = sorted(products, key=lambda p: p.final_price)
+        elif sort_by == 'price_desc':
+            products = sorted(products, key=lambda p: p.final_price, reverse=True)
+        elif sort_by == 'name_asc':
+            products = sorted(products, key=lambda p: p.title)
+        elif sort_by == 'name_desc':
+            products = sorted(products, key=lambda p: p.title, reverse=True)
+        # elif sort_by == 'new_arrivals':
+        #     products = sorted(products, key=lambda p: p.updated, reverse=True)
+        elif sort_by == 'avg_rating':
+            products = sorted(products, key=lambda p: p.avg_rating, reverse=True)
+
     items_per_page = request.GET.get('items_per_page', 9)
     paginator = Paginator(products, items_per_page)
     page = request.GET.get('page')
@@ -154,6 +173,7 @@ def product_list_by_category(request, category_cid):
         'price_filter': price_filter,
         'page_obj': page_obj,
         'search_field': search_field,
+        'sort_by': sort_by,
     }
     return render(request, 'dashboard/product_list.html', context)
 
@@ -223,13 +243,17 @@ def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
     orders = CartOrder.objects.filter(user=user).order_by('-id')
+    wal_history = WalletHistory.objects.all()
     wallet = Wallet.objects.filter(user=user)
+    item = ProductOrder.objects.filter(user=user)
     referral_code = user.referral_code  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
     
     context = {
         'user': user,
+        'item': item,
         'referral_code': referral_code,
+        'wal_history': wal_history,
         'address': address,
         'orders': orders,
         'title': 'User Profile',
@@ -385,7 +409,7 @@ def filter_product(request):
         ).distinct().order_by('-id')
         
         # Render the filtered products to HTML
-        data = render_to_string('userhome/product_list.html', {"products": products})
+        data = render_to_string('dashboard/product_list.html', {"products": products})
         
         # Return the rendered HTML as a JSON response
         return JsonResponse({"data": data})
@@ -472,6 +496,12 @@ def order_cancel(request, order_id):
             wallet, created = Wallet.objects.get_or_create(user=request.user)
             wallet.balance += Decimal(order.order_total)
             wallet.save()
+            WalletHistory.objects.create(
+                wallet=wallet,
+                transaction_type='Credit',
+                amount=order.order_total,
+                reason='Order Cancellation'
+            )
         order.status = 'Cancelled'
         order.save()
         sweetify.toast(request, 'Your order has been cancelled and amount refunded to your wallet.',icon='success', timer=3000)
@@ -482,21 +512,50 @@ def order_cancel(request, order_id):
 @login_required
 def order_return(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
-    if order.status == 'Delivered':
-        # Logic for refund to wallet for all payment methods
-        wallet, created = Wallet.objects.get_or_create(user=request.user)
-        wallet.balance += Decimal(order.order_total)
-        wallet.save()
-        order.status = 'Return'
-        order.save()
-        sweetify.toast(request, 'Your order has been marked for return and amount refunded to your wallet.',icon='success', timer=3000)
-    else:
-        sweetify.toast(request, 'Your order is not eligible for return.',icon='warning', timer=3000)
-    return redirect('store:user_order_detail', order_id=order.id)
+    
+    if request.method == 'POST':
+        sizing_issues = 'sizing_issues' in request.POST
+        damaged_item = 'damaged_item' in request.POST
+        incorrect_order = 'incorrect_order' in request.POST
+        delivery_delays = 'delivery_delays' in request.POST
+        customer_service = 'customer_service' in request.POST
+        other_reason = request.POST.get('description', '')
+
+        if order.status == 'Delivered':
+            # Logic for refund to wallet for all payment methods
+            wallet, created = Wallet.objects.get_or_create(user=request.user)
+            wallet.balance += Decimal(order.order_total)
+            wallet.save()
+            WalletHistory.objects.create(
+                wallet=wallet,
+                transaction_type='Credit',
+                amount=order.order_total,
+                reason='Order Returned'
+            )
+            order.status = 'Return'
+            order.save()
+            
+            # Save return reason
+            ReturnReason.objects.create(
+                user=request.user,
+                order=order,
+                sizing_issues=sizing_issues,
+                damaged_item=damaged_item,
+                incorrect_order=incorrect_order,
+                delivery_delays=delivery_delays,
+                customer_service=customer_service,
+                other_reason=other_reason
+            )
+            
+            sweetify.toast(request, 'Your order has been marked for return and amount refunded to your wallet.', icon='success', timer=3000)
+        else:
+            sweetify.toast(request, 'Your order is not eligible for return.', icon='warning', timer=3000)
+        
+        return redirect('store:user_order_detail', order_id=order.id)
+    
+    return render(request, 'store/order_return.html', {'order': order})
 
 
-
-from django.db.models import Min, Max
 
 def search_and_filter(request):
     search_field = request.GET.get('search_field', '')
@@ -530,22 +589,27 @@ def search_and_filter(request):
         elif price_filter == 'above_2000':
             products = products.filter(product_attributes__price__gt=2000)
 
-    # Apply sorting
+    # Annotate products with min and max price
+    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+
+    # Apply sorting by min_price
     if sort_by == 'price_asc':
-        products = products.order_by('product_attributes__price')
+        products = products.order_by('min_price')
     elif sort_by == 'price_desc':
-        products = products.order_by('-product_attributes__price')
+        products = products.order_by('-min_price')
     elif sort_by == 'title_asc':
         products = products.order_by('title')
     elif sort_by == 'title_desc':
         products = products.order_by('-title')
 
-    # Annotate products with min and max price
-    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+    # Remove duplicates
+    products = products.distinct()
 
     # Pagination logic
     if items_per_page != 'all':
-        products = products[:int(items_per_page)]
+        paginator = Paginator(products, int(items_per_page))
+        page_number = request.GET.get('page')
+        products = paginator.get_page(page_number)
 
     context = {
         'products': products,
