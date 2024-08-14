@@ -60,7 +60,7 @@ class Product(models.Model):
     p_id = models.BigAutoField(unique=True, primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
     sub_category = models.ForeignKey(Subcategory, on_delete=models.CASCADE, null=True, related_name="products")
-    title = models.CharField(max_length=100, default="product")
+    title = models.CharField(default="product")
     description = models.TextField(null=True, blank=True, default="This is the product")
     specifications = models.TextField(null=True, blank=True)
     shipping = models.TextField(null=True)

@@ -35,7 +35,7 @@ def dashboard(request):
     total_revenue = delivered_orders.aggregate(total=Sum('order_total'))['total'] or 0
 
     # Paginate the orders
-    orders_list = CartOrder.objects.all().order_by('id')
+    orders_list = CartOrder.objects.all().order_by('-id')
     paginator = Paginator(orders_list, 10)  # Show 10 orders per page
 
     page = request.GET.get('page')
@@ -50,7 +50,7 @@ def dashboard(request):
         'title': 'Admin Dashboard',
         'usr_count': usr_count,
         'order_count': order_count,
-        'orders': orders,
+        'orders': orders_list,
         'product_count': product_count,
         'cat_count': cat_count,
         'total_revenue': total_revenue,
@@ -962,3 +962,67 @@ def get_order_status_data(request):
     data = [status['count'] for status in order_status_counts]
 
     return JsonResponse({'labels': labels, 'data': data})
+
+
+
+def format_quantities(product_quantities):
+    size_labels = {
+        1: 'S',
+        2: 'M',
+        3: 'L',
+        4: 'XL',
+        6: 'XXL',
+        7: 'XXXL',
+        10: 'XXXXL'
+    }
+
+    formatted_quantities = []
+    
+    for product in Product.objects.filter(p_id__in=product_quantities.keys()):
+        quantities = product_quantities[product.p_id]
+        formatted_quantities.append({
+            'product': product,
+            'quantities': f"Total Quantity Sold: {quantities}"
+        })
+        
+    return formatted_quantities
+
+def best_selling_products(request):
+    # Get top-selling products based on quantity
+    best_selling_products = ProductOrder.objects.values('product').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+    product_ids = [item['product'] for item in best_selling_products]
+    top_products = Product.objects.filter(p_id__in=product_ids)
+
+    # Map product IDs to their quantities
+    product_quantities = {item['product']: item['total_quantity'] for item in best_selling_products}
+
+    # Format quantities into a human-readable form
+    formatted_quantities = format_quantities(product_quantities)
+
+    context = {
+        'title': 'Best Selling Products',
+        'top_products': top_products,
+        'product_quantities': formatted_quantities,  # Update this line
+    }
+    return render(request, 'cust_admin/best_selling/best_selling_products.html', context)
+
+
+def best_selling_categories(request):
+    best_selling_categories = ProductOrder.objects.values('product__category').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+    top_categories = Category.objects.filter(c_id__in=[item['product__category'] for item in best_selling_categories])
+
+    context = {
+        'title': 'Best Selling Categories',
+        'top_categories': top_categories,
+    }
+    return render(request, 'cust_admin/best selling/best_selling_categories.html', context)
+
+def best_selling_brands(request):
+    best_selling_brands = ProductOrder.objects.values('product__brand').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+    top_brands = Brand.objects.filter(id__in=[item['product__brand'] for item in best_selling_brands])
+
+    context = {
+        'title': 'Best Selling Brands',
+        'top_brands': top_brands,
+    }
+    return render(request, 'cust_admin/best selling/best_selling_brands.html', context)

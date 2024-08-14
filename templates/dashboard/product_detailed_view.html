@@ -79,8 +79,10 @@
                                             <strong class="mr-10">Size</strong>
                                             <div class="size-buttons">
                                                 {% for attribute in product_attributes %}
-                                                {% if attribute.is_blocked != True %}
-                                                <button type="button" class="size-button" data-size-id="{{ attribute.id }}">{{ attribute.size }}</button>
+                                                {% if not attribute.is_blocked %}
+                                                <button type="button" class="size-button" data-size-id="{{ attribute.id }}">
+                                                    {{ attribute.size }}
+                                                </button>
                                                 {% endif %}
                                                 {% endfor %}
                                             </div>
@@ -96,6 +98,7 @@
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
                                         </div>
                                     </form>
+                                    
                                     
                                     <style>
                                         .size-button {

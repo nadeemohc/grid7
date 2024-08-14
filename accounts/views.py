@@ -19,77 +19,65 @@ def perform_signup(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
-            print("Form is valid")
             username = form.cleaned_data.get("username")
             email = form.cleaned_data.get("email")
-            phone_number = request.POST.get("phone_number", "")
             password1 = form.cleaned_data["password1"]
             password2 = form.cleaned_data["password2"]
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
             entered_referral_code = form.cleaned_data.get("referral_code", "")
-            print(f"Entered referral code: {entered_referral_code}")
+            
+            # Manually generate a unique referral code
+            referral_code = UserManager().generate_unique_referral_code()
 
             if password1 != password2:
                 sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
-                print("Passwords do not match")
                 return redirect("accounts:perform_signup")
 
             if User.objects.filter(email=email).exists():
                 sweetify.toast(request, "Email already used!", icon='info', timer=3000)
-                print("Email already used")
                 return redirect("accounts:perform_signup")
 
-            # try:
             referrer = None
             if entered_referral_code:
                 try:
                     referrer = User.objects.get(referral_code=entered_referral_code)
-                    print(f"Referrer found: {referrer}")
                 except User.DoesNotExist:
                     sweetify.toast(request, "Invalid referral code", icon='error', timer=3000)
-                    print("Invalid referral code")
                     return redirect("accounts:perform_signup")
 
-            user = User.objects.create_user(
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-                email=email,
-                password=password1
-            )
-            print(f"User created: {user}")
+            # Create the user with a unique referral code
+            try:
+                user = User.objects.create_user(
+                    first_name=first_name,
+                    last_name=last_name,
+                    username=username,
+                    email=email,
+                    password=password1,
+                    referral_code=referral_code  # Pass the manually generated referral code
+                )
+            except IntegrityError as e:
+                if 'referral_code' in str(e):
+                    sweetify.toast(request, "Duplicate referral code detected, retrying...", icon='error', timer=3000)
+                else:
+                    sweetify.toast(request, "An error occurred during signup", icon='error', timer=3000)
+                return redirect("accounts:perform_signup")
 
             if referrer:
                 referrer.wallet.points += 5
-                print(f"Referrer points updated: {referrer.wallet.points}")
                 if referrer.wallet.points >= 10:
                     referrer.wallet.balance += 250
                     referrer.wallet.points -= 10
-                    print(f"Referrer wallet balance updated: {referrer.wallet.balance}")
                 referrer.wallet.save()
-                print("Referrer wallet saved")
 
                 user.wallet.balance += 250
                 user.wallet.save()
-                print(f"New user's wallet balance updated: {user.wallet.balance}")
 
                 Referral.objects.create(referrer=referrer, referred=user)
-                print("Referral record created")
 
             request.session["user_id"] = user.username
-            print("User ID stored in session")
             sent_otp(request)
-            print("OTP sent")
             return render(request, "account/otp.html", {"email": email})
-
-            # except Exception as e:
-                # sweetify.toast(request, "An error occurred during signup", icon='error', timer=3000)
-                # print(f"Exception occurred: {e}")
-                # return redirect("accounts:perform_signup")
-        else:
-            print("Form is not valid")
-            print(form.errors)
     else:
         form = SignUpForm()
 
@@ -98,6 +86,8 @@ def perform_signup(request):
         "form": form,
     }
     return render(request, "account/signup.html", context)
+
+
 
 
 

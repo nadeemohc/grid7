@@ -92,9 +92,11 @@
                                         </div>
                                         <div class="col-lg-5">
                                             <div class="card-body">
-                                                {% for w  in wallet %}
-                                                <p> <strong> <h5>Current Balance: ₹{{ w.balance }}</h5> </strong></p>                                                    
-                                                {% endfor %}
+                                                {% if wallet %}
+                                                <p> <strong> <h5>Current Balance: ₹{{ wallet.balance }}</h5> </strong></p>
+                                                {% else %}
+                                                <p>Wallet not found.</p>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="card-body">
@@ -112,12 +114,11 @@
                                                         {% for wal in wal_history %}
                                                         <tr>
                                                             <td>{{ wal.created_at }}</td>
-                                                            
                                                             {% if wal.transaction_type == 'Credit' %}
                                                             <td>+{{ wal.amount }}</td>
-                                                             {% elif wal.transaction_type == 'Debit' %}
+                                                            {% elif wal.transaction_type == 'Debit' %}
                                                             <td>-{{ wal.amount }}</td>
-                                                            {% endif %}                                                                
+                                                            {% endif %}
                                                             <td>{{ wal.reason }}</td>
                                                             <td>{{ wal.transaction_type }}</td>
                                                         </tr>
@@ -132,6 +133,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                
 
                                   <div class="tab-pane fade" id="coupon" role="tabpanel" aria-labelledby="coupon-tab">
                                     <div class="card">

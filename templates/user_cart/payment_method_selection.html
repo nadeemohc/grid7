@@ -107,6 +107,8 @@
                         {% endif %}
                         <!-- Payment Method Selection Form -->
                         <div class="row">
+                            
+                            {% if total_after_discount < 1000 %}
                             <div class="col-md-4 mb-3">
                                 <form id="cod-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
                                     {% csrf_token %}
@@ -114,6 +116,7 @@
                                     <button type="submit" class="btn btn-primary btn-block">Cash on Delivery</button>
                                 </form>
                             </div>
+                            {% endif %}
                             <div class="col-md-4 mb-3">
                                 <form id="wallet-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
                                     {% csrf_token %}

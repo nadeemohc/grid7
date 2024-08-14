@@ -58,10 +58,18 @@ def home(request):
     featured_products = products.filter(featured=True)
     popular_products = products.filter(popular=True)
     new_added_products = products.filter(latest=True)
-
+    
+    # Get the 'Poster' subcategory
+    poster_subcategory = Subcategory.objects.filter(sub_name='Posters').first()
+    
+    # Filter products by the 'Poster' subcategory
+    poster_products = products.filter(sub_category=poster_subcategory) if poster_subcategory else Product.objects.none()
+    print(poster_products,'poster')
+    # Apply offers
     featured_products = [apply_offers(p) for p in featured_products]
     popular_products = [apply_offers(p) for p in popular_products]
     new_added_products = [apply_offers(p) for p in new_added_products]
+    poster_products = [apply_offers(p) for p in poster_products]
 
     context = {
         'categories': categories,
@@ -70,6 +78,7 @@ def home(request):
         'featured_products': featured_products,
         'new_added_products': new_added_products,
         'popular_products': popular_products,
+        'poster_products': poster_products,  # Add this to the context
         'title': 'Home',
     }
     return render(request, 'dashboard/home.html', context)
@@ -191,11 +200,8 @@ def product_detailed_view(request, product_pid):
     # Apply offers to the product
     product = apply_offers(product)
 
-    # Define the order of sizes
-    size_order = {'S': 0, 'M': 1, 'L': 2}
-
-    # Sort the product_attributes based on the size_order
-    sorted_product_attributes = sorted(product_attributes, key=lambda attr: size_order.get(attr.size, 99))
+    # Sort the product_attributes based on price
+    sorted_product_attributes = sorted(product_attributes, key=lambda attr: attr.price)
 
     context = {
         'product': product,
@@ -205,6 +211,7 @@ def product_detailed_view(request, product_pid):
         'product_attributes': sorted_product_attributes,
     }
     return render(request, 'dashboard/product_detailed_view.html', context)
+
 
 def get_price(request, size_id):
     try:
@@ -243,8 +250,8 @@ def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
     orders = CartOrder.objects.filter(user=user).order_by('-id')
-    wal_history = WalletHistory.objects.all()
-    wallet = Wallet.objects.filter(user=user)
+    wallet = Wallet.objects.filter(user=user).first()  # Get the user's wallet
+    wal_history = WalletHistory.objects.filter(wallet=wallet) if wallet else []  # Filter wallet history based on the user's wallet
     item = ProductOrder.objects.filter(user=user)
     referral_code = user.referral_code  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
@@ -262,7 +269,6 @@ def user_profile(request):
     }
 
     return render(request, 'dashboard/user_profile.html', context)
-
 def list_coupon(request):
     print("inside coupons")
     today = timezone.now().date()
@@ -568,6 +574,11 @@ def search_and_filter(request):
     products = Product.objects.all()
     categories = Category.objects.all()
 
+    # Default search for "posters" if no search term is provided
+    if not search_field:
+        search_field = 'poster'
+
+    # Filter products based on search_field
     if search_field:
         products = products.filter(title__icontains=search_field)
 
@@ -623,6 +634,7 @@ def search_and_filter(request):
     }
 
     return render(request, 'dashboard/search_and_filter.html', context)
+
 
 
 

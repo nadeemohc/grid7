@@ -11,6 +11,7 @@ import uuid, store, random, sweetify, logging, razorpay
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from . import views
+from django.views.decorators.cache import never_cache
 from django.db.models import Sum
 from datetime import datetime
 from accounts.models import Address
@@ -19,6 +20,8 @@ from django.utils import timezone
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
+from user_cart.utils import render_to_pdf
+from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -28,61 +31,64 @@ client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_S
 def view_cart(request):
     user = request.user
     items = CartItem.objects.filter(user=user, is_deleted=False)
-
-    cart_items = []
     total_cart_price = Decimal(0)
+    cart_items = []
 
     for cart_item in items:
         product_attribute = cart_item.product
-
         if product_attribute:
             price = product_attribute.price
-            size = product_attribute.size
             cart_item.subtotal = price * cart_item.quantity
             total_cart_price += cart_item.subtotal
+            cart_items.append(cart_item)
 
-        cart_items.append(cart_item)
-
-    discounts = 0
+    discounts = Decimal(0)
     applied_coupon_id = request.session.get('applied_coupon_id')
 
+    # Handling POST requests
     if request.method == "POST":
+        # Applying a coupon
         if 'apply_coupon' in request.POST:
             coupon_code = request.POST.get('coupon_code')
-            try:
-                coupon = Coupon.objects.get(code=coupon_code, active=True, active_date__lte=timezone.now(),
-                                            expiry_date__gte=timezone.now())
-
-                discounts = (total_cart_price * coupon.discount) / 100
-                request.session['applied_coupon_id'] = coupon.id
-
-                messages.success(request, 'Coupon applied successfully!')
-            except Coupon.DoesNotExist:
-                messages.error(request, 'Invalid or expired coupon code')
-
+            if coupon_code:
+                try:
+                    coupon = Coupon.objects.get(
+                        code=coupon_code,
+                        active=True,
+                        active_date__lte=timezone.now(),
+                        expiry_date__gte=timezone.now()
+                    )
+                    # Assuming a percentage discount
+                    discounts = (total_cart_price * coupon.discount) / 100
+                    request.session['applied_coupon_id'] = coupon.id
+                    sweetify.toast(request, f"Coupon {coupon_code} applied successfully!", icon='success', timer=3000)
+                except Coupon.DoesNotExist:
+                    sweetify.toast(request, "Invalid coupon code or the coupon has expired.", icon='error', timer=3000)
+        
+        # Removing a coupon
         elif 'remove_coupon' in request.POST:
-            request.session.pop('applied_coupon_id', None)
-            discounts = 0
-            messages.success(request, 'Coupon removed successfully!')
+            if applied_coupon_id:
+                del request.session['applied_coupon_id']
+                sweetify.toast(request, "Coupon removed successfully.", icon='success', timer=3000)
+            return redirect('cart:view_cart')
 
-    if applied_coupon_id:
+    # Recalculating the discount if a coupon is applied
+    if applied_coupon_id and not discounts:
         try:
-            applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
-                                                active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
-            discounts = (total_cart_price * applied_coupon.discount) / 100
+            coupon = Coupon.objects.get(id=applied_coupon_id, active=True)
+            discounts = (total_cart_price * coupon.discount) / 100
         except Coupon.DoesNotExist:
-            request.session.pop('applied_coupon_id', None)
+            del request.session['applied_coupon_id']
+            messages.error(request, "The applied coupon is no longer valid.")
 
     total_after_discount = total_cart_price - discounts
 
-    coupons = Coupon.objects.filter(active=True, active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
-
     context = {
         'cart_items': cart_items,
-        'total_cart_price': total_cart_price,
-        'total_after_discount': total_after_discount,
+        'total_cart_price': total_cart_price,  # This remains the sum of the original prices
         'discounts': discounts,
-        'coupons': coupons,
+        'total_after_discount': total_after_discount,  # This shows the total after applying the discount
+        'coupons': Coupon.objects.filter(active=True),  # Show available coupons
     }
 
     return render(request, 'user_cart/cart.html', context)
@@ -281,9 +287,9 @@ def checkout(request):
                 # Redirect to the payment method selection page
                 return redirect('cart:payment_method_selection', order_id=new_order.id)
             except Address.DoesNotExist:
-                messages.error(request, "Selected address does not exist.")
+                sweetify.toast(request, "Selected address does not exist.", icon='error', timer=3000)
         else:
-            messages.error(request, "Please select an address.")
+            sweetify.toast(request, "Please select an address.", icon='error', timer=3000)
 
     # Add total price per item to each cart item
     for item in items:
@@ -438,7 +444,7 @@ def payment_method_selection(request, order_id):
 
 
 
-
+@never_cache
 @login_required
 def order_success(request, order_id):
     try:
@@ -521,16 +527,56 @@ def render_to_pdf(template_src, context_dict):
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
 
+# def order_invoice(request, order_id):
+#     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+#     product_orders = ProductOrder.objects.filter(order=order)
+#     context = {
+#         'order': order,
+#         'product_orders': product_orders,
+#     }
+#     pdf = render_to_pdf('user_cart/invoice.html', context)
+#     if pdf:
+#         response = HttpResponse(pdf, content_type='application/pdf')
+#         response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
+#         return response
+#     return HttpResponse("Error generating PDF")
+
+
+
 def order_invoice(request, order_id):
+    # Fetch the order and related product orders
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
     product_orders = ProductOrder.objects.filter(order=order)
+    
+    # Calculate the total product price and discount amount
+    total_product_price = sum(item.product_price for item in product_orders)
+    discount_amount = total_product_price - order.order_total
+    
+    # Prepare the context
     context = {
         'order': order,
         'product_orders': product_orders,
+        'discount_amount': discount_amount,
     }
-    pdf = render_to_pdf('user_cart/invoice.html', context)
-    if pdf:
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
-        return response
-    return HttpResponse("Error generating PDF")
+    
+    # Render the HTML content
+    html_content = render_to_string('user_cart/invoice.html', context)
+    
+    # Create a BytesIO buffer to hold the PDF
+    buffer = BytesIO()
+    
+    # Convert HTML to PDF
+    pdf = pisa.CreatePDF(html_content, dest=buffer)
+    
+    # Check for errors
+    if pdf.err:
+        return HttpResponse("Error generating PDF", status=500)
+    
+    # Get the PDF content from the buffer
+    pdf_content = buffer.getvalue()
+    buffer.close()
+    
+    # Return the PDF response
+    response = HttpResponse(pdf_content, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
+    return response

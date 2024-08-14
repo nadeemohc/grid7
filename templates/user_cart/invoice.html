@@ -10,122 +10,154 @@
             margin: 0;
             padding: 20px;
             background: #f9f9f9;
+            text-align: center;
         }
         .invoice-box {
             max-width: 800px;
-            margin: auto;
+            margin: 0 auto;
             padding: 30px;
             border: 1px solid #eee;
             background: #fff;
             border-radius: 10px;
+            text-align: left;
+            box-sizing: border-box;
         }
         table {
             width: 100%;
-            line-height: inherit;
-            text-align: left;
+            border-collapse: collapse;
         }
-        table td {
-            padding: 5px;
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
             vertical-align: top;
         }
-        .invoice-box table tr td:nth-child(2) {
-            text-align: right;
-        }
-        .invoice-box table tr.top table td {
-            padding-bottom: 20px;
-        }
-        .invoice-box table tr.information table td {
-            padding-bottom: 40px;
-        }
-        .invoice-box table tr.heading td {
-            background: #eee;
-            border-bottom: 1px solid #ddd;
+        table th {
+            background: #f4f4f4;
             font-weight: bold;
         }
-        .invoice-box table tr.details td {
-            padding-bottom: 20px;
+        table td {
+            background: #fff;
         }
-        .invoice-box table tr.item td {
-            border-bottom: 1px solid #eee;
+        .invoice-box h2, .invoice-box h3 {
+            margin: 0;
+            padding-bottom: 10px;
         }
-        .invoice-box table tr.item.last td {
-            border-bottom: none;
+        .invoice-box .section {
+            margin-bottom: 30px;
         }
-        .invoice-box table tr.total td:nth-child(2) {
-            border-top: 2px solid #eee;
+        .invoice-box .section:last-of-type {
+            margin-bottom: 0;
+        }
+        .invoice-box .total {
             font-weight: bold;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .invoice-box .coupon {
+            font-weight: bold;
+        }
+        .address-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .address-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+        .address-table .label {
+            font-weight: bold;
+            background: #f4f4f4;
+        }
+        .address-item {
+            display: inline;
+            margin-right: 5px; /* Optional: Add spacing between address components */
         }
     </style>
 </head>
 <body>
     <div class="invoice-box">
-        <table cellpadding="0" cellspacing="0">
-            <tr class="top">
-                <td colspan="2">
-                    <table>
-                        <tr>
-                            <td>
-                                <h2>Order Invoice</h2>
-                                Order ID: {{ order.id }}<br>
-                                Order Date: {{ order.created_at|date:"d M Y" }}<br>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
+        <h2>Order Invoice</h2>
+        <!-- Order Invoice Table -->
+        <table>
+            <tr>
+                <td>Order ID:</td>
+                <td>{{ order.id }}</td>
             </tr>
-
-            <tr class="information">
-                <td colspan="2">
-                    <table>
-                        <tr>
-                            <td>
-                                <h3>Billing Address</h3>
-                                {{ order.user.username }}<br>
-                                {{ order.selected_address.street_address }}<br>
-                                {{ order.selected_address.city }}<br>
-                                {{ order.selected_address.state }}<br>
-                                {{ order.selected_address.postal_code }}<br>
-                                {{ order.selected_address.country }}
-                            </td>
-                        </tr>
-                    </table>
-                </td>
+            <tr>
+                <td>Order Date:</td>
+                <td>{{ order.created_at|date:"d M Y" }}</td>
             </tr>
-
-            <tr class="heading">
-                <td>Payment Method</td>
-                <td>{{ order.payment_method }}</td>
-            </tr>
-
-            <tr class="details">
-                <td></td>
-                <td></td>
-            </tr>
-
-            <tr class="heading">
-                <td>Product</td>
-                <td>Price</td>
-            </tr>
-
-            {% for item in product_orders %}
-            <tr class="item">
-                <td>{{ item.product.title }} (Size: {{ item.variations.size }})</td>
-                <td>₹{{ item.product_price }}</td>
-            </tr>
-            {% endfor %}
-
-            <tr class="total">
-                <td></td>
-                <td>Total: ₹{{ order.order_total }}</td>
-            </tr>
-
-            {% if order.coupen %}
-            <tr class="total">
-                <td></td>
-                <td>Coupon: {{ order.coupen.discount }}% Applied</td>
-            </tr>
-            {% endif %}
         </table>
+
+        <!-- Separate Billing Address Section -->
+        <div class="section">
+            <h3>Billing Address</h3>
+            <table class="address-table">
+                <tr>
+                    <td class="label">Username:</td>
+                    <td>{{ order.user.username|capfirst }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Address:</td>
+                    <td>
+                        <span class="address-item">{{ order.selected_address.street_address }}</span>,
+                        <span class="address-item">{{ order.selected_address.city }}</span>,
+                        <span class="address-item">{{ order.selected_address.state }}</span>,
+                        <span class="address-item">{{ order.selected_address.postal_code }}</span>,
+                        <span class="address-item">{{ order.selected_address.country }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Payment Method Section -->
+        <div class="section">
+            <h3>Payment Method</h3>
+            <table class="address-table">
+                <tr>
+                    <td class="label">Method:</td>
+                    <td>{{ order.payment_method }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Order Details Section -->
+        <div class="section">
+            <h3>Order Details</h3>
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Discount</th> <!-- Added Discount Column -->
+                </tr>
+                {% for item in product_orders %}
+                <tr>
+                    <td>{{ item.product.title }} (Size: {{ item.variations.size }})</td>
+                    <td>Rs. {{ item.product_price }}</td>
+                    <td>
+                        {% if discount_amount %}
+                            Rs. {{ discount_amount }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <!-- Total Section -->
+        <div class="total">
+            <table>
+                <tr>
+                    <td>Total</td>
+                    <td>Rs. {{ order.order_total }}</td>
+                </tr>
+            </table>
+        </div>
     </div>
 </body>
 </html>

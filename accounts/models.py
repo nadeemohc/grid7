@@ -8,29 +8,38 @@ class UserManager(BaseUserManager):
     def create_user(self, first_name, last_name, username, email, password=None, referral_code=None):
         if not email:
             raise ValueError('User must have an email address')
-
         if not username:
             raise ValueError('User must have a username')
-
+        
         # Generate unique referral code if not provided
         if not referral_code:
             referral_code = self.generate_unique_referral_code()
-
+        
         user = self.model(
             email=self.normalize_email(email),
             username=username,
             first_name=first_name,
             last_name=last_name,
-            referral_code=referral_code  # Assign generated referral code
+            referral_code=referral_code
         )
         user.set_password(password)
         user.save(using=self._db)
-
+        
         # Create an empty wallet for the user
         Wallet.objects.create(user=user)
-
+        
         return user
+    
+    def generate_unique_referral_code(self):
+        length = 8
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+            print(f"Generated referral code: {code}")  # Debugging line
+            if not User.objects.filter(referral_code=code).exists():
+                return code
 
+
+    
     def create_superuser(self, first_name, last_name, username, email, password=None):
         user = self.create_user(
             email=self.normalize_email(email),
@@ -39,20 +48,19 @@ class UserManager(BaseUserManager):
             first_name=first_name,
             last_name=last_name,
         )
-
         user.is_admin = True
         user.is_active = True
         user.is_staff = True
         user.is_superadmin = True
         user.save(using=self._db)
         return user
-
+    
     def generate_unique_referral_code(self):
-        # length = 8
-        # while True:
-        #     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-        #     if not User.objects.filter(referral_code=code).exists():
-        return 'gjjth3'
+        length = 8
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+            if not User.objects.filter(referral_code=code).exists():
+                return code
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -113,7 +121,6 @@ class Address(models.Model):
 
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    points = models.IntegerField(default=0)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -130,10 +137,10 @@ class WalletHistory(models.Model):
     amount = models.IntegerField(null=True)
     reason = models.CharField(null=True, blank=True, max_length=200)
 
+
 class Referral(models.Model):
     referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_referrals')
     referred = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_referrals')
-    referral_code = models.CharField(max_length=50)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
