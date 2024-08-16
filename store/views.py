@@ -468,7 +468,9 @@ def shop(request, category_id=None):
     elif sort_by == 'price_desc':
         products = sorted(products, key=lambda x: x.final_price, reverse=True)
 
-    items_per_page = request.GET.get('items_per_page', 9)
+    total_products = len(products)  # Get the total number of products
+
+    items_per_page = request.GET.get('items_per_page', 10)
     paginator = Paginator(products, items_per_page)
     page = request.GET.get('page')
     try:
@@ -482,12 +484,14 @@ def shop(request, category_id=None):
         'categories': categories,
         'selected_category': selected_category,
         'products': page_obj,
+        'total_products': total_products,  # Pass total product count to context
         'items_per_page': items_per_page,
         'price_filter': price_filter,
         'sort_by': sort_by,
         'page_obj': page_obj,
     }
     return render(request, 'dashboard/shop.html', context)
+
 
 
 

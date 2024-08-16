@@ -11,7 +11,7 @@ import uuid, store, random, sweetify, logging, razorpay
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from . import views
-from django.views.decorators.cache import never_cache
+from django.views.decorators.cache import never_cache, cache_control
 from django.db.models import Sum
 from datetime import datetime
 from accounts.models import Address
@@ -29,6 +29,13 @@ client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_S
 
 @login_required
 def view_cart(request):
+    # Check if the order has been processed
+    if request.session.get('order_success'):
+        # Clear the session flag
+        del request.session['order_success']
+        # Redirect to empty cart
+        return render(request, 'user_cart/cart.html', {'cart_items': [], 'total_cart_price': 0, 'discounts': 0, 'total_after_discount': 0})
+
     user = request.user
     items = CartItem.objects.filter(user=user, is_deleted=False)
     total_cart_price = Decimal(0)
@@ -92,6 +99,7 @@ def view_cart(request):
     }
 
     return render(request, 'user_cart/cart.html', context)
+
 
 
 @login_required
@@ -223,6 +231,15 @@ def remove_from_cart(request, cart_item_id):
 
 @login_required
 def checkout(request):
+    # Check if the order has been processed
+    if request.session.get('payment_completed'):
+        return redirect('cart:view_cart')
+    if request.session.get('order_success'):
+        # Clear the session flag
+        del request.session['order_success']
+        # Redirect to empty cart
+        return render(request, 'user_cart/cart.html', {'cart_items': [], 'total_cart_price': 0, 'discounts': 0, 'total_after_discount': 0})
+
     user = request.user
     user_cart = Cart.objects.filter(user=user).first()
     total_cart_price = Decimal(0)
@@ -306,12 +323,18 @@ def checkout(request):
 
 
 
+
 @login_required
 def payment_method_selection(request, order_id):
     try:
         order = CartOrder.objects.get(id=order_id, user=request.user)
+        
+        if request.session.get('payment_completed'):
+            # Redirect to the success page if payment is already completed
+            return redirect('cart:order_success', order_id=order.id)
+            
     except CartOrder.DoesNotExist:
-        messages.error(request, "Order does not exist.")
+        sweetify.toast(request, "Order does not exist.", icon='error', timer=5000)
         return redirect('cart:checkout')
 
     items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
@@ -341,12 +364,9 @@ def payment_method_selection(request, order_id):
 
     if request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
-        print(f'Selected payment method: {selected_payment_method}')  # Debug print statement
         
         if selected_payment_method == 'COD':
-            print('Inside COD selection')
             if total_after_discount <= 1000:
-                    
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
                 order.save()
@@ -356,14 +376,14 @@ def payment_method_selection(request, order_id):
                     if product_attribute.reduce_stock(item.quantity):
                         product_attribute.save()
                     else:
-                        messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                        sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
                 order.clear_cart()
+                request.session['payment_completed'] = True
                 return redirect('cart:order_success', order.id)
             else:
-                sweetify.toast(request, "Purchases above 1000 rupees can't be payed Cash on Delivery", icon='error', timer=5000)    
+                sweetify.toast(request, "Purchases above 1000 rupees can't be paid Cash on Delivery", icon='error', timer=5000)    
         elif selected_payment_method == 'Wallet':
-            print('Inside Wallet selection')
             if wallet_balance >= total_after_discount:
                 wallet.balance -= total_after_discount
                 wallet.save()
@@ -382,17 +402,16 @@ def payment_method_selection(request, order_id):
                     if product_attribute.reduce_stock(item.quantity):
                         product_attribute.save()
                     else:
-                        messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                        sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
                 order.clear_cart()
+                request.session['payment_completed'] = True
                 return redirect('cart:order_success', order.id)
             else:
                 sweetify.toast(request, 'Insufficient wallet balance.', icon='error', timer=3000)
         
         elif selected_payment_method == 'Razorpay':
-            print('Inside Razorpay selection')
             razorpay_payment_id = request.POST.get('razorpay_payment_id')
-            print(f'payment id: {razorpay_payment_id}')
             if not razorpay_payment_id:
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
@@ -410,13 +429,14 @@ def payment_method_selection(request, order_id):
                 if product_attribute.reduce_stock(item.quantity):
                     product_attribute.save()
                 else:
-                    messages.error(request, f"Insufficient stock for {product_attribute.product.title}.")
+                    sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
                     return redirect('store:product_view', product_pid=product_attribute.product.id)
             order.clear_cart()
+            request.session['payment_completed'] = True
             return redirect('cart:order_success', order.id)
         
         else:
-            messages.error(request, 'Invalid payment method selected.')
+            sweetify.toast(request, 'Invalid payment method selected.', icon='error', timer=5000)
             return redirect('cart:payment_method_selection', order.id)
 
     # Razorpay Order Creation
@@ -426,8 +446,12 @@ def payment_method_selection(request, order_id):
         "currency": "INR",
         "payment_capture": 1,
     }
-    razorpay_order = client.order.create(data=data)
-    razorpay_order_id = razorpay_order['id']
+    try:
+        razorpay_order = client.order.create(data=data)
+        razorpay_order_id = razorpay_order['id']
+    except Exception as e:
+        sweetify.toast(request, 'Failed to create Razorpay order.', icon='error', timer=5000)
+        return redirect('cart:checkout')
 
     context = {
         'order': order,
@@ -444,29 +468,28 @@ def payment_method_selection(request, order_id):
 
 
 
-@never_cache
 @login_required
 def order_success(request, order_id):
     try:
         order = CartOrder.objects.get(id=order_id, user=request.user)
         product_orders = ProductOrder.objects.filter(order=order)
+        
+        # Clear the cart items after successful payment
+        CartItem.objects.filter(user=request.user, is_deleted=False).update(is_deleted=True)
+        
+        # Reset session flag
+        request.session.pop('payment_completed', None)
+
+        context = {
+            'order': order,
+            'product_orders': product_orders,
+        }
+        return render(request, 'user_cart/order_success.html', context)
     except CartOrder.DoesNotExist:
         sweetify.toast(request, 'Order does not exist', icon='error', timer=3000)
         return redirect('store:home')
 
-    context = {
-        'order': order,
-        'product_orders': product_orders,
-    }
-    return render(request, 'user_cart/order_success.html', context)
-    return redirect('store:home')
 
-    context = {
-        'order': order,
-        'product_orders': product_orders
-    }
-    return render(request, 'user_cart/order_failure', context)
-    return redirect('store:home')
 
 @login_required
 def order_failure(request, order_id):

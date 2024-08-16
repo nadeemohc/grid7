@@ -3,7 +3,37 @@
 
 {% block content %}
     
-    
+<style>
+    .card .icontext {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column; /* Aligns the icon and text vertically */
+    text-align: center; /* Centers the text inside the div */
+}
+
+.card .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px; /* Adds some space between the icon and the text */
+}
+
+.card .text {
+    text-align: center;
+}
+
+.card h6.card-title {
+    margin-bottom: 5px; /* Optional: Adjust margin as needed */
+    font-size: 1.25rem; /* Optional: Adjust font size as needed */
+}
+
+.card .text-sm {
+    font-size: 0.875rem; /* Optional: Adjust font size as needed */
+    color: #6c757d; /* Optional: Adjust text color as needed */
+}
+</style>
+
         <section class="content-main">
             <div class="content-header">
                 <div>
@@ -12,12 +42,19 @@
                 </div>
 
             </div>
+            <style>
+                .col-lg-2-4 {
+                    width: 20%;
+                }
+            </style>
             <div class="row">
-                <div class="col-lg-3">
+                <div class="col-lg-2-4">
                     <a href="{% url 'cust_admin:sales_report' %}">
                         <div class="card card-body mb-4">
                             <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
+                                <span class="icon icon-sm rounded-circle bg-primary-light">
+                                    <i class="text-primary material-icons md-monetization_on"></i>
+                                </span>
                                 <div class="text">
                                     <h6 class="mb-1 card-title">Revenue</h6>
                                     <span>&#8377;{{ total_revenue }}</span>
@@ -27,97 +64,77 @@
                         </div>
                     </a>
                 </div>
-                
-                <div class="col-lg-3">
+            
+                <div class="col-lg-2-4">
                     <a href="{% url 'cust_admin:list_order' %}">
                         <div class="card card-body mb-4">
                             <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-success-light"><i class="text-success material-icons md-local_shipping"></i></span>
+                                <span class="icon icon-sm rounded-circle bg-success-light">
+                                    <i class="text-success material-icons md-local_shipping"></i>
+                                </span>
                                 <div class="text">
-                                    <h6 class="mb-1 card-title">Orders</h6> <span>{{ order_count }}</span>
-                                    <span class="text-sm">
-                                        Excluding orders in transit
-                                    </span>
+                                    <h6 class="mb-1 card-title">Orders</h6> 
+                                    <span>{{ order_count }}</span>
+                                    <span class="text-sm">Excluding orders in transit</span>
                                 </div>
                             </article>
                         </div>
                     </a>
                 </div>
-                <div class="col-lg-3">
+            
+                <div class="col-lg-2-4">
                     <a href="{% url 'cust_admin:prod_list' %}">
                         <div class="card card-body mb-4">
                             <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-warning-light"><i class="text-warning material-icons md-qr_code"></i></span>
+                                <span class="icon icon-sm rounded-circle bg-warning-light">
+                                    <i class="text-warning material-icons md-qr_code"></i>
+                                </span>
                                 <div class="text">
-                                    <h6 class="mb-1 card-title">Products</h6> <span>{{product_count}}</span>
-                                    <span class="text-sm">
-                                        In  {{cat_count}} Categories
-                                    </span>
+                                    <h6 class="mb-1 card-title">Products</h6> 
+                                    <span>{{product_count}}</span>
+                                    <span class="text-sm">In  {{cat_count}} Categories</span>
                                 </div>
                             </article>
                         </div>
                     </a>
                 </div>
-                <div class="col-lg-3">
+            
+                <div class="col-lg-2-4">
                     <a href="{% url 'cust_admin:user_list' %}">
                         <div class="card card-body mb-4">
                             <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-info-light"><i class="text-info material-icons material-icons md-person"></i></span>
+                                <span class="icon icon-sm rounded-circle bg-info-light">
+                                    <i class="text-info material-icons material-icons md-person"></i>
+                                </span>
                                 <div class="text">
-                                    <h6 class="mb-1 card-title">Users</h6> <span>{{ usr_count }}</span>
-                                    <span class="text-sm">
-                                        Based in your user list.
-                                    </span>
+                                    <h6 class="mb-1 card-title">Users</h6> 
+                                    <span>{{ usr_count }}</span>
+                                    <span class="text-sm">Based in your user list.</span>
                                 </div>
                             </article>
                         </div>
-                </a>
+                    </a>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-4">
+            
+                <div class="col-lg-2-4">
                     <a href="{% url 'cust_admin:best_selling_products' %}">
                         <div class="card card-body mb-4">
                             <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
+                                    <span class="icon icon-sm rounded-circle bg-warning-light">
+                                    <i class="text-warning material-icons md-qr_code"></i>
+                                </span>
                                 <div class="text">
-                                    <h6 class="mb-1 card-title">Revenue</h6>
-                                    <span>&#8377;{{ total_revenue }}</span>
-                                    <span class="text-sm">Shipping fees are not included</span>
-                                </div>
-                            </article>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-lg-4">
-                    <a href="{% url 'cust_admin:best_selling_categories' %}">
-                        <div class="card card-body mb-4">
-                            <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
-                                <div class="text">
-                                    <h6 class="mb-1 card-title">Revenue</h6>
-                                    <span>&#8377;{{ total_revenue }}</span>
-                                    <span class="text-sm">Shipping fees are not included</span>
-                                </div>
-                            </article>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-lg-4">
-                    <a href="{% url 'cust_admin:best_selling_brands' %}">
-                        <div class="card card-body mb-4">
-                            <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
-                                <div class="text">
-                                    <h6 class="mb-1 card-title">Revenue</h6>
-                                    <span>&#8377;{{ total_revenue }}</span>
-                                    <span class="text-sm">Shipping fees are not included</span>
+                                    <h6 class="mb-1 card-title">Top Best Selling </h6>
+                                    <span>{{ product_count }}</span>
+                                    <span class="text-sm">Top {{ product_count }} Best Selling Products and their details</span>
                                 </div>
                             </article>
                         </div>
                     </a>
                 </div>
             </div>
+            
+            
             <div class="row">
                 <div class="col-xl-8 col-lg-12">
                     <div class="card mb-4">

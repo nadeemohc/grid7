@@ -8,6 +8,7 @@ from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOffer
 from django.contrib import messages
 from decimal import Decimal
 import sweetify
+from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -22,6 +23,7 @@ import pandas as pd
 from django.urls import reverse
 from .utils import paginate_queryset
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils.timezone import localdate, make_aware
 
 @admin_required
 def dashboard(request):
@@ -726,6 +728,9 @@ import pandas as pd
 from django.utils import timezone
 from datetime import datetime
 
+from django.utils import timezone
+from datetime import datetime
+
 def sales_report(request):
     start_date_value = ""
     end_date_value = ""
@@ -737,32 +742,50 @@ def sales_report(request):
         start_date_value = start_date
         end_date_value = end_date
 
+        print(f"Received Start Date: {start_date}")
+        print(f"Received End Date: {end_date}")
+
         if start_date and end_date:
-            start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
-            end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'))
-            orders = CartOrder.objects.filter(created_at__range=(start_date, end_date), status='Delivered').order_by('created_at')
+            try:
+                start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+                end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'))
+
+                print(f"Processed Start Date: {start_date}")
+                print(f"Processed End Date: {end_date}")
+
+                orders = CartOrder.objects.filter(
+                    created_at__range=(start_date, end_date),
+                    status='Delivered'
+                ).order_by('created_at')
+
+            except ValueError as e:
+                print(f"Date parsing error: {e}")
 
         if 'export_pdf' in request.POST:
-            return export_to_pdf(request, 'custom', orders, start_date, end_date)
+            request.session['filtered_orders'] = list(orders.values())
+            request.session['start_date'] = start_date.strftime('%Y-%m-%d')
+            request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+            return redirect('export_pdf', report_type='custom')
         elif 'export_excel' in request.POST:
-            return export_to_excel(request, 'custom', orders, start_date, end_date)
+            request.session['filtered_orders'] = list(orders.values())
+            request.session['start_date'] = start_date.strftime('%Y-%m-%d')
+            request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+            return redirect('export_excel', report_type='custom')
+
+    # Calculate total orders and total sum
+    total_count = orders.count()
+    total_sum = orders.aggregate(total_sum=Sum('order_total'))['total_sum']
 
     context = {
         'orders': orders,
         'start_date_value': start_date_value,
         'end_date_value': end_date_value,
+        'current_date': timezone.now().date(),
+        'total_count': total_count,
+        'total_sum': total_sum,
     }
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
-
-
-
-from django.template.loader import get_template
-from django.http import HttpResponse
-from xhtml2pdf import pisa
-from datetime import datetime, timedelta
-from django.utils import timezone
-from django.db.models import Sum
 
 def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=None):
     template_path = 'cust_admin/statistics/pdf_template.html'
@@ -771,16 +794,23 @@ def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=N
     total_sum = 0
     total_count = 0
 
+    # Debugging statements
+    print(f"Report Type: {report_type}, Start Date: {start_date}, End Date: {end_date}")
+
     if report_type == 'custom' and orders is not None:
+        print(f"Orders count before summing: {orders.count()}")
+        print(f"Orders fetched: {list(orders)}")
+
         context['orders'] = orders
         context['start_date'] = start_date
         context['end_date'] = end_date
-        total_sum = orders.aggregate(Sum('order_total'))['order_total__sum']
+        total_sum = orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = orders.count()
     elif report_type == 'daily':
         today = timezone.localdate()
         daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
-        total_sum = daily_orders.aggregate(Sum('order_total'))['order_total__sum']
+        print(f"Daily Orders fetched: {list(daily_orders)}")
+        total_sum = daily_orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = daily_orders.count()
         context['orders'] = daily_orders
     elif report_type == 'weekly':
@@ -788,7 +818,8 @@ def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=N
         start_of_week = today - timedelta(days=today.weekday())
         end_of_week = start_of_week + timedelta(days=6)
         weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
-        total_sum = weekly_orders.aggregate(Sum('order_total'))['order_total__sum']
+        print(f"Weekly Orders fetched: {list(weekly_orders)}")
+        total_sum = weekly_orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = weekly_orders.count()
         context['orders'] = weekly_orders
     elif report_type == 'monthly':
@@ -796,29 +827,30 @@ def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=N
         start_of_month = today.replace(day=1)
         end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
         monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
-        total_sum = monthly_orders.aggregate(Sum('order_total'))['order_total__sum']
+        print(f"Monthly Orders fetched: {list(monthly_orders)}")
+        total_sum = monthly_orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = monthly_orders.count()
         context['orders'] = monthly_orders
 
-    context['total_sum'] = total_sum or 0
+    context['total_sum'] = total_sum
     context['total_count'] = total_count
 
-    # Debug: Print the context to check if orders are present
-    print("Context for PDF:", context)
+    # Debugging statements
+    print(f"Context for PDF after filtering: {context}")
 
-    # Rendered template
     template = get_template(template_path)
     html = template.render(context)
 
-    # Create a PDF response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{report_type}_report.pdf"'
     pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # Return PDF file
     if pisa_status.err:
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
+    
+
+
 
     
 def export_to_excel(request, report_type, orders=None, start_date=None, end_date=None):
@@ -999,30 +1031,61 @@ def best_selling_products(request):
     # Format quantities into a human-readable form
     formatted_quantities = format_quantities(product_quantities)
 
+    # Count of top products
+    product_count = top_products.count()
+
     context = {
-        'title': 'Best Selling Products',
+        'title': 'Top Best  Selling',
         'top_products': top_products,
-        'product_quantities': formatted_quantities,  # Update this line
+        'product_quantities': formatted_quantities,
+        'product_count': product_count,  # Pass product count to the context
     }
-    return render(request, 'cust_admin/best_selling/best_selling_products.html', context)
+    return render(request, 'cust_admin/best_selling_products.html', context)
 
 
-def best_selling_categories(request):
-    best_selling_categories = ProductOrder.objects.values('product__category').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
-    top_categories = Category.objects.filter(c_id__in=[item['product__category'] for item in best_selling_categories])
 
-    context = {
-        'title': 'Best Selling Categories',
-        'top_categories': top_categories,
-    }
-    return render(request, 'cust_admin/best selling/best_selling_categories.html', context)
 
-def best_selling_brands(request):
-    best_selling_brands = ProductOrder.objects.values('product__brand').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
-    top_brands = Brand.objects.filter(id__in=[item['product__brand'] for item in best_selling_brands])
+# def best_selling_subcategories(request):
+#     # Get top-selling subcategories based on quantity of delivered products
+#     best_selling_subcategories = ProductOrder.objects.filter(
+#         order__status='Delivered'
+#     ).values(
+#         'product__sub_category'
+#     ).annotate(
+#         total_quantity=Sum('quantity')
+#     ).order_by('-total_quantity')
 
-    context = {
-        'title': 'Best Selling Brands',
-        'top_brands': top_brands,
-    }
-    return render(request, 'cust_admin/best selling/best_selling_brands.html', context)
+#     # Extract IDs and quantities
+#     subcategory_ids = [item['product__sub_category'] for item in best_selling_subcategories]
+#     top_subcategories = Subcategory.objects.filter(sid__in=subcategory_ids)[:10]
+
+#     # Map subcategory IDs to their total quantities
+#     subcategory_quantities = {
+#         item['product__sub_category']: item['total_quantity']
+#         for item in best_selling_subcategories
+#     }
+
+#     # Prepare quantities dictionary for template
+#     quantities = {subcat.sid: subcategory_quantities.get(subcat.sid, 'No data') for subcat in top_subcategories}
+
+#     # Debug print statements
+#     print("Subcategory Quantities:", subcategory_quantities)
+#     print("Quantities for Template:", quantities)
+
+#     context = {
+#         'title': 'Best Selling Subcategories',
+#         'top_subcategories': top_subcategories,
+#         'quantities': quantities,
+#     }
+#     return render(request, 'cust_admin/best_selling/best_selling_categories.html', context)
+
+
+# def best_selling_brands(request):
+#     best_selling_brands = ProductOrder.objects.values('product__brand').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+#     top_brands = Brand.objects.filter(id__in=[item['product__brand'] for item in best_selling_brands])
+
+#     context = {
+#         'title': 'Best Selling Brands',
+#         'top_brands': top_brands,
+#     }
+#     return render(request, 'cust_admin/best selling/best_selling_brands.html', context)
