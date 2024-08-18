@@ -23,9 +23,11 @@ import pandas as pd
 from django.urls import reverse
 from .utils import paginate_queryset
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.decorators.cache import never_cache
 from django.utils.timezone import localdate, make_aware
 
 @admin_required
+@never_cache
 def dashboard(request):
     product_count = Product.objects.count()
     cat_count = Category.objects.count()
@@ -93,7 +95,7 @@ def user_block_unblock(request, username):
     user.is_active = not user.is_active
     user.save()
     action = 'blocked' if not user.is_active else 'unblocked'
-    messages.success(request, f"The user {user.username} has been {action} successfully.")
+    sweetify.toast(request, f"The user {user.username} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:user_list')
 
 #=========================================== admin add, list, edit, delete category=========================================================================================================
@@ -126,12 +128,12 @@ def add_category(request):
         # Check if a category with the same name already exists
         existing_category = Category.objects.filter(c_name=c_name).exists()
         if existing_category:
-            messages.error(request, f"Category {c_name} with this name already exists.")
+            sweetify.toast(request, f"Category {c_name} with this name already exists.", icon='error', timer=3000)
         else:
             # Create and save the new category
             c_data = Category(c_name=c_name, c_image=c_image)
             c_data.save()
-            messages.success(request, "Category added successfully.")
+            sweetify.toast(request, "Category added successfully.", icon='success', timer=3000)
             return redirect('cust_admin:category_list')
 
     return render(request, 'cust_admin/category/add_category.html', context)
@@ -144,7 +146,7 @@ def category_list_unlist(request, c_id):
     category.is_blocked = not category.is_blocked    
     category.save()
     action = 'unblocked' if not category.is_blocked else 'blocked'
-    messages.success(request, f"The category with ID {category.c_id} has been {action} successfully.")
+    sweetify.toast(request, f"The category with ID {category.c_id} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:category_list')
 
 
@@ -223,7 +225,7 @@ def add_variant(request):
             else:
                 new_size = Size(size=size)
                 new_size.save()
-                messages.success(request, f'The size {size} added successfully')
+                sweetify.toast(request, f'The size {size} added successfully', icon='success', timer=3000)
         except IntegrityError as e:
             error_message = str(e)
             sweetify.toast(request, f'An error occurred while adding the size: {error_message}', icon='alert', timer=3000)
@@ -306,7 +308,7 @@ def add_product(request):
         for img in images:
             ProductImages.objects.create(product=product, images=img)
 
-        messages.success(request, 'Product added successfully!')
+        sweetify.toast(request, 'Product added successfully!', icon='success', timer=3000)
         return redirect('cust_admin:prod_list')
     
     # If request method is GET, render the form
@@ -359,7 +361,7 @@ def product_list_unlist(request, p_id):
     product.is_blocked = not product.is_blocked
     product.save()
     action = 'unblocked' if not product.is_blocked else 'blocked'
-    messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
+    sweetify.toast(request, f"The category with ID {product.p_id} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:prod_list')
 
 
@@ -444,7 +446,7 @@ def prod_variant_edit(request, pk):
             product_attribute.status = form.cleaned_data['status']
             product_attribute.save()
 
-            messages.success(request, 'Product attribute details updated successfully!')
+            sweetify.toast(request, 'Product attribute details updated successfully!', icon='success', timer=3000)
             return redirect('cust_admin:prod_catalogue')
     else:
         initial_data = {
@@ -506,7 +508,7 @@ def order_detail(request, order_id):
         'product_images': product_images,
         'sub_total': sub_total,  # Pass sub_total to the template context
     }
-    return render(request, 'cust_admin/order/order_dtls.html', context)
+    return render(request, 'cust_admin/order/order_details.html', context)
 
 def order_update_status(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
@@ -514,7 +516,7 @@ def order_update_status(request, order_id):
         status = request.POST.get('status')
         order.status = status
         order.save()
-        messages.success(request, 'Order status updated successfully.')
+        sweetify.toast(request, 'Order status updated successfully.', icon='success', timer=3000)
         return redirect('cust_admin:list_order')
     context = {
         'title': 'Update Order Status',
