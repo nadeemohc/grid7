@@ -328,17 +328,17 @@ def checkout(request):
 def payment_method_selection(request, order_id):
     try:
         order = CartOrder.objects.get(id=order_id, user=request.user)
-        
+
+        # Check if payment is already completed to avoid duplicate payments
         if request.session.get('payment_completed'):
-            # Redirect to the success page if payment is already completed
             return redirect('cart:order_success', order_id=order.id)
-            
+
     except CartOrder.DoesNotExist:
         sweetify.toast(request, "Order does not exist.", icon='error', timer=5000)
         return redirect('cart:checkout')
 
     items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
-    
+    print('inside payment method selection')
     total_cart_price = Decimal(0)
     for item in items:
         item.total_price = item.product.price * item.quantity
@@ -361,91 +361,160 @@ def payment_method_selection(request, order_id):
         wallet_balance = wallet.balance
     except Wallet.DoesNotExist:
         wallet_balance = Decimal(0)
+        print('wallet_balance fetched:', wallet_balance)
 
     if request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
-        
+        print('pyment method=', selected_payment_method)
         if selected_payment_method == 'COD':
             if total_after_discount <= 1000:
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
                 order.save()
-                # Reduce stock
                 for item in items:
                     product_attribute = item.product
-                    if product_attribute.reduce_stock(item.quantity):
-                        product_attribute.save()
-                    else:
+                    if not product_attribute.reduce_stock(item.quantity):
                         sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
+                    product_attribute.save()
+
                 order.clear_cart()
                 request.session['payment_completed'] = True
                 return redirect('cart:order_success', order.id)
             else:
-                sweetify.toast(request, "Purchases above 1000 rupees can't be paid Cash on Delivery", icon='error', timer=5000)    
+                sweetify.toast(request, "Purchases above 1000 rupees can't be paid Cash on Delivery", icon='error', timer=5000)
+        
         elif selected_payment_method == 'Wallet':
             if wallet_balance >= total_after_discount:
                 wallet.balance -= total_after_discount
                 wallet.save()
-                WalletHistory.objects.create(
-                    wallet=wallet,
-                    transaction_type='Debit',
-                    amount=total_after_discount,
-                    reason='Purchased Products'
-                )
+                WalletHistory.objects.create(wallet=wallet, transaction_type='Debit', amount=total_after_discount, reason='Purchased Products')
+                
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
                 order.save()
-                # Reduce stock
+
                 for item in items:
                     product_attribute = item.product
-                    if product_attribute.reduce_stock(item.quantity):
-                        product_attribute.save()
-                    else:
+                    if not product_attribute.reduce_stock(item.quantity):
                         sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
                         return redirect('store:product_view', product_pid=product_attribute.product.id)
+                    product_attribute.save()
+
                 order.clear_cart()
                 request.session['payment_completed'] = True
                 return redirect('cart:order_success', order.id)
             else:
-                sweetify.toast(request, 'Insufficient wallet balance.', icon='error', timer=3000)
+                sweetify.toast(request, '''Insufficient wallet balance, 
+                Try razorpay or combine pay.''', icon='error', timer=5000)
         
+        elif selected_payment_method == 'Wallet-Razorpay':
+            print('inside wallet-razorpay')
+            print('wallet_balance before condition:', wallet_balance)
+            if wallet_balance > 0:
+                print('wallet_balance =', wallet_balance)
+                amount_to_pay = total_after_discount - wallet_balance
+                print('amount_to_pay', amount_to_pay)
+                if amount_to_pay <= 0:
+                    amount_to_pay = 0
+                wallet.balance = max(wallet_balance - total_after_discount, 0)
+                print('wallet balance', wallet.balance)
+                wallet.save()
+                WalletHistory.objects.create(wallet=wallet, transaction_type='Debit', amount=wallet_balance, reason='Partial Payment')
+            else:
+                amount_to_pay = total_after_discount
+                print('amount to pay in else', amount_to_pay)
+
+            if amount_to_pay > 0:
+                razorpay_payment_id = request.POST.get('razorpay_payment_id')
+                print('razorpayment_id', razorpay_payment_id)
+                if razorpay_payment_id:
+                    order.status = 'Completed'
+                    order.payment_method = selected_payment_method
+                    order.razorpay_payment_id = razorpay_payment_id
+                    order.save()
+                    print('order.razorpay_payment_id', order.razorpay_payment_id)
+                    for item in items:
+                        product_attribute = item.product
+                        if not product_attribute.reduce_stock(item.quantity):
+                            sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
+                            return redirect('store:product_view', product_pid=product_attribute.product.id)
+                        product_attribute.save()
+
+                    order.clear_cart()
+                    request.session['payment_completed'] = True
+                    return redirect('cart:order_success', order.id)
+                else:
+                    sweetify.toast(request, 'Payment failed. Please try again.', icon='error', timer=3000)
+                    return redirect('cart:payment_method_selection', order.id)
+
+                client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+                data = {"amount": int(amount_to_pay * 100), "currency": "INR", "payment_capture": 1}
+                print('data under client', data)
+                try:
+                    razorpay_order = client.order.create(data=data)
+                    razorpay_order_id = razorpay_order['id']
+                except Exception as e:
+                    sweetify.toast(request, 'Failed to create Razorpay order.', icon='error', timer=5000)
+                    return redirect('cart:checkout')
+
+                context = {
+                    'order': order,
+                    'items': items,
+                    'total_cart_price': total_cart_price,
+                    'discounts': discounts,
+                    'total_after_discount': total_after_discount,
+                    'razorpay_order_id': razorpay_order_id,
+                    'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+                    'amount_to_pay': amount_to_pay,  # Pass the amount to the template
+                    'selected_payment_method': selected_payment_method,  # Pass the selected payment method to the template
+                }
+                return render(request, 'user_cart/payment_method_selection.html', context)
+
+            else:
+                order.status = 'Pending'
+                order.payment_method = selected_payment_method
+                order.save()
+                
+                for item in items:
+                    product_attribute = item.product
+                    if not product_attribute.reduce_stock(item.quantity):
+                        sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
+                        return redirect('store:product_view', product_pid=product_attribute.product.id)
+                    product_attribute.save()
+
+                order.clear_cart()
+                request.session['payment_completed'] = True
+                return redirect('cart:order_success', order.id)
+
         elif selected_payment_method == 'Razorpay':
             razorpay_payment_id = request.POST.get('razorpay_payment_id')
-            if not razorpay_payment_id:
-                order.status = 'Pending'
+            print('razorpayment_id inside razorpay elif', razorpay_payment_id)
+            if razorpay_payment_id:
+                order.status = 'Completed'
                 order.payment_method = selected_payment_method
                 order.razorpay_payment_id = razorpay_payment_id
                 order.save()
+
+                # Process the items and clear cart
+                for item in items:
+                    product_attribute = item.product
+                    if not product_attribute.reduce_stock(item.quantity):
+                        sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
+                        return redirect('store:product_view', product_pid=product_attribute.product.id)
+                    product_attribute.save()
+
+                order.clear_cart()
+                request.session['payment_completed'] = True
+                return redirect('cart:order_success', order.id)
+            else:
                 sweetify.toast(request, 'Payment failed. Please try again.', icon='error', timer=3000)
                 return redirect('cart:payment_method_selection', order.id)
-            order.status = 'Completed'
-            order.payment_method = selected_payment_method
-            order.razorpay_payment_id = razorpay_payment_id
-            order.save()
-            # Reduce stock
-            for item in items:
-                product_attribute = item.product
-                if product_attribute.reduce_stock(item.quantity):
-                    product_attribute.save()
-                else:
-                    sweetify.toast(request, f"Insufficient stock for {product_attribute.product.title}.", icon='error', timer=5000)
-                    return redirect('store:product_view', product_pid=product_attribute.product.id)
-            order.clear_cart()
-            request.session['payment_completed'] = True
-            return redirect('cart:order_success', order.id)
-        
-        else:
-            sweetify.toast(request, 'Invalid payment method selected.', icon='error', timer=5000)
-            return redirect('cart:payment_method_selection', order.id)
 
-    # Razorpay Order Creation
+
+    # Razorpay Order Creation for displaying Razorpay payment form initially
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-    data = {
-        "amount": int(total_after_discount * 100),  # amount in paise
-        "currency": "INR",
-        "payment_capture": 1,
-    }
+    data = {"amount": int(total_after_discount * 100), "currency": "INR", "payment_capture": 1}
     try:
         razorpay_order = client.order.create(data=data)
         razorpay_order_id = razorpay_order['id']
@@ -464,6 +533,8 @@ def payment_method_selection(request, order_id):
     }
 
     return render(request, 'user_cart/payment_method_selection.html', context)
+
+
 
 
 
