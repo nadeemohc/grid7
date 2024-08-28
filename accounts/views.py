@@ -9,7 +9,7 @@ from .forms import SignUpForm
 from .models import User
 from store.models import Wallet, Referral
 from django.contrib.auth import get_user_model
-from .models import Wallet, Referral
+from .models import Wallet, Referral, UserManager
 import sweetify
 
 # accounts/views.py
