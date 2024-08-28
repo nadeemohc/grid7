@@ -110,13 +110,18 @@
                             </div>
                             
                             <!-- Wallet + Razorpay Combined Payment Option -->
-                            <div class="col-md-4 mb-3">
+                             
+                             {% if wallet_balance < total_after_discount %}
+                             <div class="col-md-4 mb-3">
                                 <form id="wallet-razorpay-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="payment_method" value="Wallet-Razorpay">
                                     <button id="wallet-razorpay-button" type="button" class="btn btn-primary btn-block">Combine Pay</button>
+                                <p>wallet balance = {{ wallet_balance }}</p>
                                 </form>
-                            </div>
+                            </div>                                
+                             {% endif %}
+
                         </div>
                     </div>
                 </div>

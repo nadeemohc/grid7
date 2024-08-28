@@ -269,6 +269,8 @@ def checkout(request):
 
     total_after_discount = total_cart_price - discounts  # Calculate total after applying coupon
 
+    print('discounts = ', discounts)
+
     if request.method == 'POST':
         selected_address_id = request.POST.get('existing_address')
         if selected_address_id:
@@ -282,6 +284,7 @@ def checkout(request):
                     order_number=order_number,
                     order_total=total_after_discount,  # Use total_after_discount here
                     selected_address=selected_address,
+                    discounts=discounts,
                     status='New'
                 )
 
@@ -323,7 +326,6 @@ def checkout(request):
 
 
 
-
 @login_required
 def payment_method_selection(request, order_id):
     try:
@@ -338,7 +340,6 @@ def payment_method_selection(request, order_id):
         return redirect('cart:checkout')
 
     items = CartItem.objects.filter(cart=order.user.cart, is_deleted=False)
-    print('inside payment method selection')
     total_cart_price = Decimal(0)
     for item in items:
         item.total_price = item.product.price * item.quantity
@@ -355,17 +356,18 @@ def payment_method_selection(request, order_id):
             request.session.pop('applied_coupon_id', None)
 
     total_after_discount = total_cart_price - discounts
+    
+    print(f"Discounts: {discounts}, Total After Discount: {total_after_discount}")
 
     try:
         wallet = Wallet.objects.get(user=request.user)
         wallet_balance = wallet.balance
     except Wallet.DoesNotExist:
         wallet_balance = Decimal(0)
-        print('wallet_balance fetched:', wallet_balance)
 
     if request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
-        print('pyment method=', selected_payment_method)
+
         if selected_payment_method == 'COD':
             if total_after_discount <= 1000:
                 order.status = 'Pending'
@@ -382,8 +384,8 @@ def payment_method_selection(request, order_id):
                 request.session['payment_completed'] = True
                 return redirect('cart:order_success', order.id)
             else:
-                sweetify.toast(request, "Purchases above 1000 rupees can't be paid Cash on Delivery", icon='error', timer=5000)
-        
+                sweetify.toast(request, "Purchases above 1000 rupees can't be paid by Cash on Delivery", icon='error', timer=5000)
+
         elif selected_payment_method == 'Wallet':
             if wallet_balance >= total_after_discount:
                 wallet.balance -= total_after_discount
@@ -392,6 +394,7 @@ def payment_method_selection(request, order_id):
                 
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
+                order.order_total = total_after_discount
                 order.save()
 
                 for item in items:
@@ -405,35 +408,32 @@ def payment_method_selection(request, order_id):
                 request.session['payment_completed'] = True
                 return redirect('cart:order_success', order.id)
             else:
-                sweetify.toast(request, '''Insufficient wallet balance, 
-                Try razorpay or combine pay.''', icon='error', timer=5000)
-        
+                sweetify.toast(request, "Insufficient wallet balance. Try Razorpay or combine payment methods.", icon='error', timer=5000)
+
         elif selected_payment_method == 'Wallet-Razorpay':
-            print('inside wallet-razorpay')
-            print('wallet_balance before condition:', wallet_balance)
+            if wallet_balance >= total_after_discount:
+                sweetify.toast(request, "Sufficient balance in wallet. Please choose Wallet or Razorpay for payment.", icon='info', timer=5000)
+                return redirect('cart:payment_method_selection', order.id)
+
             if wallet_balance > 0:
-                print('wallet_balance =', wallet_balance)
                 amount_to_pay = total_after_discount - wallet_balance
-                print('amount_to_pay', amount_to_pay)
-                if amount_to_pay <= 0:
-                    amount_to_pay = 0
                 wallet.balance = max(wallet_balance - total_after_discount, 0)
-                print('wallet balance', wallet.balance)
                 wallet.save()
+                print(wallet_balance)
                 WalletHistory.objects.create(wallet=wallet, transaction_type='Debit', amount=wallet_balance, reason='Partial Payment')
+                order.wallet_balance_used = wallet_balance
             else:
                 amount_to_pay = total_after_discount
-                print('amount to pay in else', amount_to_pay)
 
             if amount_to_pay > 0:
                 razorpay_payment_id = request.POST.get('razorpay_payment_id')
-                print('razorpayment_id', razorpay_payment_id)
                 if razorpay_payment_id:
                     order.status = 'Completed'
+                    order.order_total = total_after_discount
                     order.payment_method = selected_payment_method
                     order.razorpay_payment_id = razorpay_payment_id
                     order.save()
-                    print('order.razorpay_payment_id', order.razorpay_payment_id)
+
                     for item in items:
                         product_attribute = item.product
                         if not product_attribute.reduce_stock(item.quantity):
@@ -450,7 +450,6 @@ def payment_method_selection(request, order_id):
 
                 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
                 data = {"amount": int(amount_to_pay * 100), "currency": "INR", "payment_capture": 1}
-                print('data under client', data)
                 try:
                     razorpay_order = client.order.create(data=data)
                     razorpay_order_id = razorpay_order['id']
@@ -466,8 +465,9 @@ def payment_method_selection(request, order_id):
                     'total_after_discount': total_after_discount,
                     'razorpay_order_id': razorpay_order_id,
                     'razorpay_key_id': settings.RAZORPAY_KEY_ID,
-                    'amount_to_pay': amount_to_pay,  # Pass the amount to the template
-                    'selected_payment_method': selected_payment_method,  # Pass the selected payment method to the template
+                    'amount_to_pay': amount_to_pay,
+                    'selected_payment_method': selected_payment_method,
+                    'wallet_balance': wallet_balance,
                 }
                 return render(request, 'user_cart/payment_method_selection.html', context)
 
@@ -475,7 +475,7 @@ def payment_method_selection(request, order_id):
                 order.status = 'Pending'
                 order.payment_method = selected_payment_method
                 order.save()
-                
+            
                 for item in items:
                     product_attribute = item.product
                     if not product_attribute.reduce_stock(item.quantity):
@@ -489,14 +489,13 @@ def payment_method_selection(request, order_id):
 
         elif selected_payment_method == 'Razorpay':
             razorpay_payment_id = request.POST.get('razorpay_payment_id')
-            print('razorpayment_id inside razorpay elif', razorpay_payment_id)
             if razorpay_payment_id:
                 order.status = 'Completed'
                 order.payment_method = selected_payment_method
                 order.razorpay_payment_id = razorpay_payment_id
+                order.order_total = total_after_discount
                 order.save()
 
-                # Process the items and clear cart
                 for item in items:
                     product_attribute = item.product
                     if not product_attribute.reduce_stock(item.quantity):
@@ -510,7 +509,6 @@ def payment_method_selection(request, order_id):
             else:
                 sweetify.toast(request, 'Payment failed. Please try again.', icon='error', timer=3000)
                 return redirect('cart:payment_method_selection', order.id)
-
 
     # Razorpay Order Creation for displaying Razorpay payment form initially
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -530,9 +528,12 @@ def payment_method_selection(request, order_id):
         'total_after_discount': total_after_discount,
         'razorpay_order_id': razorpay_order_id,
         'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+        'wallet_balance': wallet_balance,
+
     }
 
     return render(request, 'user_cart/payment_method_selection.html', context)
+
 
 
 
@@ -621,20 +622,6 @@ def render_to_pdf(template_src, context_dict):
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
 
-# def order_invoice(request, order_id):
-#     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
-#     product_orders = ProductOrder.objects.filter(order=order)
-#     context = {
-#         'order': order,
-#         'product_orders': product_orders,
-#     }
-#     pdf = render_to_pdf('user_cart/invoice.html', context)
-#     if pdf:
-#         response = HttpResponse(pdf, content_type='application/pdf')
-#         response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
-#         return response
-#     return HttpResponse("Error generating PDF")
-
 
 
 def order_invoice(request, order_id):
@@ -645,12 +632,16 @@ def order_invoice(request, order_id):
     # Calculate the total product price and discount amount
     total_product_price = sum(item.product_price for item in product_orders)
     discount_amount = total_product_price - order.order_total
-    
+    if order.payment_method == "Wallet-Razorpay":
+        wallet_amount_used = order.wallet_balance_used
+        razor = int(total_product_price) - int(wallet_amount_used)
     # Prepare the context
     context = {
         'order': order,
         'product_orders': product_orders,
         'discount_amount': discount_amount,
+        'wallet_amount_used': wallet_amount_used,
+        'razor': razor,
     }
     
     # Render the HTML content

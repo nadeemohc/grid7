@@ -131,15 +131,25 @@
                 <tr>
                     <th>Product</th>
                     <th>Price</th>
-                    <th>Discount</th> <!-- Added Discount Column -->
+                    <th>Discount</th>
+                    <th>Wallet</th>
+                    <th>razorpay</th>
                 </tr>
                 {% for item in product_orders %}
                 <tr>
                     <td>{{ item.product.title }} (Size: {{ item.variations.size }})</td>
                     <td>Rs. {{ item.product_price }}</td>
+                    <td>N/A</td> <!-- Assuming no discount in your context -->
                     <td>
-                        {% if discount_amount %}
-                            Rs. {{ discount_amount }}
+                        {% if order.payment_method == "Wallet-Razorpay" %}
+                            Rs. {{ wallet_amount_used }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.payment_method == "Wallet-Razorpay" %}
+                            Rs. {{ razor }}
                         {% else %}
                             N/A
                         {% endif %}
