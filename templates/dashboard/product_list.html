@@ -46,7 +46,6 @@
                                             <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
                                             <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
                                             <option value="new_arrivals" {% if sort_by == 'new_arrivals' %}selected{% endif %}>New Arrivals</option>
-                                            <option value="avg_rating" {% if sort_by == 'avg_rating' %}selected{% endif %}>Avg. Rating</option>
                                             <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: Aa-Zz</option>
                                             <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name: Zz-Aa</option>
                                         </select>
@@ -68,19 +67,7 @@
                                             {% endif %}
                                         </a>
                                     </div>
-                                    {% if product.featured %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="best">Best Sell</span>
-                                    </div>
-                                    {% elif product.popular %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="hot">Hot</span>
-                                    </div>
-                                    {% elif product.latest %}
-                                    <div class="product-badges product-badges-position product-badges-mrg">
-                                        <span class="new">New</span>
-                                    </div>
-                                    {% endif %}
+                                    
                                 </div>
                                 <div class="product-content-wrap">
                                     <div class="product-category"></div>
@@ -92,7 +79,9 @@
                                     </div> -->
                                     <div class="product-price">
                                         <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                        {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                         <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="product-action-1 show">
                                         <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>
@@ -118,16 +107,6 @@
                                 <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
                                 {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
                                 <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                {% elif num == 1 %}
-                                <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                                {% if page_obj.number > 6 %}
-                                <li class="page-item disabled"><a class="page-link dot" href="#">...</a></li>
-                                {% endif %}
-                                {% elif num == page_obj.paginator.num_pages %}
-                                {% if page_obj.number < page_obj.paginator.num_pages|add:'-5' %}
-                                <li class="page-item disabled"><a class="page-link dot" href="#">...</a></li>
-                                {% endif %}
-                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
                                 {% endif %}
                                 {% endfor %}
                                 {% if page_obj.has_next %}
@@ -143,50 +122,46 @@
                 </div>
                 <div class="col-lg-3 primary-sidebar sticky-sidebar">
                     <div class="widget-category mb-30">
-                        <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
+                        <h5 class="section-title style-1 mb-30">Category</h5>
                         <ul class="categories">
                             {% for category in categories %}
                             <li>
-                                <a href="{% url 'store:product_list_by_category' category.c_id %}"> {{ category.c_name }}</a></li>
+                                <a href="{% url 'store:product_list_by_category' category.c_id %}">{{ category.c_name }}</a>
+                            </li>
                             {% endfor %}
                         </ul>
                     </div>
                     <div class="sidebar-widget price_range range mb-30">
-                        <h5 class="section-title style-1 mb-30">Filter by price</h5>
+                        <h5 class="section-title style-1 mb-30">Fill by price</h5>
                         <form method="get" id="price-filter-form">
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="below_500" id="below_500" class="form-check-input" {% if price_filter == 'below_500' %}checked{% endif %}>
-                                <label for="below_500" class="form-check-label">Below ₹500</label>
-                            </div>
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="500_1000" id="500_1000" class="form-check-input" {% if price_filter == '500_1000' %}checked{% endif %}>
-                                <label for="500_1000" class="form-check-label">₹500 - ₹1000</label>
-                            </div>
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="1000_1500" id="1000_1500" class="form-check-input" {% if price_filter == '1000_1500' %}checked{% endif %}>
-                                <label for="1000_1500" class="form-check-label">₹1000 - ₹1500</label>
-                            </div>
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="1500_2000" id="1500_2000" class="form-check-input" {% if price_filter == '1500_2000' %}checked{% endif %}>
-                                <label for="1500_2000" class="form-check-label">₹1500 - ₹2000</label>
-                            </div>
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="above_2000" id="above_2000" class="form-check-input" {% if price_filter == 'above_2000' %}checked{% endif %}>
-                                <label for="above_2000" class="form-check-label">Above ₹2000</label>
-                            </div>
-                            <div class="price-filter">
-                                <input type="radio" name="price_filter" value="all" id="all" class="form-check-input" {% if price_filter == 'all' %}checked{% endif %}>
-                                <label for="all" class="form-check-label">All</label>
-                            </div>
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Filter</button>
-                                <a href="{% url 'store:product_list_by_category' category.c_id %}" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i>Clear Filter</a>
+                            <div class="list-group">
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-1" name="price_filter" value="below_500" type="radio" onchange="document.getElementById('price-filter-form').submit();" {% if price_filter == 'below_500' %}checked{% endif %}>
+                                    Below ₹500
+                                </label>
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-1" name="price_filter" value="500_1000" type="radio" onchange="document.getElementById('price-filter-form').submit();" {% if price_filter == '500_1000' %}checked{% endif %}>
+                                    ₹500-₹1000
+                                </label>
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-1" name="price_filter" value="1000_1500" type="radio" onchange="document.getElementById('price-filter-form').submit();" {% if price_filter == '1000_1500' %}checked{% endif %}>
+                                    ₹1000-₹1500
+                                </label>
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-1" name="price_filter" value="1500_2000" type="radio" onchange="document.getElementById('price-filter-form').submit();" {% if price_filter == '1500_2000' %}checked{% endif %}>
+                                    ₹1500-₹2000
+                                </label>
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-1" name="price_filter" value="above_2000" type="radio" onchange="document.getElementById('price-filter-form').submit();" {% if price_filter == 'above_2000' %}checked{% endif %}>
+                                    Above ₹2000
+                                </label>
                             </div>
                         </form>
                     </div>
                 </div>
+                <!-- Fillter By Price -->
             </div>
         </div>
     </section>
 </main>
-{% endblock content %}
+{% endblock %}

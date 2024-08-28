@@ -8,37 +8,53 @@ from cust_admin.forms import ProductVariantAssignForm, CouponForm, CategoryOffer
 from django.contrib import messages
 from decimal import Decimal
 import sweetify
+from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import IntegrityError
 from PIL import Image
-from django.db.models import Case, CharField, Value, When, Count
+from django.db.models import Case, CharField, Value, When, Count, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import pandas as pd
 from django.urls import reverse
-
+from .utils import paginate_queryset
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.decorators.cache import never_cache
+from django.utils.timezone import localdate, make_aware
 
 @admin_required
+@never_cache
 def dashboard(request):
     product_count = Product.objects.count()
     cat_count = Category.objects.count()
-    orders = CartOrder.objects.all().order_by('id')
     usr_count = User.objects.count()
     order_count = CartOrder.objects.count()
-    
+
     # Calculate total revenue from delivered orders
     delivered_orders = CartOrder.objects.filter(status='Delivered')
     total_revenue = delivered_orders.aggregate(total=Sum('order_total'))['total'] or 0
-    
+
+    # Paginate the orders
+    orders_list = CartOrder.objects.all().order_by('-id')
+    paginator = Paginator(orders_list, 10)  # Show 10 orders per page
+
+    page = request.GET.get('page')
+    try:
+        orders = paginator.page(page)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+
     context = {
         'title': 'Admin Dashboard',
         'usr_count': usr_count,
         'order_count': order_count,
-        'orders': orders,
+        'orders': orders_list,
         'product_count': product_count,
         'cat_count': cat_count,
         'total_revenue': total_revenue,
@@ -50,9 +66,13 @@ def dashboard(request):
 @admin_required
 def user_list(request):
     users = User.objects.all().order_by('id')
+    page_obj, paginator = paginate_queryset(request, users, items_per_page=20)  # Adjust items_per_page as needed
+
     context={
         'title':'User List',
          'users': users,
+         'page_obj': page_obj,
+         'paginator': paginator
          }
     return render(request, 'cust_admin/user/user_list.html', context)
 
@@ -75,7 +95,7 @@ def user_block_unblock(request, username):
     user.is_active = not user.is_active
     user.save()
     action = 'blocked' if not user.is_active else 'unblocked'
-    messages.success(request, f"The user {user.username} has been {action} successfully.")
+    sweetify.toast(request, f"The user {user.username} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:user_list')
 
 #=========================================== admin add, list, edit, delete category=========================================================================================================
@@ -83,9 +103,14 @@ def user_block_unblock(request, username):
 @admin_required
 def category_list(request):
     categories = Category.objects.all().order_by('c_id')
+    page_obj, paginator = paginate_queryset(request, categories, items_per_page=20)  # Adjust items_per_page as needed
+
     context = {
         'title':'Category List',
         'categories':categories,
+        'page_obj': page_obj,
+        'paginator': paginator,
+
         }
     return render(request, 'cust_admin/category/category_list.html', context)
 
@@ -103,12 +128,12 @@ def add_category(request):
         # Check if a category with the same name already exists
         existing_category = Category.objects.filter(c_name=c_name).exists()
         if existing_category:
-            messages.error(request, f"Category {c_name} with this name already exists.")
+            sweetify.toast(request, f"Category {c_name} with this name already exists.", icon='error', timer=3000)
         else:
             # Create and save the new category
             c_data = Category(c_name=c_name, c_image=c_image)
             c_data.save()
-            messages.success(request, "Category added successfully.")
+            sweetify.toast(request, "Category added successfully.", icon='success', timer=3000)
             return redirect('cust_admin:category_list')
 
     return render(request, 'cust_admin/category/add_category.html', context)
@@ -121,7 +146,7 @@ def category_list_unlist(request, c_id):
     category.is_blocked = not category.is_blocked    
     category.save()
     action = 'unblocked' if not category.is_blocked else 'blocked'
-    messages.success(request, f"The category with ID {category.c_id} has been {action} successfully.")
+    sweetify.toast(request, f"The category with ID {category.c_id} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:category_list')
 
 
@@ -200,7 +225,7 @@ def add_variant(request):
             else:
                 new_size = Size(size=size)
                 new_size.save()
-                messages.success(request, f'The size {size} added successfully')
+                sweetify.toast(request, f'The size {size} added successfully', icon='success', timer=3000)
         except IntegrityError as e:
             error_message = str(e)
             sweetify.toast(request, f'An error occurred while adding the size: {error_message}', icon='alert', timer=3000)
@@ -234,10 +259,13 @@ def edit_variant(request, id):
 @admin_required
 def prod_list(request):
     products = Product.objects.all().order_by('p_id')
+    page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
     
     context = {
         'products': products,
         'title': 'Product Lobby',
+        'paginator': paginator,
+        'page_obj': page_obj
     }
     return render(request, 'cust_admin/product/product_list.html', context)
 
@@ -280,7 +308,7 @@ def add_product(request):
         for img in images:
             ProductImages.objects.create(product=product, images=img)
 
-        messages.success(request, 'Product added successfully!')
+        sweetify.toast(request, 'Product added successfully!', icon='success', timer=3000)
         return redirect('cust_admin:prod_list')
     
     # If request method is GET, render the form
@@ -333,7 +361,7 @@ def product_list_unlist(request, p_id):
     product.is_blocked = not product.is_blocked
     product.save()
     action = 'unblocked' if not product.is_blocked else 'blocked'
-    messages.success(request, f"The category with ID {product.p_id} has been {action} successfully.")
+    sweetify.toast(request, f"The category with ID {product.p_id} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:prod_list')
 
 
@@ -342,12 +370,15 @@ def product_list_unlist(request, p_id):
 
 def prod_catalogue_list(request):    
     products = ProductAttribute.objects.all().order_by('product')
+    page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
     prods = Product.objects.all()
     
     context = {
         'prods': prods,
         'products': products,
         'title': 'Product Catalogue',
+        'page_obj': page_obj,
+        'paginator': paginator
     }
     return render(request, 'cust_admin/product/product_catalogue.html', context)
 
@@ -415,7 +446,7 @@ def prod_variant_edit(request, pk):
             product_attribute.status = form.cleaned_data['status']
             product_attribute.save()
 
-            messages.success(request, 'Product attribute details updated successfully!')
+            sweetify.toast(request, 'Product attribute details updated successfully!', icon='success', timer=3000)
             return redirect('cust_admin:prod_catalogue')
     else:
         initial_data = {
@@ -439,19 +470,24 @@ def prod_variant_edit(request, pk):
 #=========================================== admin list, detail, status update of orders =========================================================================================================
 
 def list_order(request):
-    orders = CartOrder.objects.all().order_by('id')
+    orders = CartOrder.objects.all().order_by('-id')
+    page_obj, paginator = paginate_queryset(request, orders, items_per_page=20)  # Adjust items_per_page as needed
+
     context = {
         'title': 'Order List',
-        'orders': orders,
+        'orders': page_obj,
+        'paginator': paginator,
+        'page_obj': page_obj,
     }
     return render(request, 'cust_admin/order/order_list.html', context)
+
 
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
     product_images = []
     sub_total = 0  # Initialize sub_total here
-    
+    print('order=',order.payment_method)
     for item in items:
         product = item.product
         price = item.product_price
@@ -472,7 +508,7 @@ def order_detail(request, order_id):
         'product_images': product_images,
         'sub_total': sub_total,  # Pass sub_total to the template context
     }
-    return render(request, 'cust_admin/order/order_dtls.html', context)
+    return render(request, 'cust_admin/order/order_details.html', context)
 
 def order_update_status(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
@@ -480,7 +516,7 @@ def order_update_status(request, order_id):
         status = request.POST.get('status')
         order.status = status
         order.save()
-        messages.success(request, 'Order status updated successfully.')
+        sweetify.toast(request, 'Order status updated successfully.', icon='success', timer=3000)
         return redirect('cust_admin:list_order')
     context = {
         'title': 'Update Order Status',
@@ -498,7 +534,11 @@ def add_coupon(request):
             sweetify.toast(request, 'Coupon added successfully!', icon='success', timer=3000)
             return redirect('cust_admin:coupon_list')
         else:
-            sweetify.error(request, 'There was an error adding the coupon.', timer=3000)
+            # Check if the discount field has errors
+            if form.errors.get('discount'):
+                sweetify.toast(request, 'Discount must be between 1 and 99 percent.', icon='error', timer=3000)
+            else:
+                sweetify.toast(request, 'There was an error adding the coupon.', icon='error', timer=3000)
     else:
         form = CouponForm()
     
@@ -520,7 +560,14 @@ def edit_coupon(request, coupon_id):
 
 def coupon_list(request):
     coupons = Coupon.objects.all()
-    return render(request, 'cust_admin/coupon/coupon_list.html', {'coupons': coupons})
+    page_obj, paginator = paginate_queryset(request, coupons, items_per_page=20)  # Adjust items_per_page as needed
+    
+    context = {
+        'coupons': coupons,
+        'page_obj': page_obj,
+        'paginator': paginator
+    }
+    return render(request, 'cust_admin/coupon/coupon_list.html',context)
 
 def delete_coupon(request, coupon_id):
     coupon = get_object_or_404(Coupon, id=coupon_id)
@@ -532,7 +579,14 @@ def delete_coupon(request, coupon_id):
 
 def category_offer_list(request):
     category_offers = CategoryOffer.objects.all()
-    return render(request, 'cust_admin/offer/category_offer/list_offer.html', {'category_offers': category_offers})
+    page_obj, paginator = paginate_queryset(request, category_offers, items_per_page=20)  # Adjust items_per_page as needed
+
+    context = {
+        'category_offers': category_offers,
+        'page_obj': page_obj,
+        'paginator': paginator
+    }
+    return render(request, 'cust_admin/offer/category_offer/list_offer.html', context)
 
 def add_category_offer(request):
     if request.method == 'POST':
@@ -588,7 +642,14 @@ def delete_category_offer(request, offer_id):
 
 def product_offer_list(request):
     product_offers = ProductOffer.objects.all()
-    return render(request, 'cust_admin/offer/product_offer/list_offer.html', {'product_offers': product_offers})
+    page_obj, paginator = paginate_queryset(request, product_offers, items_per_page=20)  # Adjust items_per_page as needed
+
+    context = {
+        'product_offers': product_offers,
+        'page_obj': page_obj,
+        'paginator': paginator
+    }
+    return render(request, 'cust_admin/offer/product_offer/list_offer.html', context)
 
 def add_product_offer(request):
     if request.method == 'POST':
@@ -656,6 +717,22 @@ def delete_product_offer(request, offer_id):
 
 #=========================================== sales, weekly, daily, monthly reports =========================================================================================================
 
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.utils import timezone
+from datetime import datetime, timedelta
+# from .models import CartOrder
+from django.db.models import Sum
+import pandas as pd
+
+from django.utils import timezone
+from datetime import datetime
+
+from django.utils import timezone
+from datetime import datetime
+
 def sales_report(request):
     start_date_value = ""
     end_date_value = ""
@@ -667,56 +744,75 @@ def sales_report(request):
         start_date_value = start_date
         end_date_value = end_date
 
+        print(f"Received Start Date: {start_date}")
+        print(f"Received End Date: {end_date}")
+
         if start_date and end_date:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-            orders = CartOrder.objects.filter(created_at__range=(start_date, end_date), status='Delivered').order_by('created_at')
+            try:
+                start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+                end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'))
+
+                print(f"Processed Start Date: {start_date}")
+                print(f"Processed End Date: {end_date}")
+
+                orders = CartOrder.objects.filter(
+                    created_at__range=(start_date, end_date),
+                    status='Delivered'
+                ).order_by('created_at')
+
+            except ValueError as e:
+                print(f"Date parsing error: {e}")
 
         if 'export_pdf' in request.POST:
-            return export_to_pdf(request, 'custom', orders)
+            request.session['filtered_orders'] = list(orders.values())
+            request.session['start_date'] = start_date.strftime('%Y-%m-%d')
+            request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+            return redirect('export_pdf', report_type='custom')
         elif 'export_excel' in request.POST:
-            return export_to_excel(request, 'custom', orders)
+            request.session['filtered_orders'] = list(orders.values())
+            request.session['start_date'] = start_date.strftime('%Y-%m-%d')
+            request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+            return redirect('export_excel', report_type='custom')
+
+    # Calculate total orders and total sum
+    total_count = orders.count()
+    total_sum = orders.aggregate(total_sum=Sum('order_total'))['total_sum']
 
     context = {
         'orders': orders,
         'start_date_value': start_date_value,
         'end_date_value': end_date_value,
+        'current_date': timezone.now().date(),
+        'total_count': total_count,
+        'total_sum': total_sum,
     }
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
 
-def daily_report(request):
-    today = timezone.localdate()
-    daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
-    context = {'daily_orders': daily_orders}
-    return render(request, 'cust_admin/statistics/daily_report.html', context)
-
-def weekly_report(request):
-    today = timezone.now().date()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
-    weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
-    context = {'weekly_orders': weekly_orders}
-    return render(request, 'cust_admin/statistics/weekly_report.html', context)
-
-def monthly_report(request):
-    today = timezone.now().date()
-    start_of_month = today.replace(day=1)
-    end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
-    monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
-    context = {'monthly_orders': monthly_orders}
-    return render(request, 'cust_admin/statistics/monthly_report.html', context)
-
-from django.db.models import Sum
-
-def export_to_pdf(request, report_type):
+def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=None):
     template_path = 'cust_admin/statistics/pdf_template.html'
     context = {}
-    
-    if report_type == 'daily':
-        today = timezone.now().date()
+
+    total_sum = 0
+    total_count = 0
+
+    # Debugging statements
+    print(f"Report Type: {report_type}, Start Date: {start_date}, End Date: {end_date}")
+
+    if report_type == 'custom' and orders is not None:
+        print(f"Orders count before summing: {orders.count()}")
+        print(f"Orders fetched: {list(orders)}")
+
+        context['orders'] = orders
+        context['start_date'] = start_date
+        context['end_date'] = end_date
+        total_sum = orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
+        total_count = orders.count()
+    elif report_type == 'daily':
+        today = timezone.localdate()
         daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
-        total_sum = daily_orders.aggregate(Sum('order_total'))['order_total__sum']
+        print(f"Daily Orders fetched: {list(daily_orders)}")
+        total_sum = daily_orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = daily_orders.count()
         context['orders'] = daily_orders
     elif report_type == 'weekly':
@@ -724,7 +820,8 @@ def export_to_pdf(request, report_type):
         start_of_week = today - timedelta(days=today.weekday())
         end_of_week = start_of_week + timedelta(days=6)
         weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
-        total_sum = weekly_orders.aggregate(Sum('order_total'))['order_total__sum']
+        print(f"Weekly Orders fetched: {list(weekly_orders)}")
+        total_sum = weekly_orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = weekly_orders.count()
         context['orders'] = weekly_orders
     elif report_type == 'monthly':
@@ -732,30 +829,37 @@ def export_to_pdf(request, report_type):
         start_of_month = today.replace(day=1)
         end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
         monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
-        total_sum = monthly_orders.aggregate(Sum('order_total'))['order_total__sum']
+        print(f"Monthly Orders fetched: {list(monthly_orders)}")
+        total_sum = monthly_orders.aggregate(Sum('order_total'))['order_total__sum'] or 0
         total_count = monthly_orders.count()
         context['orders'] = monthly_orders
 
-    context['total_sum'] = total_sum or 0
+    context['total_sum'] = total_sum
     context['total_count'] = total_count
-    
-    # Rendered template
+
+    # Debugging statements
+    print(f"Context for PDF after filtering: {context}")
+
     template = get_template(template_path)
     html = template.render(context)
-    
-    # Create a PDF response
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{report_type}_report.pdf"'
     pisa_status = pisa.CreatePDF(html, dest=response)
-    
-    # Return PDF file
+
     if pisa_status.err:
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
+    
 
-def export_to_excel(request, report_type):
-    if report_type == 'daily':
-        today = timezone.now().date()
+
+
+    
+def export_to_excel(request, report_type, orders=None, start_date=None, end_date=None):
+    if report_type == 'custom' and orders is not None:
+        pass  # orders are already filtered
+    elif report_type == 'daily':
+        today = timezone.localdate()
         orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
     elif report_type == 'weekly':
         today = timezone.now().date()
@@ -778,8 +882,8 @@ def export_to_excel(request, report_type):
     df = pd.DataFrame(data)
     
     # Add aggregate rows
-    df.loc['Total'] = ['Total', '', '', df['Total'].sum(), '']
-    df.loc['Count'] = ['Count', '', '', len(orders), '']
+    df.loc['Total'] = ['Total', '', df['Total'].sum(), '']
+    df.loc['Count'] = ['Count', '', len(orders), '']
     
     # Create Excel file
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -787,6 +891,28 @@ def export_to_excel(request, report_type):
     df.to_excel(response, index=False)
     
     return response
+
+def daily_report(request):
+    today = timezone.localdate()
+    daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
+    context = {'daily_orders': daily_orders}
+    return render(request, 'cust_admin/statistics/daily_report.html', context)
+
+def weekly_report(request):
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    weekly_orders = CartOrder.objects.filter(created_at__range=(start_of_week, end_of_week), status='Delivered')
+    context = {'weekly_orders': weekly_orders}
+    return render(request, 'cust_admin/statistics/weekly_report.html', context)
+
+def monthly_report(request):
+    today = timezone.now().date()
+    start_of_month = today.replace(day=1)
+    end_of_month = (start_of_month.replace(month=start_of_month.month % 12 + 1, day=1) - timedelta(days=1))
+    monthly_orders = CartOrder.objects.filter(created_at__range=(start_of_month, end_of_month), status='Delivered')
+    context = {'monthly_orders': monthly_orders}
+    return render(request, 'cust_admin/statistics/monthly_report.html', context)
 
 
 #=========================================== admin home bar and pie graphs =========================================================================================================
@@ -870,3 +996,98 @@ def get_order_status_data(request):
     data = [status['count'] for status in order_status_counts]
 
     return JsonResponse({'labels': labels, 'data': data})
+
+
+
+def format_quantities(product_quantities):
+    size_labels = {
+        1: 'S',
+        2: 'M',
+        3: 'L',
+        4: 'XL',
+        6: 'XXL',
+        7: 'XXXL',
+        10: 'XXXXL'
+    }
+
+    formatted_quantities = []
+    
+    for product in Product.objects.filter(p_id__in=product_quantities.keys()):
+        quantities = product_quantities[product.p_id]
+        formatted_quantities.append({
+            'product': product,
+            'quantities': f"Total Quantity Sold: {quantities}"
+        })
+        
+    return formatted_quantities
+
+def best_selling_products(request):
+    # Get top-selling products based on quantity
+    best_selling_products = ProductOrder.objects.values('product').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+    product_ids = [item['product'] for item in best_selling_products]
+    top_products = Product.objects.filter(p_id__in=product_ids)
+
+    # Map product IDs to their quantities
+    product_quantities = {item['product']: item['total_quantity'] for item in best_selling_products}
+
+    # Format quantities into a human-readable form
+    formatted_quantities = format_quantities(product_quantities)
+
+    # Count of top products
+    product_count = top_products.count()
+
+    context = {
+        'title': 'Top Best  Selling',
+        'top_products': top_products,
+        'product_quantities': formatted_quantities,
+        'product_count': product_count,  # Pass product count to the context
+    }
+    return render(request, 'cust_admin/best_selling_products.html', context)
+
+
+
+
+# def best_selling_subcategories(request):
+#     # Get top-selling subcategories based on quantity of delivered products
+#     best_selling_subcategories = ProductOrder.objects.filter(
+#         order__status='Delivered'
+#     ).values(
+#         'product__sub_category'
+#     ).annotate(
+#         total_quantity=Sum('quantity')
+#     ).order_by('-total_quantity')
+
+#     # Extract IDs and quantities
+#     subcategory_ids = [item['product__sub_category'] for item in best_selling_subcategories]
+#     top_subcategories = Subcategory.objects.filter(sid__in=subcategory_ids)[:10]
+
+#     # Map subcategory IDs to their total quantities
+#     subcategory_quantities = {
+#         item['product__sub_category']: item['total_quantity']
+#         for item in best_selling_subcategories
+#     }
+
+#     # Prepare quantities dictionary for template
+#     quantities = {subcat.sid: subcategory_quantities.get(subcat.sid, 'No data') for subcat in top_subcategories}
+
+#     # Debug print statements
+#     print("Subcategory Quantities:", subcategory_quantities)
+#     print("Quantities for Template:", quantities)
+
+#     context = {
+#         'title': 'Best Selling Subcategories',
+#         'top_subcategories': top_subcategories,
+#         'quantities': quantities,
+#     }
+#     return render(request, 'cust_admin/best_selling/best_selling_categories.html', context)
+
+
+# def best_selling_brands(request):
+#     best_selling_brands = ProductOrder.objects.values('product__brand').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+#     top_brands = Brand.objects.filter(id__in=[item['product__brand'] for item in best_selling_brands])
+
+#     context = {
+#         'title': 'Best Selling Brands',
+#         'top_brands': top_brands,
+#     }
+#     return render(request, 'cust_admin/best selling/best_selling_brands.html', context)

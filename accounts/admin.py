@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # from django_allauth import sites
-from accounts.models import User, Address, Profile
+from accounts.models import*
 
 # Register your models here.
 
@@ -17,3 +17,14 @@ admin.site.register(Address, AddressAdmin)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'dp_img', 'bio']
 admin.site.register(Profile, ProfileAdmin)
+
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ('user', 'balance', 'created_at')
+
+@admin.register(Referral)
+class ReferralAdmin(admin.ModelAdmin):
+    list_display = ('referrer', 'referred', 'date_created')
+@admin.register(WalletHistory)
+class ReferralAdmin(admin.ModelAdmin):
+    list_display = ('wallet', 'transaction_type', 'created_at', 'amount', 'reason')

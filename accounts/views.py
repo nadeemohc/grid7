@@ -7,8 +7,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from .forms import SignUpForm
 from .models import User
+from store.models import Wallet, Referral
+from django.contrib.auth import get_user_model
+from .models import Wallet, Referral
+import sweetify
 
-
+# accounts/views.py
+User = get_user_model()
 
 def perform_signup(request):
     if request.method == "POST":
@@ -16,37 +21,63 @@ def perform_signup(request):
         if form.is_valid():
             username = form.cleaned_data.get("username")
             email = form.cleaned_data.get("email")
-            phone_number = request.POST.get("phone_number")
             password1 = form.cleaned_data["password1"]
             password2 = form.cleaned_data["password2"]
-            encryptedpassword = make_password(form.cleaned_data.get("password1"))
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
-
-            try:
-                user_with_email = User.objects.get(email=email)
-                sweetify.toast(request, "Email already used!", icon='info', timer=3000)
-                return redirect("accounts:perform_signup")
-            except User.DoesNotExist:
-                pass  # Email is not in use, continue with registration
+            entered_referral_code = form.cleaned_data.get("referral_code", "")
+            
+            # Manually generate a unique referral code
+            referral_code = UserManager().generate_unique_referral_code()
 
             if password1 != password2:
                 sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
                 return redirect("accounts:perform_signup")
 
-            user = User.objects.create(
-                username=username,
-                email=email,
-                phone_number=phone_number,
-                password=encryptedpassword,
-                first_name=first_name,
-                last_name=last_name,
-            )
+            if User.objects.filter(email=email).exists():
+                sweetify.toast(request, "Email already used!", icon='info', timer=3000)
+                return redirect("accounts:perform_signup")
 
-            request.session["user_id"] = user.id
+            referrer = None
+            if entered_referral_code:
+                try:
+                    referrer = User.objects.get(referral_code=entered_referral_code)
+                except User.DoesNotExist:
+                    sweetify.toast(request, "Invalid referral code", icon='error', timer=3000)
+                    return redirect("accounts:perform_signup")
+
+            # Create the user with a unique referral code
+            try:
+                user = User.objects.create_user(
+                    first_name=first_name,
+                    last_name=last_name,
+                    username=username,
+                    email=email,
+                    password=password1,
+                    referral_code=referral_code  # Pass the manually generated referral code
+                )
+            except IntegrityError as e:
+                if 'referral_code' in str(e):
+                    sweetify.toast(request, "Duplicate referral code detected, retrying...", icon='error', timer=3000)
+                else:
+                    sweetify.toast(request, "An error occurred during signup", icon='error', timer=3000)
+                return redirect("accounts:perform_signup")
+
+            if referrer:
+                referrer.wallet.points += 5
+                if referrer.wallet.points >= 10:
+                    referrer.wallet.balance += 250
+                    referrer.wallet.points -= 10
+                referrer.wallet.save()
+
+                user.wallet.balance += 250
+                user.wallet.save()
+
+                Referral.objects.create(referrer=referrer, referred=user)
+
+            request.session["user_id"] = user.username
             sent_otp(request)
             return render(request, "account/otp.html", {"email": email})
-
     else:
         form = SignUpForm()
 
@@ -55,6 +86,13 @@ def perform_signup(request):
         "form": form,
     }
     return render(request, "account/signup.html", context)
+
+
+
+
+
+
+
 
 @never_cache
 def perform_login(request):
@@ -142,9 +180,10 @@ def otp_verification(request):
     if request.method == "POST":
         otp_ = request.POST.get("otp")
         user_id = request.session.get("user_id")
+        user = User.objects.all()
 
         if otp_ == request.session["otp"]:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(username=user_id)
             user.verified = True
             user.save()
             request.session.flush()

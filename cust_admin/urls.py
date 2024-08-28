@@ -70,4 +70,9 @@ urlpatterns = [
     path('get_yearly_sales_data/', views.get_yearly_sales_data, name='get_yearly_sales_data'),
     path('get_order_status_data/', views.get_order_status_data, name='get_order_status_data'),
     path('sales_statistics/', views.sales_statistics, name='sales_statistics'),
+    path('export-custom-sales-report/', views.sales_report, name='export_custom_sales_report'),
+    # Best selling 
+    path('best-selling-products/', views.best_selling_products, name='best_selling_products'),
+    # path('best-selling-subcategories/', views.best_selling_subcategories, name='best_selling_subcategories'),
+    # path('best-selling-brands/', views.best_selling_brands, name='best_selling_brands'),
 ]

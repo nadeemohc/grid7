@@ -60,7 +60,7 @@ class Product(models.Model):
     p_id = models.BigAutoField(unique=True, primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="products")
     sub_category = models.ForeignKey(Subcategory, on_delete=models.CASCADE, null=True, related_name="products")
-    title = models.CharField(max_length=100, default="product")
+    title = models.CharField(default="product")
     description = models.TextField(null=True, blank=True, default="This is the product")
     specifications = models.TextField(null=True, blank=True)
     shipping = models.TextField(null=True)
@@ -146,6 +146,7 @@ class CartItem(models.Model):
     quantity = models.PositiveBigIntegerField(default=1)
     is_deleted = models.BooleanField(default=False)
     size = models.CharField(max_length=10, blank=True, null=True)
+    
 
     def product_image(self):
         first_image = self.product.p._images.first()
@@ -156,23 +157,6 @@ class CartItem(models.Model):
     def __str__(self):
         return f'{self.quantity} x {self.product} in {self.cart}'
 
-class Payments(models.Model):
-    payment_choices=(
-        ('COD','COD'),
-        ('Razorpay','Razorpay'),
-        ('Wallet','Wallet'),
-    )
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    payment_id = models.CharField(max_length=100)
-    payment_method = models.CharField(max_length=100,choices=payment_choices)
-    amount_paid = models.CharField(max_length=100)
-    status = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.user.first_name
-
 class CartOrder(models.Model):
     STATUS = (
         ('New', 'New'),
@@ -181,22 +165,33 @@ class CartOrder(models.Model):
         ('Conformed', 'Conformed'),
         ('Pending', 'Pending'),
         ('Delivered', 'Delivered'),
+        ('Completed', 'Completed'),
         ('Cancelled', 'Cancelled'),
         ('Return', 'Return')
     )
+    payment_choices=(
+        ('COD','COD'),
+        ('Razorpay','Razorpay'),
+        ('Wallet','Wallet'),
+    )
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    payment = models.ForeignKey(Payments, on_delete=models.SET_NULL, blank=True, null=True)
+    wallet_balance_used = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    payment_method = models.CharField(max_length=100,choices=payment_choices)
     order_number = models.CharField(max_length=20, default=None)
     order_total = models.FloatField(null=True, blank=True)
-    status = models.CharField(max_length=10, choices=STATUS, default='New')
-    ip = models.CharField(blank=True, max_length=20)
+    discounts = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_ordered = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, editable=True)
     updated_at = models.DateTimeField(auto_now=True)
     selected_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
 
+    # Add these fields for Razorpay integration
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, default='Pending')
+
     class Meta:
-        verbose_name_plural = "Cart Order"
+        verbose_name_plural = "Cart Orders"
 
     def __str__(self):
         return self.order_number
@@ -208,7 +203,7 @@ class CartOrder(models.Model):
 
 class ProductOrder(models.Model):
     order = models.ForeignKey(CartOrder, related_name='items', on_delete=models.SET_NULL, null=True)
-    payment = models.ForeignKey(Payments, on_delete=models.SET_NULL, blank=True, null=True)
+    # payment = models.ForeignKey(Payments, on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
@@ -270,3 +265,16 @@ class CategoryOffer(models.Model):
     def __str__(self):
         return f"{self.category} - {self.discount_percentage}% Off"
 
+class ReturnReason(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(CartOrder, on_delete=models.CASCADE)
+    sizing_issues = models.BooleanField(default=False)
+    damaged_item = models.BooleanField(default=False)
+    incorrect_order = models.BooleanField(default=False)
+    delivery_delays = models.BooleanField(default=False)
+    customer_service = models.BooleanField(default=False)
+    other_reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Return Reason for Order {self.order.id} by {self.user.username}'

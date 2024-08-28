@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Invoice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f9f9f9;
+            text-align: center;
+        }
+        .invoice-box {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            background: #fff;
+            border-radius: 10px;
+            text-align: left;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        table th {
+            background: #f4f4f4;
+            font-weight: bold;
+        }
+        table td {
+            background: #fff;
+        }
+        .invoice-box h2, .invoice-box h3 {
+            margin: 0;
+            padding-bottom: 10px;
+        }
+        .invoice-box .section {
+            margin-bottom: 30px;
+        }
+        .invoice-box .section:last-of-type {
+            margin-bottom: 0;
+        }
+        .invoice-box .total {
+            font-weight: bold;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .invoice-box .coupon {
+            font-weight: bold;
+        }
+        .address-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .address-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+        .address-table .label {
+            font-weight: bold;
+            background: #f4f4f4;
+        }
+        .address-item {
+            display: inline;
+            margin-right: 5px; /* Optional: Add spacing between address components */
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <h2>Order Invoice</h2>
+        <!-- Order Invoice Table -->
+        <table>
+            <tr>
+                <td>Order ID:</td>
+                <td>{{ order.id }}</td>
+            </tr>
+            <tr>
+                <td>Order Date:</td>
+                <td>{{ order.created_at|date:"d M Y" }}</td>
+            </tr>
+        </table>
+
+        <!-- Separate Billing Address Section -->
+        <div class="section">
+            <h3>Billing Address</h3>
+            <table class="address-table">
+                <tr>
+                    <td class="label">Username:</td>
+                    <td>{{ order.user.username|capfirst }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Address:</td>
+                    <td>
+                        <span class="address-item">{{ order.selected_address.street_address }}</span>,
+                        <span class="address-item">{{ order.selected_address.city }}</span>,
+                        <span class="address-item">{{ order.selected_address.state }}</span>,
+                        <span class="address-item">{{ order.selected_address.postal_code }}</span>,
+                        <span class="address-item">{{ order.selected_address.country }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Payment Method Section -->
+        <div class="section">
+            <h3>Payment Method</h3>
+            <table class="address-table">
+                <tr>
+                    <td class="label">Method:</td>
+                    <td>{{ order.payment_method }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Order Details Section -->
+        <div class="section">
+            <h3>Order Details</h3>
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Discount</th>
+                    <th>Wallet</th>
+                    <th>razorpay</th>
+                </tr>
+                {% for item in product_orders %}
+                <tr>
+                    <td>{{ item.product.title }} (Size: {{ item.variations.size }})</td>
+                    <td>Rs. {{ item.product_price }}</td>
+                    <td>N/A</td> <!-- Assuming no discount in your context -->
+                    <td>
+                        {% if order.payment_method == "Wallet-Razorpay" %}
+                            Rs. {{ wallet_amount_used }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.payment_method == "Wallet-Razorpay" %}
+                            Rs. {{ razor }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <!-- Total Section -->
+        <div class="total">
+            <table>
+                <tr>
+                    <td>Total</td>
+                    <td>Rs. {{ order.order_total }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

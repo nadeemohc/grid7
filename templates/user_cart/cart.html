@@ -58,7 +58,7 @@
                                 {% for cart_item in cart_items %}
                                 <tr>
                                     <td class="product-des product-name">
-                                        <h5 class="product-name"><a href="shop-product-right.html">{{ cart_item.product.product.title }}</a></h5>
+                                        <h5 class="product-name">{{ cart_item.product.product.title }}</h5>
                                     </td>
                                     <td class="product-size"><span>{{ cart_item.product.size }}</span></td>
                                     <td class="price" data-title="Price"><span>{{ cart_item.product.price }}</span></td>
@@ -203,7 +203,7 @@ fetch(`/increase_quantity/${cartItemId}/${cart_id}`)
             showToast('info', 'Product is out of stock');
             throw new Error('Product is out of stock');
         } else {
-            throw new Error('Failed to increase quantity');
+            throw new Error('Maximum quatity limit reached');
         }
     })
     .then(data => {
@@ -259,6 +259,7 @@ fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
 }
 
 
+
     function removeFromCart(CartItemId) {
         // Send AJAX request to remove item from wishlist
         fetch(`/remove_from_cart/${CartItemId}/`, {
@@ -303,6 +304,18 @@ fetch(`/decrease_quantity/${cartItemId}/${cart_id}`)
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
             }
+        });
+    }
+
+    function showToast(icon, title) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: icon,
+            title: title,
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
         });
     }
 </script>

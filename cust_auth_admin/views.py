@@ -4,7 +4,7 @@ from cust_admin import views
 from django.contrib.auth.decorators import user_passes_test
 from accounts.models import User
 from django.contrib.auth import login, logout, authenticate
-
+import sweetify
 
 # Create your views here.
 def is_admin(user):
@@ -25,15 +25,21 @@ def admin_login(request):
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
-        print(email,password)
-        user = authenticate(request, email = email, password = password)
-        if user:
+        user = authenticate(request, email=email, password=password)
+        
+        if user is not None:
             if user.is_superadmin:
                 login(request, user)
+                # Add the welcome message here
+                sweetify.toast(request, f'Welcome, {user.first_name}!', icon='success', timer=3000)
                 return redirect('cust_admin:admin_dashboard')
+            else:
+                sweetify.toast(request, 'Invalid admin credentials', icon='error', timer=3000)
+        else:
+            sweetify.toast(request, 'Invalid email or password', icon='error', timer=3000)
             
-            messages.error(request, 'Invalid admin credentials')
     return render(request, 'cust_admin/admin_login.html', {'title':'Admin Login'})
+
     
 @admin_required
 def admin_logout(request):

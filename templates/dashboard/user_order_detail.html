@@ -1,5 +1,6 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block content %}
 
 <style>
@@ -36,7 +37,6 @@
     }
 </style>
 
-
 <div class="container order-container">
     <!-- <div class="order-header">
         <h2>Order Details</h2>
@@ -60,6 +60,10 @@
             <td>₹{{ order.order_total }}</td>
         </tr>
         <tr>
+            <th>Payment Method</th>
+            <td>{{ order.payment_method }}</td>
+        </tr>
+        <tr>
             <th>Order Status</th>
             <td>{{ order.status }}</td>
         </tr>
@@ -79,15 +83,11 @@
             <tr>
                 <td>{{ item.product.title }}</td>
                 <td>{{ item.quantity }}</td>
-                <td>₹{{ item.product_price }}</td>
+                <td>₹{{ item.quantity|multiply:item.product_price|floatformat:2 }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
-            <!-- <tr>
-                <th colspan="2">Sub Total Price:</th>
-                <td>₹{{ order.sub_total }}</td>
-            </tr> -->
             {% if order.coupon %}
             <tr>
                 <th colspan="2">Discount Price:</th>
@@ -102,9 +102,14 @@
     </table>
 
     <div class="button-container">
-        <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>
+        <a href="{% url 'store:home' %}" class="back-to-shop">Continue Shopping</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="{% url 'cart:order_invoice' order.id %}" class="btn btn-primary ">Download Invoice</a>
+
         
-        {% if order.status == Cancelled %}
+        {% if order.status == 'Delivered' %}
+        <!-- <a href="{% url 'store:order_return' order.id %}" class="cancel-order-btn">Return Order</a> -->
+         {% include 'dashboard/modal/return_reason.html' %}
+        {% elif order.status != 'Cancelled' and order.status != 'Return' %}
         <a href="{% url 'store:order_cancel' order.id %}" class="cancel-order-btn">Cancel Order</a>
         {% else %}
         

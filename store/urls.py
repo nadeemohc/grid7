@@ -16,7 +16,7 @@ urlpatterns = [
     path('get_price/<int:size_id>/', views.get_price, name='get_price'),
     path('user_profile/', views.user_profile, name='user_profile'),
     path('order/<int:order_id>/', views.user_order_detail, name='user_order_detail'),
-    # path('order_cancel/<int:order_id>/', views.order_cancel, name='order_cancel'),
+    path('order/return/<int:order_id>/', views.order_return, name='order_return'),
     path('order/cancel/<int:order_id>/', views.order_cancel, name='order_cancel'),
     path('edit_profile/', views.edit_profile, name='edit_profile'),
     path('add_address/', views.add_address, name='add_address'),
@@ -25,6 +25,6 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('shop/', views.shop, name='shop'),
     path('shop/<int:category_id>/', views.shop, name='shop_by_category'),
-    path('list_coupons/', views.list_coupon, name='list_coupon'),    
-
+    path('list_coupons/', views.list_coupon, name='list_coupon'),
+    # path('send-referral-code/', views.send_referral_code, name='send_referral_code'),
 ]

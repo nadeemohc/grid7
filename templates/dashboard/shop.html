@@ -7,7 +7,7 @@
         <div class="container">
             <div class="breadcrumb">
                 <a href="{% url 'store:home' %}" rel="nofollow">Home</a>
-                <span></span> Shop
+                <span></span> Catalogue
             </div>
         </div>
     </div>
@@ -17,7 +17,7 @@
                 <div class="col-lg-9">
                     <div class="shop-product-fillter">
                         <div class="totall-product">
-                            <p>We found <strong class="text-brand">{{ prod_count }}</strong> items for you!</p>
+                            <p>We found <strong class="text-brand">{{ total_products }}</strong> items for you!</p>
                         </div>
                             <form class="sort-by-product-area" method="get" id="filter-form">
                                 <div class="sort-by-cover">
@@ -27,7 +27,7 @@
                                         </div>
                                         <div class="sort-by-dropdown-wrap">
                                             <select name="items_per_page" onchange="document.getElementById('filter-form').submit();">
-                                                <option value="9" {% if items_per_page == '9' %}selected{% endif %}>9</option>
+                                                <option value="9" {% if items_per_page == '10' %}selected{% endif %}>10</option>
                                                 <option value="20" {% if items_per_page == '20' %}selected{% endif %}>20</option>
                                                 <option value="30" {% if items_per_page == '30' %}selected{% endif %}>30</option>
                                                 <option value="all" {% if items_per_page == 'all' %}selected{% endif %}>All</option>
@@ -85,7 +85,9 @@
                                     </div> -->
                                     <div class="product-price">
                                         <span>&#8377;{{ product.product_attributes.first.price }}</span>
+                                        {% if product.product_attributes.first.old_price != 0 and product.product_attributes.first.price != 0 %}
                                         <span class="old-price">&#8377;{{ product.product_attributes.first.old_price }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="product-action-1 show">
                                         <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'store:add_to_wishlist' product.p_id %}"><i class="fi-rs-heart"></i></a>

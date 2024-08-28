@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, Http
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from .models import Coupon
+from decimal import Decimal
 from accounts.models import User, Address
 from django.db.models import Sum, Min, Max
 from django.core.mail import send_mail
@@ -15,6 +16,10 @@ from django.template.defaultfilters import linebreaksbr
 from user_cart.views import checkout
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import sweetify
+from django.conf import settings
+from django.utils import timezone
+from django.db.models import F, ExpressionWrapper, DecimalField
+
 
 def apply_offers(product):
     product_attributes = ProductAttribute.objects.filter(product=product)
@@ -53,10 +58,18 @@ def home(request):
     featured_products = products.filter(featured=True)
     popular_products = products.filter(popular=True)
     new_added_products = products.filter(latest=True)
-
+    
+    # Get the 'Poster' subcategory
+    poster_subcategory = Subcategory.objects.filter(sub_name='Posters').first()
+    
+    # Filter products by the 'Poster' subcategory
+    poster_products = products.filter(sub_category=poster_subcategory) if poster_subcategory else Product.objects.none()
+    print(poster_products,'poster')
+    # Apply offers
     featured_products = [apply_offers(p) for p in featured_products]
     popular_products = [apply_offers(p) for p in popular_products]
     new_added_products = [apply_offers(p) for p in new_added_products]
+    poster_products = [apply_offers(p) for p in poster_products]
 
     context = {
         'categories': categories,
@@ -65,6 +78,7 @@ def home(request):
         'featured_products': featured_products,
         'new_added_products': new_added_products,
         'popular_products': popular_products,
+        'poster_products': poster_products,  # Add this to the context
         'title': 'Home',
     }
     return render(request, 'dashboard/home.html', context)
@@ -108,6 +122,7 @@ def list_prod(request):
 
 
 
+
 def product_list_by_category(request, category_cid):
     category = get_object_or_404(Category, c_id=category_cid)
     search_field = request.GET.get('search_field', '')
@@ -131,6 +146,22 @@ def product_list_by_category(request, category_cid):
         elif price_filter == 'above_2000':
             products = [p for p in products if p.final_price >= 2000]
 
+    # Sort by
+    sort_by = request.GET.get('sort_by')
+    if sort_by:
+        if sort_by == 'price_asc':
+            products = sorted(products, key=lambda p: p.final_price)
+        elif sort_by == 'price_desc':
+            products = sorted(products, key=lambda p: p.final_price, reverse=True)
+        elif sort_by == 'name_asc':
+            products = sorted(products, key=lambda p: p.title)
+        elif sort_by == 'name_desc':
+            products = sorted(products, key=lambda p: p.title, reverse=True)
+        # elif sort_by == 'new_arrivals':
+        #     products = sorted(products, key=lambda p: p.updated, reverse=True)
+        elif sort_by == 'avg_rating':
+            products = sorted(products, key=lambda p: p.avg_rating, reverse=True)
+
     items_per_page = request.GET.get('items_per_page', 9)
     paginator = Paginator(products, items_per_page)
     page = request.GET.get('page')
@@ -151,6 +182,7 @@ def product_list_by_category(request, category_cid):
         'price_filter': price_filter,
         'page_obj': page_obj,
         'search_field': search_field,
+        'sort_by': sort_by,
     }
     return render(request, 'dashboard/product_list.html', context)
 
@@ -165,18 +197,20 @@ def product_detailed_view(request, product_pid):
     product_attributes = ProductAttribute.objects.filter(product=product)
     title = product.title
 
+    # Apply offers to the product
     product = apply_offers(product)
+
+    # Sort the product_attributes based on price
+    sorted_product_attributes = sorted(product_attributes, key=lambda attr: attr.price)
 
     context = {
         'product': product,
         'title': title,
         'specifications_lines': specifications_lines,
         'product_images': product_images,
-        'product_attributes': product_attributes,
+        'product_attributes': sorted_product_attributes,
     }
     return render(request, 'dashboard/product_detailed_view.html', context)
-
-
 
 
 def get_price(request, size_id):
@@ -187,26 +221,54 @@ def get_price(request, size_id):
     except ProductAttribute.DoesNotExist:
         return JsonResponse({'error': 'Product attribute not found'}, status=404)
 
+
+# @login_required
+# def send_referral_code(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         if email:
+#             referral_code = request.user.profile.referral_code  # assuming referral_code is in the profile
+#             subject = 'Your Referral Code'
+#             message = f'Your referral code is {referral_code}. Share it with your friends!'
+#             from_email = settings.EMAIL_FROM
+#             recipient_list = [email]
+#             print('from_email: ', from_email)
+
+#             try:
+#                 send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+#                 sweetify.toast(request, 'Referral code sent successfully.', icon='success', timer=3000)
+#             except Exception as e:
+#                 sweetify.toast(request, f'Failed to send email: {e}', icon='error', timer=3000)
+#         else:
+#             sweetify.toast(request, 'Please provide an email address.', icon='error', timer=3000)
+
+#     return render(request, 'dashboard/user_profile.html', {'referral_code': referral_code})
+
 # for viewing the user details
 @login_required
 def user_profile(request):
     user = request.user
     address = Address.objects.filter(user=user)
     orders = CartOrder.objects.filter(user=user).order_by('-id')
-    today = timezone.now().date()
-    # coupons = Coupon.objects.filter(active=True, active_date__lte=today, expiry_date__gte=today)
+    wallet = Wallet.objects.filter(user=user).first()  # Get the user's wallet
+    wal_history = WalletHistory.objects.filter(wallet=wallet) if wallet else []  # Filter wallet history based on the user's wallet
+    item = ProductOrder.objects.filter(user=user)
+    referral_code = user.referral_code  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
-    print('coupons=', coupons)
+    
     context = {
         'user': user,
-        'address':address,
+        'item': item,
+        'referral_code': referral_code,
+        'wal_history': wal_history,
+        'address': address,
         'orders': orders,
         'title': 'User Profile',
+        'wallet': wallet,
         'coupons': coupons
     }
 
     return render(request, 'dashboard/user_profile.html', context)
-
 def list_coupon(request):
     print("inside coupons")
     today = timezone.now().date()
@@ -353,7 +415,7 @@ def filter_product(request):
         ).distinct().order_by('-id')
         
         # Render the filtered products to HTML
-        data = render_to_string('userhome/product_list.html', {"products": products})
+        data = render_to_string('dashboard/product_list.html', {"products": products})
         
         # Return the rendered HTML as a JSON response
         return JsonResponse({"data": data})
@@ -406,7 +468,9 @@ def shop(request, category_id=None):
     elif sort_by == 'price_desc':
         products = sorted(products, key=lambda x: x.final_price, reverse=True)
 
-    items_per_page = request.GET.get('items_per_page', 9)
+    total_products = len(products)  # Get the total number of products
+
+    items_per_page = request.GET.get('items_per_page', 10)
     paginator = Paginator(products, items_per_page)
     page = request.GET.get('page')
     try:
@@ -420,6 +484,7 @@ def shop(request, category_id=None):
         'categories': categories,
         'selected_category': selected_category,
         'products': page_obj,
+        'total_products': total_products,  # Pass total product count to context
         'items_per_page': items_per_page,
         'price_filter': price_filter,
         'sort_by': sort_by,
@@ -432,22 +497,75 @@ def shop(request, category_id=None):
 
 
 
-
-
-
+@login_required
 def order_cancel(request, order_id):
-    print('inside cancel')
-    order = get_object_or_404(CartOrder, id=order_id)
-    order.status = 'Cancelled'
-    bv = order.status
-    order.save()
-    print(bv)
-    sweetify.toast(request, 'Order status updated successfully.', timer=3000, icon='success')
-    return redirect('store:user_order_detail', order_id = order_id)
+    order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+    if order.status != 'Cancelled':
+        if order.payment_method == 'Razorpay':
+            # Logic for Razorpay refund to wallet
+            wallet, created = Wallet.objects.get_or_create(user=request.user)
+            wallet.balance += Decimal(order.order_total)
+            wallet.save()
+            WalletHistory.objects.create(
+                wallet=wallet,
+                transaction_type='Credit',
+                amount=order.order_total,
+                reason='Order Cancellation'
+            )
+        order.status = 'Cancelled'
+        order.save()
+        sweetify.toast(request, 'Your order has been cancelled and amount refunded to your wallet.',icon='success', timer=3000)
+    else:
+        sweetify.toast(request, 'Your order is already cancelled.',icon='warning', timer=3000)
+    return redirect('store:user_order_detail', order_id=order.id)
+
+@login_required
+def order_return(request, order_id):
+    order = get_object_or_404(CartOrder, id=order_id, user=request.user)
+    
+    if request.method == 'POST':
+        sizing_issues = 'sizing_issues' in request.POST
+        damaged_item = 'damaged_item' in request.POST
+        incorrect_order = 'incorrect_order' in request.POST
+        delivery_delays = 'delivery_delays' in request.POST
+        customer_service = 'customer_service' in request.POST
+        other_reason = request.POST.get('description', '')
+
+        if order.status == 'Delivered':
+            # Logic for refund to wallet for all payment methods
+            wallet, created = Wallet.objects.get_or_create(user=request.user)
+            wallet.balance += Decimal(order.order_total)
+            wallet.save()
+            WalletHistory.objects.create(
+                wallet=wallet,
+                transaction_type='Credit',
+                amount=order.order_total,
+                reason='Order Returned'
+            )
+            order.status = 'Return'
+            order.save()
+            
+            # Save return reason
+            ReturnReason.objects.create(
+                user=request.user,
+                order=order,
+                sizing_issues=sizing_issues,
+                damaged_item=damaged_item,
+                incorrect_order=incorrect_order,
+                delivery_delays=delivery_delays,
+                customer_service=customer_service,
+                other_reason=other_reason
+            )
+            
+            sweetify.toast(request, 'Your order has been marked for return and amount refunded to your wallet.', icon='success', timer=3000)
+        else:
+            sweetify.toast(request, 'Your order is not eligible for return.', icon='warning', timer=3000)
+        
+        return redirect('store:user_order_detail', order_id=order.id)
+    
+    return render(request, 'store/order_return.html', {'order': order})
 
 
-
-from django.db.models import Min, Max
 
 def search_and_filter(request):
     search_field = request.GET.get('search_field', '')
@@ -460,6 +578,11 @@ def search_and_filter(request):
     products = Product.objects.all()
     categories = Category.objects.all()
 
+    # Default search for "posters" if no search term is provided
+    if not search_field:
+        search_field = 'poster'
+
+    # Filter products based on search_field
     if search_field:
         products = products.filter(title__icontains=search_field)
 
@@ -481,22 +604,27 @@ def search_and_filter(request):
         elif price_filter == 'above_2000':
             products = products.filter(product_attributes__price__gt=2000)
 
-    # Apply sorting
+    # Annotate products with min and max price
+    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+
+    # Apply sorting by min_price
     if sort_by == 'price_asc':
-        products = products.order_by('product_attributes__price')
+        products = products.order_by('min_price')
     elif sort_by == 'price_desc':
-        products = products.order_by('-product_attributes__price')
+        products = products.order_by('-min_price')
     elif sort_by == 'title_asc':
         products = products.order_by('title')
     elif sort_by == 'title_desc':
         products = products.order_by('-title')
 
-    # Annotate products with min and max price
-    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+    # Remove duplicates
+    products = products.distinct()
 
     # Pagination logic
     if items_per_page != 'all':
-        products = products[:int(items_per_page)]
+        paginator = Paginator(products, int(items_per_page))
+        page_number = request.GET.get('page')
+        products = paginator.get_page(page_number)
 
     context = {
         'products': products,
@@ -510,6 +638,7 @@ def search_and_filter(request):
     }
 
     return render(request, 'dashboard/search_and_filter.html', context)
+
 
 
 

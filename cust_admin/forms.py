@@ -37,6 +37,12 @@ class CouponForm(forms.ModelForm):
             raise ValidationError("Expiry date cannot be in the past.")
         return expiry_date
 
+    def clean_discount(self):
+        discount = self.cleaned_data.get('discount')
+        if discount is not None and (discount < 1 or discount > 99):
+            raise ValidationError("Discount must be between 1 and 99 percent.")
+        return discount
+
     def clean(self):
         cleaned_data = super().clean()
         active_date = cleaned_data.get('active_date')
@@ -45,6 +51,7 @@ class CouponForm(forms.ModelForm):
         if active_date and expiry_date and active_date > expiry_date:
             raise ValidationError("Expiry date must be after the active date.")
         return cleaned_data
+
 
 class CategoryOfferForm(forms.ModelForm):
     class Meta:
