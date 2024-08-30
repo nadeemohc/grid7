@@ -14,6 +14,7 @@ import sweetify
 
 # accounts/views.py
 User = get_user_model()
+#=========================================== User Signin, login, logout =========================================================================================================
 
 def perform_signup(request):
     if request.method == "POST":
@@ -88,12 +89,6 @@ def perform_signup(request):
     return render(request, "account/signup.html", context)
 
 
-
-
-
-
-
-
 @never_cache
 def perform_login(request):
     if request.user.is_authenticated:
@@ -138,11 +133,14 @@ def perform_login(request):
     return render(request, "account/login.html", context)
 
 
-def edit_info(request):
-    user = get_object_or_404(
-        User,
-    )
-    return render(request, "dashboard/edit_profile.html")
+@never_cache
+def perform_logout(request):
+    logout(request)
+    sweetify.toast(request, "You have logged out", icon='success', timer=3000)
+    return redirect("store:home")
+
+
+#=========================================== Send, resend and verify otp =========================================================================================================
 
 
 def sent_otp(request):
@@ -205,8 +203,3 @@ def otp_verification(request):
         return render(request, "account/otp.html")
 
 
-@never_cache
-def perform_logout(request):
-    logout(request)
-    sweetify.toast(request, "You have logged out", icon='success', timer=3000)
-    return redirect("store:home")
