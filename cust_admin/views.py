@@ -524,6 +524,51 @@ def order_update_status(request, order_id):
     }
     return render(request, 'cust_admin/order/order_update_status.html', context)
 
+def manage_return_requests(request):
+    # Fetch orders with the 'Return Requested' status
+    return_requests = CartOrder.objects.filter(status='Return Requested')
+    print('requests = ', return_requests)
+    if request.method == 'POST':
+        order_id = request.POST.get('order_id')
+        action = request.POST.get('action')
+        
+        # Fetch the order
+        order = get_object_or_404(CartOrder, id=order_id)
+        
+        if action == 'approve':
+            if order.status == 'Return Approved':
+                messages.error(request, 'This order has already been refunded.')
+            else:
+                # Approve the return
+                order.status = 'Return Approved'
+                order.save()
+                
+                # Process refund to wallet
+                wallet, created = Wallet.objects.get_or_create(user=order.user)
+                wallet.balance += Decimal(order.order_total)
+                wallet.save()
+                
+                WalletHistory.objects.create(
+                    wallet=wallet,
+                    transaction_type='Credit',
+                    amount=order.order_total,
+                    reason='Order Return Approved'
+                )
+                
+                messages.success(request, 'Return request approved and refund processed.')
+                
+        elif action == 'reject':
+            # Reject the return
+            order.status = 'Return Rejected'
+            order.save()
+            
+            messages.success(request, 'Return request rejected.')
+        
+        return redirect('cust_admin:returned_orders')
+
+    return render(request, 'cust_admin/order/manage_return_requests.html', {'return_requests': return_requests})
+
+
 #=========================================== admin add, list, edit, delete coupons =========================================================================================================
 
 def add_coupon(request):
@@ -1046,48 +1091,3 @@ def best_selling_products(request):
 
 
 
-
-# def best_selling_subcategories(request):
-#     # Get top-selling subcategories based on quantity of delivered products
-#     best_selling_subcategories = ProductOrder.objects.filter(
-#         order__status='Delivered'
-#     ).values(
-#         'product__sub_category'
-#     ).annotate(
-#         total_quantity=Sum('quantity')
-#     ).order_by('-total_quantity')
-
-#     # Extract IDs and quantities
-#     subcategory_ids = [item['product__sub_category'] for item in best_selling_subcategories]
-#     top_subcategories = Subcategory.objects.filter(sid__in=subcategory_ids)[:10]
-
-#     # Map subcategory IDs to their total quantities
-#     subcategory_quantities = {
-#         item['product__sub_category']: item['total_quantity']
-#         for item in best_selling_subcategories
-#     }
-
-#     # Prepare quantities dictionary for template
-#     quantities = {subcat.sid: subcategory_quantities.get(subcat.sid, 'No data') for subcat in top_subcategories}
-
-#     # Debug print statements
-#     print("Subcategory Quantities:", subcategory_quantities)
-#     print("Quantities for Template:", quantities)
-
-#     context = {
-#         'title': 'Best Selling Subcategories',
-#         'top_subcategories': top_subcategories,
-#         'quantities': quantities,
-#     }
-#     return render(request, 'cust_admin/best_selling/best_selling_categories.html', context)
-
-
-# def best_selling_brands(request):
-#     best_selling_brands = ProductOrder.objects.values('product__brand').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
-#     top_brands = Brand.objects.filter(id__in=[item['product__brand'] for item in best_selling_brands])
-
-#     context = {
-#         'title': 'Best Selling Brands',
-#         'top_brands': top_brands,
-#     }
-#     return render(request, 'cust_admin/best selling/best_selling_brands.html', context)

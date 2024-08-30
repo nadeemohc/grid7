@@ -522,7 +522,7 @@ def order_cancel(request, order_id):
 @login_required
 def order_return(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
-    
+
     if request.method == 'POST':
         sizing_issues = 'sizing_issues' in request.POST
         damaged_item = 'damaged_item' in request.POST
@@ -532,20 +532,8 @@ def order_return(request, order_id):
         other_reason = request.POST.get('description', '')
 
         if order.status == 'Delivered':
-            # Logic for refund to wallet for all payment methods
-            wallet, created = Wallet.objects.get_or_create(user=request.user)
-            wallet.balance += Decimal(order.order_total)
-            wallet.save()
-            WalletHistory.objects.create(
-                wallet=wallet,
-                transaction_type='Credit',
-                amount=order.order_total,
-                reason='Order Returned'
-            )
-            order.status = 'Return'
-            order.save()
-            
-            # Save return reason
+            print('order = ', order)
+            # Save the return request for admin review
             ReturnReason.objects.create(
                 user=request.user,
                 order=order,
@@ -556,13 +544,14 @@ def order_return(request, order_id):
                 customer_service=customer_service,
                 other_reason=other_reason
             )
-            
-            sweetify.toast(request, 'Your order has been marked for return and amount refunded to your wallet.', icon='success', timer=3000)
+            order.status = 'Return Requested'
+            order.save()
+            sweetify.toast(request, 'Your return request has been submitted for review.', icon='success', timer=3000)
         else:
             sweetify.toast(request, 'Your order is not eligible for return.', icon='warning', timer=3000)
-        
+
         return redirect('store:user_order_detail', order_id=order.id)
-    
+
     return render(request, 'store/order_return.html', {'order': order})
 
 
