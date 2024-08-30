@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
+
+#=========================================== view, add, remove, increase, decrease in cart =================================================================================================================================
+
+
 @login_required
 def view_cart(request):
     # Check if the order has been processed
@@ -101,7 +105,6 @@ def view_cart(request):
     return render(request, 'user_cart/cart.html', context)
 
 
-
 @login_required
 @require_POST
 def add_to_cart(request):
@@ -166,23 +169,6 @@ def add_to_cart(request):
     return redirect('store:product_view', product_pid=product_id)
 
 
-def apply_coupon(request):
-    if request.method == "POST":
-        coupon_code = request.POST.get("coupon_code")
-        try:
-            coupon = Coupon.objects.get(code=coupon_code, active=True)
-            if coupon.is_active():
-                request.session['coupon_id'] = coupon.id
-                messages.success(request, "Coupon applied successfully!")
-            else:
-                messages.error(request, "Coupon is expired or inactive.")
-        except Coupon.DoesNotExist:
-            messages.error(request, "Invalid coupon code.")
-    return redirect('cart:view_cart')
-
-
-
-
 @login_required
 def increase_quantity(request, cart_item_id, cart_id):
     try:
@@ -219,7 +205,7 @@ def decrease_quantity(request, cart_item_id, cart_id):
         return JsonResponse({'error': 'Cart item not found'}, status=404)
    
 
-
+@login_required
 @require_POST
 def remove_from_cart(request, cart_item_id):
     
@@ -227,6 +213,28 @@ def remove_from_cart(request, cart_item_id):
     cart_item.delete()
     sweetify.toast(request, 'Item removed from cart successfully',timer=3000, icon='success')
     return JsonResponse({'message': 'Item removed from cart successfully'}, status=200)
+
+
+#=========================================== apply coupon =================================================================================================================================
+
+
+@login_required
+def apply_coupon(request):
+    if request.method == "POST":
+        coupon_code = request.POST.get("coupon_code")
+        try:
+            coupon = Coupon.objects.get(code=coupon_code, active=True)
+            if coupon.is_active():
+                request.session['coupon_id'] = coupon.id
+                messages.success(request, "Coupon applied successfully!")
+            else:
+                messages.error(request, "Coupon is expired or inactive.")
+        except Coupon.DoesNotExist:
+            messages.error(request, "Invalid coupon code.")
+    return redirect('cart:view_cart')
+
+
+#=========================================== checkout and payment method selection =================================================================================================================================
 
 
 @login_required
@@ -323,7 +331,6 @@ def checkout(request):
         'user_addresses': user_addresses,
     }
     return render(request, 'user_cart/checkout.html', context)
-
 
 
 @login_required
@@ -536,8 +543,7 @@ def payment_method_selection(request, order_id):
 
 
 
-
-
+#=========================================== order success and failure =================================================================================================================================
 
 
 @login_required
@@ -562,7 +568,6 @@ def order_success(request, order_id):
         return redirect('store:home')
 
 
-
 @login_required
 def order_failure(request, order_id):
     try:
@@ -572,47 +577,10 @@ def order_failure(request, order_id):
         sweetify.toast(request, 'Order does not exist', icon='error', timer=3000)
 
 
-@login_required
-def payment(request, order_id):
-    user = request.user
-    order = get_object_or_404(CartOrder, id=order_id, user=user)
-
-    if request.method == 'POST':
-        payment_method = request.POST.get('payment_method')
-
-        if payment_method:
-            # Assume payment is successful and update the order status
-            Payments.objects.create(
-                user=user,
-                payment_id=str(uuid.uuid4()),  # Example payment ID
-                payment_method=payment_method,
-                amount_paid=order.order_total,
-                status='Completed'
-            )
-            order.status = 'Paid'
-            order.save()
-
-            messages.success(request, "Your payment was successful!")
-            return redirect('cart:order_confirmation', order_id=order.id)
-        else:
-            messages.error(request, "Please select a payment method.")
-
-    context = {
-        'order': order,
-    }
-    return render(request, 'user_cart/payment.html', context)
+#=========================================== invoice things =================================================================================================================================
 
 
 @login_required
-def order_confirmation(request, order_id):
-    user = request.user
-    order = get_object_or_404(CartOrder, id=order_id, user=user)
-    context = {
-        'order': order,
-    }
-    return render(request, 'user_cart/order_confirmation.html', context)
-
-
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
     html = template.render(context_dict)
@@ -623,7 +591,7 @@ def render_to_pdf(template_src, context_dict):
     return None
 
 
-
+@login_required
 def order_invoice(request, order_id):
     # Fetch the order and related product orders
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)

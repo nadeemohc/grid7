@@ -157,6 +157,50 @@ class CartItem(models.Model):
     def __str__(self):
         return f'{self.quantity} x {self.product} in {self.cart}'
 
+# class CartOrder(models.Model):
+#     STATUS = (
+#         ('New', 'New'),
+#         ('Paid', 'Paid'),
+#         ('Shipped', 'Shipped'),
+#         ('Conformed', 'Conformed'),
+#         ('Pending', 'Pending'),
+#         ('Delivered', 'Delivered'),
+#         ('Completed', 'Completed'),
+#         ('Cancelled', 'Cancelled'),
+#         ('Return', 'Return')
+#     )
+#     payment_choices=(
+#         ('COD','COD'),
+#         ('Razorpay','Razorpay'),
+#         ('Wallet','Wallet'),
+#     )
+#     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+#     wallet_balance_used = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+#     payment_method = models.CharField(max_length=100,choices=payment_choices)
+#     order_number = models.CharField(max_length=20, default=None)
+#     order_total = models.FloatField(null=True, blank=True)
+#     discounts = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+#     is_ordered = models.BooleanField(default=True)
+#     created_at = models.DateTimeField(default=timezone.now, editable=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     selected_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+
+#     # Add these fields for Razorpay integration
+#     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+#     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+#     status = models.CharField(max_length=20, default='Pending')
+
+#     class Meta:
+#         verbose_name_plural = "Cart Orders"
+
+#     def __str__(self):
+#         return self.order_number
+
+#     def clear_cart(self):
+#         cart = Cart.objects.filter(user=self.user).first()
+#         if cart:
+#             cart.items.all().delete()
+
 class CartOrder(models.Model):
     STATUS = (
         ('New', 'New'),
@@ -167,16 +211,20 @@ class CartOrder(models.Model):
         ('Delivered', 'Delivered'),
         ('Completed', 'Completed'),
         ('Cancelled', 'Cancelled'),
-        ('Return', 'Return')
+        ('Return Requested', 'Return Requested'),
+        ('Return Approved', 'Return Approved'),
+        ('Return Rejected', 'Return Rejected')
     )
-    payment_choices=(
-        ('COD','COD'),
-        ('Razorpay','Razorpay'),
-        ('Wallet','Wallet'),
+    
+    payment_choices = (
+        ('COD', 'COD'),
+        ('Razorpay', 'Razorpay'),
+        ('Wallet', 'Wallet'),
     )
+    
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     wallet_balance_used = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    payment_method = models.CharField(max_length=100,choices=payment_choices)
+    payment_method = models.CharField(max_length=100, choices=payment_choices)
     order_number = models.CharField(max_length=20, default=None)
     order_total = models.FloatField(null=True, blank=True)
     discounts = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -188,7 +236,15 @@ class CartOrder(models.Model):
     # Add these fields for Razorpay integration
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
-    status = models.CharField(max_length=20, default='Pending')
+    status = models.CharField(max_length=20, choices=STATUS, default='Pending')
+    
+    # New fields for handling returns
+    return_request_status = models.CharField(
+        max_length=20,
+        choices=STATUS,
+        default='None'
+    )
+    return_reason = models.TextField(blank=True, null=True)
 
     class Meta:
         verbose_name_plural = "Cart Orders"

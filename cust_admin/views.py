@@ -26,6 +26,10 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.decorators.cache import never_cache
 from django.utils.timezone import localdate, make_aware
 
+
+#=========================================== admin dashboard ===========================================================================================================================
+
+
 @admin_required
 @never_cache
 def dashboard(request):
@@ -61,7 +65,9 @@ def dashboard(request):
     }
     return render(request, 'cust_admin/index.html', context)
 
+
 #=========================================== admin list, view, delete user =========================================================================================================
+
 
 @admin_required
 def user_list(request):
@@ -98,7 +104,9 @@ def user_block_unblock(request, username):
     sweetify.toast(request, f"The user {user.username} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:user_list')
 
+
 #=========================================== admin add, list, edit, delete category=========================================================================================================
+
 
 @admin_required
 def category_list(request):
@@ -139,7 +147,6 @@ def add_category(request):
     return render(request, 'cust_admin/category/add_category.html', context)
 
 
-
 @admin_required
 def category_list_unlist(request, c_id):
     category = get_object_or_404(Category, c_id = c_id)
@@ -167,7 +174,9 @@ def edit_category(request, c_id):
           
     return render(request, 'cust_admin/category/category_edit.html', context)
 
+
 #=========================================== admin add, list subcategory =========================================================================================================
+
 
 @admin_required
 def subcategory_list(request):
@@ -190,8 +199,11 @@ def add_subcat(request):
     # categories = Category.objects.all()
     return render(request, 'cust_admin/sub_category/add_sub_cat.html', {'title':'Add Sub Category'})
 
+
 #=========================================== admin add, list, edit, delete variant =========================================================================================================
 
+
+@admin_required
 def list_variant(request):
     # Define the custom ordering based on the size values
     custom_ordering = Case(
@@ -214,6 +226,8 @@ def list_variant(request):
     }
     return render(request, 'cust_admin/variant/variant_list.html', context)
 
+
+@admin_required
 def add_variant(request):
     if request.method == 'POST':
         size = request.POST.get('size')
@@ -237,6 +251,7 @@ def add_variant(request):
     return render(request, 'cust_admin/variant/variant_add.html', context)
 
 
+@admin_required
 def edit_variant(request, id):
     if request.method == 'POST':
         size = request.POST.get('size')
@@ -254,7 +269,9 @@ def edit_variant(request, id):
     
     return render(request, 'cust_admin/variant/variant_edit.html', context)
 
+
 #=========================================== admin add, list, edit, delete product =========================================================================================================
+
 
 @admin_required
 def prod_list(request):
@@ -268,6 +285,7 @@ def prod_list(request):
         'page_obj': page_obj
     }
     return render(request, 'cust_admin/product/product_list.html', context)
+
 
 @admin_required
 def add_product(request):
@@ -322,7 +340,6 @@ def add_product(request):
     return render(request, 'cust_admin/product/product_add.html', context)
 
 
-
 @admin_required
 def prod_edit(request, p_id):
     product = get_object_or_404(Product, p_id=p_id)
@@ -365,9 +382,7 @@ def product_list_unlist(request, p_id):
     return redirect('cust_admin:prod_list')
 
 
-
-
-
+@admin_required
 def prod_catalogue_list(request):    
     products = ProductAttribute.objects.all().order_by('product')
     page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
@@ -382,6 +397,8 @@ def prod_catalogue_list(request):
     }
     return render(request, 'cust_admin/product/product_catalogue.html', context)
 
+
+@admin_required
 def catalogue_list_unlist(request, pk):
     product = get_object_or_404(ProductAttribute, pk=pk)
     product.is_blocked = not product.is_blocked
@@ -390,9 +407,11 @@ def catalogue_list_unlist(request, pk):
     sweetify.toast(request, f"The product variant with ID {product.pk} has been {action} successfully.", timer=3000, icon='success')
     return redirect('cust_admin:prod_catalogue')
 
+
 #=========================================== admin product variant assign, edit =========================================================================================================
 
 
+@admin_required
 def prod_variant_assign(request):
     form = ProductVariantAssignForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -430,7 +449,7 @@ def prod_variant_assign(request):
     return render(request, 'cust_admin/product/prod_variant_assign.html', context)
 
 
-
+@admin_required
 def prod_variant_edit(request, pk):
     product_attribute = get_object_or_404(ProductAttribute, pk=pk)
 
@@ -467,8 +486,11 @@ def prod_variant_edit(request, pk):
 
     return render(request, 'cust_admin/product/prod_variant_edit.html', context)
     
+
 #=========================================== admin list, detail, status update of orders =========================================================================================================
 
+
+@admin_required
 def list_order(request):
     orders = CartOrder.objects.all().order_by('-id')
     page_obj, paginator = paginate_queryset(request, orders, items_per_page=20)  # Adjust items_per_page as needed
@@ -482,6 +504,7 @@ def list_order(request):
     return render(request, 'cust_admin/order/order_list.html', context)
 
 
+@admin_required
 def order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     items = ProductOrder.objects.filter(order=order)
@@ -510,6 +533,8 @@ def order_detail(request, order_id):
     }
     return render(request, 'cust_admin/order/order_details.html', context)
 
+
+@admin_required
 def order_update_status(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
     if request.method == 'POST':
@@ -524,8 +549,57 @@ def order_update_status(request, order_id):
     }
     return render(request, 'cust_admin/order/order_update_status.html', context)
 
+
+@admin_required
+def manage_return_requests(request):
+    # Fetch orders with the 'Return Requested' status
+    return_requests = CartOrder.objects.filter(status='Return Requested')
+    print('requests = ', return_requests)
+    if request.method == 'POST':
+        order_id = request.POST.get('order_id')
+        action = request.POST.get('action')
+        
+        # Fetch the order
+        order = get_object_or_404(CartOrder, id=order_id)
+        
+        if action == 'approve':
+            if order.status == 'Return Approved':
+                messages.error(request, 'This order has already been refunded.')
+            else:
+                # Approve the return
+                order.status = 'Return Approved'
+                order.save()
+                
+                # Process refund to wallet
+                wallet, created = Wallet.objects.get_or_create(user=order.user)
+                wallet.balance += Decimal(order.order_total)
+                wallet.save()
+                
+                WalletHistory.objects.create(
+                    wallet=wallet,
+                    transaction_type='Credit',
+                    amount=order.order_total,
+                    reason='Order Return Approved'
+                )
+                
+                messages.success(request, 'Return request approved and refund processed.')
+                
+        elif action == 'reject':
+            # Reject the return
+            order.status = 'Return Rejected'
+            order.save()
+            
+            messages.success(request, 'Return request rejected.')
+        
+        return redirect('cust_admin:returned_orders')
+
+    return render(request, 'cust_admin/order/manage_return_requests.html', {'return_requests': return_requests})
+
+
 #=========================================== admin add, list, edit, delete coupons =========================================================================================================
 
+
+@admin_required
 def add_coupon(request):
     if request.method == 'POST':
         form = CouponForm(request.POST)
@@ -544,6 +618,8 @@ def add_coupon(request):
     
     return render(request, 'cust_admin/coupon/add_coupon.html', {'form': form})
 
+
+@admin_required
 def edit_coupon(request, coupon_id):
     coupon = get_object_or_404(Coupon, id=coupon_id)
     if request.method == 'POST':
@@ -558,6 +634,8 @@ def edit_coupon(request, coupon_id):
         form = CouponForm(instance=coupon)
     return render(request, 'cust_admin/coupon/edit_coupon.html', {'form': form})
 
+
+@admin_required
 def coupon_list(request):
     coupons = Coupon.objects.all()
     page_obj, paginator = paginate_queryset(request, coupons, items_per_page=20)  # Adjust items_per_page as needed
@@ -569,14 +647,19 @@ def coupon_list(request):
     }
     return render(request, 'cust_admin/coupon/coupon_list.html',context)
 
+
+@admin_required
 def delete_coupon(request, coupon_id):
     coupon = get_object_or_404(Coupon, id=coupon_id)
     coupon.delete()
     sweetify.toast(request, 'Coupon deleted successfully!', icon='success', timer=3000)
     return redirect('cust_admin:coupon_list')
 
+
 #=========================================== admin add, list, edit, delete category offers =========================================================================================================
 
+
+@admin_required
 def category_offer_list(request):
     category_offers = CategoryOffer.objects.all()
     page_obj, paginator = paginate_queryset(request, category_offers, items_per_page=20)  # Adjust items_per_page as needed
@@ -588,6 +671,8 @@ def category_offer_list(request):
     }
     return render(request, 'cust_admin/offer/category_offer/list_offer.html', context)
 
+
+@admin_required
 def add_category_offer(request):
     if request.method == 'POST':
         form = CategoryOfferForm(request.POST)
@@ -613,6 +698,8 @@ def add_category_offer(request):
         form = CategoryOfferForm()
     return render(request, 'cust_admin/offer/category_offer/add_offer.html', {'form': form, 'title': 'Add Category Offer'})
 
+
+@admin_required
 def edit_category_offer(request, offer_id):
     offer = CategoryOffer.objects.get(pk=offer_id)
     if request.method == 'POST':
@@ -627,6 +714,8 @@ def edit_category_offer(request, offer_id):
         form = CategoryOfferForm(instance=offer)
     return render(request, 'cust_admin/offer/category_offer/edit_offer.html', {'form': form, 'title': 'Edit Category Offer'})
 
+
+@admin_required
 def delete_category_offer(request, offer_id):
     offer = CategoryOffer.objects.get(id=offer_id)
     product_attributes = ProductAttribute.objects.filter(product__category=offer.category)
@@ -638,8 +727,11 @@ def delete_category_offer(request, offer_id):
     sweetify.toast(request, 'Category offer deleted successfully.', icon='success', timer=3000)
     return redirect('cust_admin:category_offer_list')
 
+
 #=========================================== admin add, list, edit, delete product offer =========================================================================================================
 
+
+@admin_required
 def product_offer_list(request):
     product_offers = ProductOffer.objects.all()
     page_obj, paginator = paginate_queryset(request, product_offers, items_per_page=20)  # Adjust items_per_page as needed
@@ -651,6 +743,8 @@ def product_offer_list(request):
     }
     return render(request, 'cust_admin/offer/product_offer/list_offer.html', context)
 
+
+@admin_required
 def add_product_offer(request):
     if request.method == 'POST':
         form = ProductOfferForm(request.POST)
@@ -675,7 +769,7 @@ def add_product_offer(request):
     return render(request, 'cust_admin/offer/product_offer/add_offer.html', {'form': form, 'title': 'Add Product Offer'})
 
 
-
+@admin_required
 def edit_product_offer(request, offer_id):
     offer = ProductOffer.objects.get(id=offer_id)
     if request.method == "POST":
@@ -704,6 +798,8 @@ def edit_product_offer(request, offer_id):
         form = ProductOfferForm(instance=offer)
     return render(request, 'cust_admin/offer/product_offer/edit_offer.html', {'form': form})
 
+
+@admin_required
 def delete_product_offer(request, offer_id):
     offer = ProductOffer.objects.get(id=offer_id)
     product_attributes = ProductAttribute.objects.filter(product=offer.product)
@@ -715,24 +811,11 @@ def delete_product_offer(request, offer_id):
     sweetify.toast(request, 'Product offer deleted successfully.', icon='success', timer=3000)
     return redirect(reverse('cust_admin:product_offer_list'))
 
+
 #=========================================== sales, weekly, daily, monthly reports =========================================================================================================
 
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.template.loader import get_template
-from xhtml2pdf import pisa
-from django.utils import timezone
-from datetime import datetime, timedelta
-# from .models import CartOrder
-from django.db.models import Sum
-import pandas as pd
 
-from django.utils import timezone
-from datetime import datetime
-
-from django.utils import timezone
-from datetime import datetime
-
+@admin_required
 def sales_report(request):
     start_date_value = ""
     end_date_value = ""
@@ -789,6 +872,8 @@ def sales_report(request):
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
 
+
+@admin_required
 def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=None):
     template_path = 'cust_admin/statistics/pdf_template.html'
     context = {}
@@ -852,9 +937,7 @@ def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=N
     return response
     
 
-
-
-    
+@admin_required    
 def export_to_excel(request, report_type, orders=None, start_date=None, end_date=None):
     if report_type == 'custom' and orders is not None:
         pass  # orders are already filtered
@@ -892,12 +975,16 @@ def export_to_excel(request, report_type, orders=None, start_date=None, end_date
     
     return response
 
+
+@admin_required
 def daily_report(request):
     today = timezone.localdate()
     daily_orders = CartOrder.objects.filter(created_at__date=today, status='Delivered')
     context = {'daily_orders': daily_orders}
     return render(request, 'cust_admin/statistics/daily_report.html', context)
 
+
+@admin_required
 def weekly_report(request):
     today = timezone.now().date()
     start_of_week = today - timedelta(days=today.weekday())
@@ -906,6 +993,8 @@ def weekly_report(request):
     context = {'weekly_orders': weekly_orders}
     return render(request, 'cust_admin/statistics/weekly_report.html', context)
 
+
+@admin_required
 def monthly_report(request):
     today = timezone.now().date()
     start_of_month = today.replace(day=1)
@@ -918,6 +1007,7 @@ def monthly_report(request):
 #=========================================== admin home bar and pie graphs =========================================================================================================
 
 
+@admin_required
 def sales_statistics(request):
     # Get the count of delivered products per day for the last 7 days
     today = timezone.now().date()
@@ -937,6 +1027,8 @@ def sales_statistics(request):
 
     return JsonResponse({'labels': labels, 'data': data})
 
+
+@admin_required
 def get_daily_sales_data(request):
     today = timezone.localdate()
     daily_orders = (
@@ -952,6 +1044,8 @@ def get_daily_sales_data(request):
 
     return JsonResponse({'labels': labels, 'data': data})
 
+
+@admin_required
 def get_monthly_sales_data(request):
     today = timezone.localdate()
     start_of_month = today.replace(day=1)
@@ -969,6 +1063,8 @@ def get_monthly_sales_data(request):
 
     return JsonResponse({'labels': labels, 'data': data})
 
+
+@admin_required
 def get_yearly_sales_data(request):
     today = timezone.localdate()
     start_of_year = today.replace(month=1, day=1)
@@ -985,6 +1081,8 @@ def get_yearly_sales_data(request):
 
     return JsonResponse({'labels': labels, 'data': data})
 
+
+@admin_required
 def get_order_status_data(request):
     order_status_counts = (
         CartOrder.objects.values('status')
@@ -998,7 +1096,10 @@ def get_order_status_data(request):
     return JsonResponse({'labels': labels, 'data': data})
 
 
+#=========================================== Best Selling Details =========================================================================================================================================
 
+
+@admin_required
 def format_quantities(product_quantities):
     size_labels = {
         1: 'S',
@@ -1021,6 +1122,8 @@ def format_quantities(product_quantities):
         
     return formatted_quantities
 
+
+@admin_required
 def best_selling_products(request):
     # Get top-selling products based on quantity
     best_selling_products = ProductOrder.objects.values('product').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
@@ -1046,48 +1149,3 @@ def best_selling_products(request):
 
 
 
-
-# def best_selling_subcategories(request):
-#     # Get top-selling subcategories based on quantity of delivered products
-#     best_selling_subcategories = ProductOrder.objects.filter(
-#         order__status='Delivered'
-#     ).values(
-#         'product__sub_category'
-#     ).annotate(
-#         total_quantity=Sum('quantity')
-#     ).order_by('-total_quantity')
-
-#     # Extract IDs and quantities
-#     subcategory_ids = [item['product__sub_category'] for item in best_selling_subcategories]
-#     top_subcategories = Subcategory.objects.filter(sid__in=subcategory_ids)[:10]
-
-#     # Map subcategory IDs to their total quantities
-#     subcategory_quantities = {
-#         item['product__sub_category']: item['total_quantity']
-#         for item in best_selling_subcategories
-#     }
-
-#     # Prepare quantities dictionary for template
-#     quantities = {subcat.sid: subcategory_quantities.get(subcat.sid, 'No data') for subcat in top_subcategories}
-
-#     # Debug print statements
-#     print("Subcategory Quantities:", subcategory_quantities)
-#     print("Quantities for Template:", quantities)
-
-#     context = {
-#         'title': 'Best Selling Subcategories',
-#         'top_subcategories': top_subcategories,
-#         'quantities': quantities,
-#     }
-#     return render(request, 'cust_admin/best_selling/best_selling_categories.html', context)
-
-
-# def best_selling_brands(request):
-#     best_selling_brands = ProductOrder.objects.values('product__brand').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
-#     top_brands = Brand.objects.filter(id__in=[item['product__brand'] for item in best_selling_brands])
-
-#     context = {
-#         'title': 'Best Selling Brands',
-#         'top_brands': top_brands,
-#     }
-#     return render(request, 'cust_admin/best selling/best_selling_brands.html', context)

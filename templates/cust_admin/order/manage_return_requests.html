@@ -1,0 +1,119 @@
+{% extends 'cust_admin/base.html' %}
+{% load static %}
+{% block content %}
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Return Requests</h2>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <header class="card-header">
+            <div class="row gx-3">
+                <div class="col-lg-4 col-md-6 me-auto">
+                    <input type="text" placeholder="Search..." class="form-control">
+                </div>
+                <div class="col-lg-2 col-6 col-md-3">
+                    <select class="form-select">
+                        <option>Status</option>
+                        <option>Return Requested</option>
+                        <option>Return Approved</option>
+                        <option>Return Rejected</option>
+                        <option>Show all</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-6 col-md-3">
+                    <select class="form-select">
+                        <option>Show 20</option>
+                        <option>Show 30</option>
+                        <option>Show 40</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Return Reason</th>
+                            <th>View</th>
+                            <th class="col-md-2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in return_requests %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.order_total }}</td>
+                                <td>{{ order.status }}</td>
+                                <td>
+                                    {% if order.returnreason_set.exists %}
+                                        {% for return_reason in order.returnreason_set.all %}
+                                            <div>
+                                                {% if return_reason.sizing_issues %}Sizing issues<br>{% endif %}
+                                                {% if return_reason.damaged_item %}Damaged item<br>{% endif %}
+                                                {% if return_reason.incorrect_order %}Incorrect order<br>{% endif %}
+                                                {% if return_reason.delivery_delays %}Delivery delays<br>{% endif %}
+                                                {% if return_reason.customer_service %}Customer service issues<br>{% endif %}
+                                                {% if return_reason.other_reason %}Other reason: {{ return_reason.other_reason }}<br>{% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        No return reason
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'cust_admin:order_detail' order.id %}" class="btn btn-light rounded btn-sm font-sm">View</a>
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" action="{% url 'cust_admin:returned_orders' %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                                        <button type="submit" name="action" value="approve" class="btn btn-success rounded btn-sm font-sm">Approve</button>
+                                        <button type="submit" name="action" value="reject" class="btn btn-danger rounded btn-sm font-sm">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="pagination-area mt-30 mb-50">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-start">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <i class="material-icons md-chevron_left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <i class="material-icons md-chevron_right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</section>
+
+{% endblock content %}
