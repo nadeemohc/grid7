@@ -111,7 +111,7 @@
                             
                             <!-- Wallet + Razorpay Combined Payment Option -->
                              
-                             {% if wallet_balance < total_after_discount %}
+                             {% if wallet_balance < total_after_discount and wallet_balance > 0 %}
                              <div class="col-md-4 mb-3">
                                 <form id="wallet-razorpay-form" method="POST" action="{% url 'cart:payment_method_selection' order.id %}">
                                     {% csrf_token %}
