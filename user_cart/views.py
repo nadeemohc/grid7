@@ -603,6 +603,9 @@ def order_invoice(request, order_id):
     if order.payment_method == "Wallet-Razorpay":
         wallet_amount_used = order.wallet_balance_used
         razor = int(total_product_price) - int(wallet_amount_used)
+    wallet_amount_used = 0
+    razor = total_product_price
+    print('razor = ', razor)
     # Prepare the context
     context = {
         'order': order,

@@ -148,7 +148,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if order.payment_method == "Wallet-Razorpay" %}
+                        {% if order.payment_method == "Wallet-Razorpay" or order.payment_meethod != 'Wallet-Razorpay' %}
                             Rs. {{ razor }}
                         {% else %}
                             N/A
