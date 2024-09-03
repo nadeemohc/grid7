@@ -353,7 +353,7 @@ def payment_method_selection(request, order_id):
         total_cart_price += item.total_price
 
     applied_coupon_id = request.session.get('applied_coupon_id')
-    discounts = Decimal(0)
+    discounts = order.discounts
     if applied_coupon_id:
         try:
             applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
@@ -600,9 +600,15 @@ def order_invoice(request, order_id):
     # Calculate the total product price and discount amount
     total_product_price = sum(item.product_price for item in product_orders)
     discount_amount = total_product_price - order.order_total
+    discount = order.discounts
+    print('discount before= ', discount)
+
     if order.payment_method == "Wallet-Razorpay":
         wallet_amount_used = order.wallet_balance_used
         razor = int(total_product_price) - int(wallet_amount_used)
+    wallet_amount_used = 0
+    razor = int(total_product_price) - int(order.discounts)
+    print('razor = ', razor)
     # Prepare the context
     context = {
         'order': order,
@@ -610,6 +616,7 @@ def order_invoice(request, order_id):
         'discount_amount': discount_amount,
         'wallet_amount_used': wallet_amount_used,
         'razor': razor,
+        'discount': int(order.discounts)
     }
     
     # Render the HTML content

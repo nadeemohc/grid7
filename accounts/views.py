@@ -11,6 +11,7 @@ from store.models import Wallet, Referral
 from django.contrib.auth import get_user_model
 from .models import Wallet, Referral, UserManager
 import sweetify
+from django.core.mail import EmailMessage, get_connection
 
 # accounts/views.py
 User = get_user_model()
@@ -144,13 +145,29 @@ def perform_logout(request):
 
 
 def sent_otp(request):
-    s = ""
-    for x in range(0, 4):
-        s += str(random.randint(0, 9))
-    request.session["otp"] = s
+    otp = "".join([str(random.randint(0, 9)) for _ in range(4)])
+    request.session["otp"] = otp
+
     email = request.POST.get("email")
-    send_mail("otp for sign up", s, "mn8697865@gmail.com", [email], fail_silently=False)
+    subject = "OTP for Sign Up"
+    message = f"Your OTP for sign up is {otp}. Please use this code to complete your registration."
+
+    # Specify the connection manually
+    connection = get_connection(
+        host='smtp.gmail.com',
+        port=587,
+        username='grid7catalougue@gmail.com',
+        password='kjhx kili myhl jtsz',
+        use_tls=True,
+    )
+
+    # Send the email using the specified connection
+    email_message = EmailMessage(subject, message, 'grid7catalougue@gmail.com', [email], connection=connection)
+    email_message.send()
+
     return render(request, "account/otp.html")
+
+
 
 
 def resend_otp(request):
@@ -158,21 +175,39 @@ def resend_otp(request):
         email = request.POST.get("email")
         user = User.objects.filter(email=email).first()
         if user:
-            # Generate a new OTP
-            s = "".join([str(random.randint(0, 9)) for _ in range(4)])
-            request.session["otp"] = s
-            send_mail(
-                "OTP for sign up",
-                s,
-                "mn8697865@gmail.com",
-                [email],
-                fail_silently=False,
+            # Generate a new 4-digit OTP
+            otp = "".join([str(random.randint(0, 9)) for _ in range(4)])
+            request.session["otp"] = otp
+            
+            # Create the subject and message for the email
+            subject = "OTP for Sign Up"
+            message = f"Your OTP for sign up is {otp}. Please use this code to complete your registration."
+
+            # Specify the connection manually
+            connection = get_connection(
+                host='smtp.gmail.com',
+                port=587,
+                username='grid7catalougue@gmail.com',
+                password='kjhx kili myhl jtsz',
+                use_tls=True,
             )
+
+            # Send the email using the specified connection
+            email_message = EmailMessage(subject, message, 'grid7catalougue@gmail.com', [email], connection=connection)
+            email_message.send()
+
+            # Display a success message using SweetAlert
             sweetify.toast(request, "OTP has been resent successfully!", icon='success', timer=3000)
         else:
+            # Display an error message if the user doesn't exist
             sweetify.toast(request, "User with this email does not exist!", icon='error', timer=3000)
-        return redirect("accounts:otp_verification")  # Redirect to the OTP verification page
+        
+        # Redirect to the OTP verification page
+        return redirect("accounts:otp_verification")
+    
+    # Render the resend OTP page if the request method is not POST
     return render(request, "account/resend_otp.html")
+
 
 def otp_verification(request):
     if request.method == "POST":
