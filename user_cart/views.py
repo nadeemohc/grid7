@@ -600,11 +600,14 @@ def order_invoice(request, order_id):
     # Calculate the total product price and discount amount
     total_product_price = sum(item.product_price for item in product_orders)
     discount_amount = total_product_price - order.order_total
+    discount = order.discounts
+    print('discount before= ', discount)
+
     if order.payment_method == "Wallet-Razorpay":
         wallet_amount_used = order.wallet_balance_used
         razor = int(total_product_price) - int(wallet_amount_used)
     wallet_amount_used = 0
-    razor = total_product_price
+    razor = int(total_product_price) - int(order.discounts)
     print('razor = ', razor)
     # Prepare the context
     context = {
@@ -613,6 +616,7 @@ def order_invoice(request, order_id):
         'discount_amount': discount_amount,
         'wallet_amount_used': wallet_amount_used,
         'razor': razor,
+        'discount': int(order.discounts)
     }
     
     # Render the HTML content

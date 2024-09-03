@@ -139,7 +139,7 @@
                 <tr>
                     <td>{{ item.product.title }} (Size: {{ item.variations.size }})</td>
                     <td>Rs. {{ item.product_price }}</td>
-                    <td>N/A</td> <!-- Assuming no discount in your context -->
+                    <td>{{ discount }}</td> <!-- Assuming no discount in your context -->
                     <td>
                         {% if order.payment_method == "Wallet-Razorpay" %}
                             Rs. {{ wallet_amount_used }}
