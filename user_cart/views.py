@@ -353,7 +353,7 @@ def payment_method_selection(request, order_id):
         total_cart_price += item.total_price
 
     applied_coupon_id = request.session.get('applied_coupon_id')
-    discounts = Decimal(0)
+    discounts = order.discounts
     if applied_coupon_id:
         try:
             applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
