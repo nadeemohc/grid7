@@ -181,7 +181,7 @@ def otp_verification(request):
         user = User.objects.all()
 
         if otp_ == request.session["otp"]:
-            user = User.objects.get(username=user_id)
+            user = User.objects.get(id=user_id)
             user.verified = True
             user.save()
             request.session.flush()
