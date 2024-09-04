@@ -122,7 +122,7 @@ def perform_login(request):
                 sweetify.toast(request, "Please verify your account using OTP", icon='error', timer=3000)
                 request.session["user_id"] = user.id
                 sent_otp(request)
-                return redirect("accounts:otp_verification")
+                return redirect("accounts:otp_verification_login")
         else:
             # Failed login attempt
             sweetify.toast(request, "Invalid username or password", icon='warning', timer=3000)
@@ -179,6 +179,38 @@ def otp_verification(request):
         otp_ = request.POST.get("otp")
         user_id = request.session.get("user_id")
         user = User.objects.all()
+        print('inside verify')
+        if otp_ == request.session["otp"]:
+            user = User.objects.get(username=user_id)
+            print('user id and name',user, user_id)
+            user.verified = True
+            user.save()
+            request.session.flush()
+            sweetify.toast(request, "OTP verified successfully.", icon='success', timer=3000)
+
+            # Authenticate the user
+            user = authenticate(request, user=user)
+
+            if user is not None:
+                # Log in the user
+                login(request, user)
+                return redirect("store:home")
+            else:
+                return redirect("accounts:login")  # Redirect to login page or any other appropriate URL
+        else:
+            sweetify.toast(request, "Invalid OTP. Please try again.", icon='error', timer=3000)
+            return redirect("accounts:otp_verification")
+    else:
+        context = {
+            'user':user
+        }
+        return render(request, "account/otp.html")
+
+def otp_verification_login(request):
+    if request.method == "POST":
+        otp_ = request.POST.get("otp")
+        user_id = request.session.get("user_id")
+        user = User.objects.all()
 
         if otp_ == request.session["otp"]:
             user = User.objects.get(id=user_id)
@@ -200,6 +232,5 @@ def otp_verification(request):
             sweetify.toast(request, "Invalid OTP. Please try again.", icon='error', timer=3000)
             return redirect("accounts:otp_verification")
     else:
-        return render(request, "account/otp.html")
-
+        return render(request, "account/otp1.html")
 
