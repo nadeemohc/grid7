@@ -11,6 +11,8 @@ from store.models import Wallet, Referral
 from django.contrib.auth import get_user_model
 from .models import Wallet, Referral, UserManager
 import sweetify
+from django.db import IntegrityError
+
 
 # accounts/views.py
 User = get_user_model()
@@ -24,12 +26,13 @@ def perform_signup(request):
             email = form.cleaned_data.get("email")
             password1 = form.cleaned_data["password1"]
             password2 = form.cleaned_data["password2"]
+            phone_number = form.cleaned_data['phone_number']
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
             entered_referral_code = form.cleaned_data.get("referral_code", "")
             
-            # Manually generate a unique referral code
-            referral_code = UserManager().generate_unique_referral_code()
+            # Manually generate a unique referral code for the new user
+            referral_code = User.objects.generate_unique_referral_code()
 
             if password1 != password2:
                 sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
@@ -47,37 +50,43 @@ def perform_signup(request):
                     sweetify.toast(request, "Invalid referral code", icon='error', timer=3000)
                     return redirect("accounts:perform_signup")
 
-            # Create the user with a unique referral code
+            # Create the user with the generated unique referral code
             try:
                 user = User.objects.create_user(
                     first_name=first_name,
                     last_name=last_name,
                     username=username,
+                    phone_number=phone_number,
                     email=email,
                     password=password1,
-                    referral_code=referral_code  # Pass the manually generated referral code
+                    referral_code=referral_code  # Pass the generated unique referral code
                 )
             except IntegrityError as e:
                 if 'referral_code' in str(e):
-                    sweetify.toast(request, "Duplicate referral code detected, retrying...", icon='error', timer=3000)
+                    sweetify.toast(request, "Duplicate referral code detected, please retry", icon='error', timer=3000)
                 else:
                     sweetify.toast(request, "An error occurred during signup", icon='error', timer=3000)
                 return redirect("accounts:perform_signup")
 
+            # Update the referrer's wallet and create a referral record
             if referrer:
                 referrer.wallet.points += 5
                 if referrer.wallet.points >= 10:
                     referrer.wallet.balance += 250
-                    referrer.wallet.points -= 10
+                    referrer.wallet.points -= 10  # Deduct 10 points when balance is credited
                 referrer.wallet.save()
 
+                # Add 250 to the new user's wallet
                 user.wallet.balance += 250
                 user.wallet.save()
 
+                # Create referral record for tracking
                 Referral.objects.create(referrer=referrer, referred=user)
 
+            # Store the username in session and send OTP for verification
             request.session["user_id"] = user.username
-            sent_otp(request)
+            sent_otp(request)  # Assumes sent_otp function exists to send OTP
+
             return render(request, "account/otp.html", {"email": email})
     else:
         form = SignUpForm()
@@ -178,33 +187,33 @@ def otp_verification(request):
     if request.method == "POST":
         otp_ = request.POST.get("otp")
         user_id = request.session.get("user_id")
-        user = User.objects.all()
         print('inside verify')
-        if otp_ == request.session["otp"]:
+
+        if otp_ == request.session.get("otp"):
             user = User.objects.get(username=user_id)
-            print('user id and name',user, user_id)
+            print('user id and name', user, user_id)
             user.verified = True
             user.save()
-            request.session.flush()
+            request.session.flush()  # Clear the session after verification
+
             sweetify.toast(request, "OTP verified successfully.", icon='success', timer=3000)
 
             # Authenticate the user
-            user = authenticate(request, user=user)
+            user = authenticate(request, username=user.username, password=user.password)
 
             if user is not None:
                 # Log in the user
                 login(request, user)
                 return redirect("store:home")
             else:
-                return redirect("accounts:login")  # Redirect to login page or any other appropriate URL
+                return redirect("accounts:login")
         else:
             sweetify.toast(request, "Invalid OTP. Please try again.", icon='error', timer=3000)
             return redirect("accounts:otp_verification")
-    else:
-        context = {
-            'user':user
-        }
-        return render(request, "account/otp.html")
+
+    # If it's a GET request, you don't need the `user` context unless you're using it in the template
+    return render(request, "account/otp.html")
+
 
 def otp_verification_login(request):
     if request.method == "POST":

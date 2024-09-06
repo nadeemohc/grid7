@@ -232,7 +232,7 @@ class CartOrder(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=True)
     updated_at = models.DateTimeField(auto_now=True)
     selected_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
-
+    order_address = models.CharField(max_length=100, null=False, blank=False)
     # Add these fields for Razorpay integration
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)

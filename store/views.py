@@ -206,6 +206,7 @@ def user_profile(request):
     item = ProductOrder.objects.filter(user=user)
     referral_code = user.referral_code  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
+    print(user.phone_number)
     
     context = {
         'user': user,
@@ -349,7 +350,7 @@ def user_order_detail(request, order_id):
 def order_cancel(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
     if order.status != 'Cancelled':
-        if order.payment_method == 'Razorpay':
+        if order.payment_method == 'Razorpay' or order.payment_method == 'Wallet' or order.payment_method == 'Wallet-Razorpay':
             # Logic for Razorpay refund to wallet
             wallet, created = Wallet.objects.get_or_create(user=request.user)
             wallet.balance += Decimal(order.order_total)
@@ -420,6 +421,7 @@ def apply_offers(product):
     if product_offer and product_offer.is_active():
         discount = product_offer.discount_percentage
         product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
+        print(product.title,product.final_price)
     elif category_offer and category_offer.is_active():
         discount = category_offer.discount_percentage
         product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
@@ -554,58 +556,63 @@ def shop(request, category_id=None):
         if category_id:
             selected_category = get_object_or_404(Category, c_id=category_id)
 
+    # Base product query
     products = Product.objects.filter(is_blocked=False)
     if selected_category:
         products = products.filter(category=selected_category)
 
-    products = [apply_offers(p) for p in products]
-
-    price_filter = request.GET.get('price_filter')
+    # Price filter
+    price_filter = request.GET.get('price_filter', None)
     if price_filter:
         if price_filter == 'below_500':
-            products = [p for p in products if p.final_price < 500]
+            products = products.filter(product_attributes__price__lt=500)
         elif price_filter == '500_1000':
-            products = [p for p in products if 500 <= p.final_price < 1000]
+            products = products.filter(product_attributes__price__gte=500, product_attributes__price__lte=1000)
         elif price_filter == '1000_1500':
-            products = [p for p in products if 1000 <= p.final_price < 1500]
+            products = products.filter(product_attributes__price__gte=1000, product_attributes__price__lte=1500)
         elif price_filter == '1500_2000':
-            products = [p for p in products if 1500 <= p.final_price < 2000]
+            products = products.filter(product_attributes__price__gte=1500, product_attributes__price__lte=2000)
         elif price_filter == 'above_2000':
-            products = [p for p in products if p.final_price >= 2000]
+            products = products.filter(product_attributes__price__gt=2000)
 
-    sort_by = request.GET.get('sort_by', 'title_asc')
-    if sort_by == 'title_asc':
-        products = sorted(products, key=lambda x: x.title)
-    elif sort_by == 'title_desc':
-        products = sorted(products, key=lambda x: x.title, reverse=True)
-    elif sort_by == 'price_asc':
-        products = sorted(products, key=lambda x: x.final_price)
+    # Annotate products with min and max price for sorting
+    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+
+    # Sorting
+    sort_by = request.GET.get('sort_by', None)
+    if sort_by == 'price_asc':
+        products = products.order_by('min_price')
     elif sort_by == 'price_desc':
-        products = sorted(products, key=lambda x: x.final_price, reverse=True)
+        products = products.order_by('-min_price')
+    elif sort_by == 'title_asc':
+        products = products.order_by('title')
+    elif sort_by == 'title_desc':
+        products = products.order_by('-title')
 
-    total_products = len(products)  # Get the total number of products
+    # Remove duplicates
+    products = products.distinct()
 
-    items_per_page = request.GET.get('items_per_page', 10)
-    paginator = Paginator(products, items_per_page)
-    page = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    # Pagination
+    items_per_page = request.GET.get('items_per_page', '10')  # Default to 10 items per page
+    if items_per_page != 'all':
+        paginator = Paginator(products, int(items_per_page))
+        page_number = request.GET.get('page')
+        products = paginator.get_page(page_number)
+
+    total_products = products.paginator.count  # Get total product count
 
     context = {
         'categories': categories,
         'selected_category': selected_category,
-        'products': page_obj,
-        'total_products': total_products,  # Pass total product count to context
+        'products': products,
+        'total_products': total_products,
         'items_per_page': items_per_page,
         'price_filter': price_filter,
         'sort_by': sort_by,
-        'page_obj': page_obj,
     }
+
     return render(request, 'dashboard/shop.html', context)
+
 
 
 #=========================================== views related to wishlist =================================================================================================================================

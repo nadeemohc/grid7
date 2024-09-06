@@ -4,63 +4,60 @@ from django.utils import timezone
 import random
 import string
 
+from django.contrib.auth.models import BaseUserManager
+import random
+import string
+
 class UserManager(BaseUserManager):
-    def create_user(self, first_name, last_name, username, email, password=None, referral_code=None):
+    def create_user(self, first_name, last_name, username, email, password=None, phone_number=None, referral_code=None):
         if not email:
             raise ValueError('User must have an email address')
         if not username:
             raise ValueError('User must have a username')
-        
+
         # Generate unique referral code if not provided
         if not referral_code:
             referral_code = self.generate_unique_referral_code()
-        
+
         user = self.model(
             email=self.normalize_email(email),
             username=username,
             first_name=first_name,
             last_name=last_name,
+            phone_number=phone_number,  # Include phone_number
             referral_code=referral_code
         )
         user.set_password(password)
         user.save(using=self._db)
-        
-        # Create an empty wallet for the user
+
+        # Create an empty wallet for the user (assuming a Wallet model exists)
         Wallet.objects.create(user=user)
-        
+
         return user
-    
-    def generate_unique_referral_code(self):
-        length = 8
-        while True:
-            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-            print(f"Generated referral code: {code}")  # Debugging line
-            if not User.objects.filter(referral_code=code).exists():
-                return code
 
-
-    
-    def create_superuser(self, first_name, last_name, username, email, password=None):
+    def create_superuser(self, first_name, last_name, username, email, password=None, phone_number=None):
         user = self.create_user(
-            email=self.normalize_email(email),
-            username=username,
-            password=password,
             first_name=first_name,
             last_name=last_name,
+            username=username,
+            email=self.normalize_email(email),
+            password=password,
+            phone_number=phone_number  # Include phone_number for superuser
         )
         user.is_admin = True
-        user.is_active = True
         user.is_staff = True
         user.is_superadmin = True
+        user.is_active = True
         user.save(using=self._db)
         return user
-    
+
     def generate_unique_referral_code(self):
         length = 8
         while True:
             code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
             if not User.objects.filter(referral_code=code).exists():
                 return code
+
 
 
 class User(AbstractBaseUser, PermissionsMixin):

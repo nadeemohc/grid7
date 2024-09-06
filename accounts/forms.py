@@ -8,24 +8,58 @@ from django.core.validators import validate_email
 User = get_user_model()
 
 class SignUpForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "First Name"}),
-                                 required=True, help_text='Required. 30 characters or fewer.')
-    last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Last Name"}),
-                                required=True, help_text='Required. 30 characters or fewer.')
-    email = forms.EmailField(max_length=254, widget=forms.EmailInput(attrs={"placeholder": "Email"}), required=True,
-                             help_text='Required. Enter a valid email address.')
-    password1 = forms.CharField(max_length=30, widget=forms.PasswordInput(attrs={"placeholder": "Password"}),
-                                required=True, help_text='Required. 30 characters or fewer.')
-    password2 = forms.CharField(max_length=30, widget=forms.PasswordInput(attrs={"placeholder": "Confirm Password"}),
-                                required=True, help_text='Required. 30 characters or fewer.')
-    username = forms.CharField(max_length=30, widget=forms.TextInput(attrs={"placeholder": "Username"}), required=True,
-                               help_text='Required. 30 characters or fewer.')
-    referral_code = forms.CharField(max_length=50, widget=forms.TextInput(attrs={"placeholder": "Referral Code (optional)"}),
-                                    required=False, help_text='Optional. Enter referral code if you have one.')
+    first_name = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(attrs={"placeholder": "First Name"}),
+        required=True,
+        help_text='Required. 30 characters or fewer.'
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(attrs={"placeholder": "Last Name"}),
+        required=True,
+        help_text='Required. 30 characters or fewer.'
+    )
+    email = forms.EmailField(
+        max_length=254,
+        widget=forms.EmailInput(attrs={"placeholder": "Email"}),
+        required=True,
+        help_text='Required. Enter a valid email address.'
+    )
+    password1 = forms.CharField(
+        max_length=30,
+        widget=forms.PasswordInput(attrs={"placeholder": "Password"}),
+        required=True,
+        help_text='Required. 30 characters or fewer.'
+    )
+    password2 = forms.CharField(
+        max_length=30,
+        widget=forms.PasswordInput(attrs={"placeholder": "Confirm Password"}),
+        required=True,
+        help_text='Required. 30 characters or fewer.'
+    )
+    username = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(attrs={"placeholder": "Username"}),
+        required=True,
+        help_text='Required. 30 characters or fewer.'
+    )
+    phone_number = forms.CharField(
+        max_length=15,
+        widget=forms.TextInput(attrs={"placeholder": "Phone Number"}),
+        required=True,
+        help_text='Required. Enter a valid phone number.'
+    )
+    referral_code = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={"placeholder": "Referral Code (optional)"}),
+        required=False,
+        help_text='Optional. Enter referral code if you have one.'
+    )
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'referral_code']
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone_number', 'password1', 'password2', 'referral_code']
         labels = {'email': 'Email'}
 
     def clean_first_name(self):
@@ -50,6 +84,14 @@ class SignUpForm(UserCreationForm):
         email = self.cleaned_data.get('email')
         validate_email(email)
         return email
+
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data.get('phone_number')
+        if not phone_number.isdigit():
+            raise ValidationError(_('Phone number should only contain digits.'))
+        if len(phone_number) < 10:
+            raise ValidationError(_('Phone number should be at least 10 digits long.'))
+        return phone_number
 
     def clean_referral_code(self):
         referral_code = self.cleaned_data.get('referral_code')

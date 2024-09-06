@@ -52,7 +52,7 @@
         </tr>
         <tr>
             <th>Shipping Address</th>
-            <td>{{ order.selected_address.street_address }} {{ order.selected_address.city }}, 
+            <td>{{ order.order_address }} {{ order.selected_address.city }}, 
                 {{ order.selected_address.state }}, {{ order.selected_address.country }} P.O - {{ order.selected_address.postal_code }}</td>
         </tr>
         <tr>
@@ -109,7 +109,7 @@
         {% if order.status == 'Delivered' %}
         <!-- <a href="{% url 'store:order_return' order.id %}" class="cancel-order-btn">Return Order</a> -->
          {% include 'dashboard/modal/return_reason.html' %}
-        {% elif order.status != 'Cancelled' and order.status != 'Return' %}
+        {% elif order.status != 'Cancelled' and order.status != 'Return Approved' %}
         <a href="{% url 'store:order_cancel' order.id %}" class="cancel-order-btn">Cancel Order</a>
         {% else %}
         

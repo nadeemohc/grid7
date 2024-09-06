@@ -293,6 +293,7 @@ def checkout(request):
                     order_total=total_after_discount,  # Use total_after_discount here
                     selected_address=selected_address,
                     discounts=discounts,
+                    order_address=selected_address,
                     status='New'
                 )
 

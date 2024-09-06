@@ -137,7 +137,7 @@
                 </tr>
                 {% for item in product_orders %}
                 <tr>
-                    <td>{{ item.product.title }} (Size: {{ item.variations.size }})</td>
+                    <td>{{ item.product.title }} (Size: {{ item.variations.size }}) (Quantity: {{ item.cartitem.quantity }})</td>
                     <td>Rs. {{ item.product_price }}</td>
                     <td>{{ discount }}</td> <!-- Assuming no discount in your context -->
                     <td>
