@@ -298,7 +298,6 @@ def edit_profile(request):
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         username = request.POST.get('username')
-        email = request.POST.get('email')
         phone_number = request.POST.get('phone_number')
         user = request.user
 
@@ -306,7 +305,6 @@ def edit_profile(request):
         user.first_name = first_name
         user.last_name = last_name
         user.username = username
-        user.email = email
         user.phone_number = phone_number
         user.save()
 
@@ -316,33 +314,32 @@ def edit_profile(request):
         send_mail(subject, message, None, [user.email])
 
         # Redirect to user profile page
-        messages.success(request, "Profile Updated Successfully")
+        sweetify.toast(request, "Profile Updated Successfully", icon='success', timer=4000)
         return redirect('store:user_profile')
 
     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':request.user})
 
 
-@blocked_user_required
 @login_required
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save()  # Save the form and get the user
             update_session_auth_hash(request, user)
-            messages.success(request, 'Your password was successfully updated!')
-            # Send email verification
-            send_email_verification(request.user.email)
+            sweetify.toast(request, 'Your password was successfully updated!', icon='success', timer=3000)
+            # Send email verification using the saved `user` object, not `request.user`
+            send_email_verification(user.email)
             return redirect('accounts:logout')  # Redirect to a success page
         else:
-            messages.error(request, 'Please correct the error below.')
+            sweetify.toast(request, 'Please correct the error below.', icon='error', timer=3000)
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'dashboard/change_password.html', {'form': form})
 
 
-@blocked_user_required
 def send_email_verification(email):
+    print(f"Sending email verification to: {email}")
     subject = 'Password Change Verification'
     message = 'Your password has been successfully changed. If you did not make this change, please contact us immediately.'
     from_email = 'mn8697865@gmail.com'  # Use your email
@@ -424,7 +421,6 @@ def order_return(request, order_id):
 #=========================================== views related to filter, coupon, offers =================================================================================================================================
 
 
-@blocked_user_required
 def apply_offers(product):
     product_attributes = ProductAttribute.objects.filter(product=product)
     if not product_attributes.exists():
@@ -570,7 +566,8 @@ def search_and_filter(request):
 def shop(request, category_id=None):
     # Fetch categories that are not blocked
     categories = Category.objects.filter(is_blocked=False)
-    
+    product_attribute = ProductAttribute.objects.all()
+
     selected_category = None
     if category_id:
         selected_category = get_object_or_404(Category, c_id=category_id)
