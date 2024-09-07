@@ -597,7 +597,6 @@ def order_invoice(request, order_id):
     # Fetch the order and related product orders
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
     product_orders = ProductOrder.objects.filter(order=order)
-    
     # Calculate the total product price and discount amount
     total_product_price = sum(item.product_price for item in product_orders)
     discount_amount = total_product_price - order.order_total
@@ -607,9 +606,11 @@ def order_invoice(request, order_id):
     if order.payment_method == "Wallet-Razorpay":
         wallet_amount_used = order.wallet_balance_used
         razor = int(total_product_price) - int(wallet_amount_used)
-    wallet_amount_used = 0
+    else:
+        wallet_amount_used = 0
     razor = int(total_product_price) - int(order.discounts)
     print('razor = ', razor)
+    print('wallet amount user', wallet_amount_used)
     # Prepare the context
     context = {
         'order': order,

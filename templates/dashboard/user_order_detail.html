@@ -88,10 +88,15 @@
             {% endfor %}
         </tbody>
         <tfoot>
-            {% if order.coupon %}
+            {% if order.discounts %}
             <tr>
-                <th colspan="2">Discount Price:</th>
-                <td>₹{{ order.discount }}</td>
+                <th colspan="2">Coupon Discount:</th>
+                <td>₹{{ order.discounts }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <th colspan="2">Coupon Discount:</th>
+                <td>Nil</td>
             </tr>
             {% endif %}
             <tr>
