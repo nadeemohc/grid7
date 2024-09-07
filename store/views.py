@@ -547,7 +547,9 @@ def search_and_filter(request):
 
 
 def shop(request, category_id=None):
+    # Fetch categories that are not blocked
     categories = Category.objects.filter(is_blocked=False)
+    
     selected_category = None
     if category_id:
         selected_category = get_object_or_404(Category, c_id=category_id)
@@ -556,12 +558,14 @@ def shop(request, category_id=None):
         if category_id:
             selected_category = get_object_or_404(Category, c_id=category_id)
 
-    # Base product query
-    products = Product.objects.filter(is_blocked=False)
+    # Base product query: Only products from unblocked categories
+    products = Product.objects.filter(is_blocked=False, category__is_blocked=False)
+    
+    # Filter by selected category if provided
     if selected_category:
         products = products.filter(category=selected_category)
 
-    # Price filter
+    # Price filter logic
     price_filter = request.GET.get('price_filter', None)
     if price_filter:
         if price_filter == 'below_500':
@@ -578,7 +582,7 @@ def shop(request, category_id=None):
     # Annotate products with min and max price for sorting
     products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
 
-    # Sorting
+    # Sorting logic
     sort_by = request.GET.get('sort_by', None)
     if sort_by == 'price_asc':
         products = products.order_by('min_price')
@@ -592,13 +596,14 @@ def shop(request, category_id=None):
     # Remove duplicates
     products = products.distinct()
 
-    # Pagination
+    # Pagination logic
     items_per_page = request.GET.get('items_per_page', '10')  # Default to 10 items per page
     if items_per_page != 'all':
         paginator = Paginator(products, int(items_per_page))
         page_number = request.GET.get('page')
         products = paginator.get_page(page_number)
 
+    # Total product count
     total_products = products.paginator.count  # Get total product count
 
     context = {
@@ -612,6 +617,7 @@ def shop(request, category_id=None):
     }
 
     return render(request, 'dashboard/shop.html', context)
+
 
 
 
