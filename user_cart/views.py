@@ -21,6 +21,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
 from user_cart.utils import render_to_pdf
+from store.decorators import blocked_user_required
 from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_S
 #=========================================== view, add, remove, increase, decrease in cart =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def view_cart(request):
     # Check if the order has been processed
@@ -105,6 +107,7 @@ def view_cart(request):
     return render(request, 'user_cart/cart.html', context)
 
 
+@blocked_user_required
 @login_required
 @require_POST
 def add_to_cart(request):
@@ -169,6 +172,7 @@ def add_to_cart(request):
     return redirect('store:product_view', product_pid=product_id)
 
 
+@blocked_user_required
 @login_required
 def increase_quantity(request, cart_item_id, cart_id):
     try:
@@ -189,6 +193,7 @@ def increase_quantity(request, cart_item_id, cart_id):
         return JsonResponse({'error': 'Cart item not found'}, status=404)
 
 
+@blocked_user_required
 @login_required
 def decrease_quantity(request, cart_item_id, cart_id):
     try:
@@ -205,6 +210,7 @@ def decrease_quantity(request, cart_item_id, cart_id):
         return JsonResponse({'error': 'Cart item not found'}, status=404)
    
 
+@blocked_user_required
 @login_required
 @require_POST
 def remove_from_cart(request, cart_item_id):
@@ -218,6 +224,7 @@ def remove_from_cart(request, cart_item_id):
 #=========================================== apply coupon =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def apply_coupon(request):
     if request.method == "POST":
@@ -237,6 +244,7 @@ def apply_coupon(request):
 #=========================================== checkout and payment method selection =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def checkout(request):
     # Check if the order has been processed
@@ -334,6 +342,7 @@ def checkout(request):
     return render(request, 'user_cart/checkout.html', context)
 
 
+@blocked_user_required
 @login_required
 def payment_method_selection(request, order_id):
     try:
@@ -547,6 +556,7 @@ def payment_method_selection(request, order_id):
 #=========================================== order success and failure =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def order_success(request, order_id):
     try:
@@ -569,6 +579,7 @@ def order_success(request, order_id):
         return redirect('store:home')
 
 
+@blocked_user_required
 @login_required
 def order_failure(request, order_id):
     try:
@@ -581,6 +592,7 @@ def order_failure(request, order_id):
 #=========================================== invoice things =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
@@ -592,6 +604,7 @@ def render_to_pdf(template_src, context_dict):
     return None
 
 
+@blocked_user_required
 @login_required
 def order_invoice(request, order_id):
     # Fetch the order and related product orders
