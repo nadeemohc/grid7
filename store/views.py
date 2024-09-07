@@ -170,7 +170,9 @@ def product_detailed_view(request, product_pid):
     product = get_object_or_404(Product, p_id=product_pid)
     specifications_lines = product.specifications.split('\n')
     product_images = ProductImages.objects.filter(product=product).order_by('images')
-    product_attributes = ProductAttribute.objects.filter(product=product)
+    
+    # Filter product attributes where stock is greater than 0
+    product_attributes = ProductAttribute.objects.filter(product=product, stock__gt=0)
     title = product.title
 
     # Apply offers to the product
@@ -187,6 +189,7 @@ def product_detailed_view(request, product_pid):
         'product_attributes': sorted_product_attributes,
     }
     return render(request, 'dashboard/product_detailed_view.html', context)
+
 
 
 @blocked_user_required
@@ -562,11 +565,11 @@ def search_and_filter(request):
 #=========================================== views related to shop =================================================================================================================================
 
 
+
 @blocked_user_required
 def shop(request, category_id=None):
     # Fetch categories that are not blocked
     categories = Category.objects.filter(is_blocked=False)
-    product_attribute = ProductAttribute.objects.all()
 
     selected_category = None
     if category_id:
@@ -577,8 +580,13 @@ def shop(request, category_id=None):
             selected_category = get_object_or_404(Category, c_id=category_id)
 
     # Base product query: Only products from unblocked categories
-    products = Product.objects.filter(is_blocked=False, category__is_blocked=False)
-    
+    products = Product.objects.filter(
+        is_blocked=False,
+        category__is_blocked=False,
+        product_attributes__size__isnull=False,  # Ensure the size is present
+        product_attributes__stock__gt=0  # Ensure stock is greater than 0
+    ).distinct()  # Ensure distinct products
+
     # Filter by selected category if provided
     if selected_category:
         products = products.filter(category=selected_category)
@@ -610,9 +618,6 @@ def shop(request, category_id=None):
         products = products.order_by('title')
     elif sort_by == 'title_desc':
         products = products.order_by('-title')
-
-    # Remove duplicates
-    products = products.distinct()
 
     # Pagination logic
     items_per_page = request.GET.get('items_per_page', '10')  # Default to 10 items per page

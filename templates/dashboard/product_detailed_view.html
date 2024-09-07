@@ -75,15 +75,13 @@
                                         <input type="hidden" name="product_id" value="{{ product.p_id }}">
                                         
                                         <div class="attr-detail attr-size">
-                                            <!-- Display the size options here -->
                                             <strong class="mr-10">Size</strong>
                                             <div class="size-buttons">
                                                 {% for attribute in product_attributes %}
-                                                {% if not attribute.is_blocked %}
-                                                <button type="button" class="size-button" data-size-id="{{ attribute.id }}">
-                                                    {{ attribute.size }}
-                                                </button>
-                                                {% endif %}
+                                                    <!-- Display the size only if the stock is greater than 0 -->
+                                                    <button type="button" class="size-button" data-size-id="{{ attribute.id }}">
+                                                        {{ attribute.size }} 
+                                                    </button>
                                                 {% endfor %}
                                             </div>
                                             <input type="hidden" name="selected_size" id="selected-size" value="{{ product_attributes.0.size }}">
