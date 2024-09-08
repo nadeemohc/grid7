@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from .forms import SignUpForm
 from .models import User
+from accounts.models import *
 from django.contrib.auth import get_user_model
 from .models import Wallet, Referral, UserManager
 import sweetify
@@ -56,6 +57,7 @@ def perform_signup(request):
 
             try:
                 with transaction.atomic():
+                    # Create the new user
                     user = User.objects.create_user(
                         first_name=first_name,
                         last_name=last_name,
@@ -65,22 +67,37 @@ def perform_signup(request):
                         password=password1,
                     )
 
-                    # Update the referrer's wallet and add to user's wallet if referrer exists
+                    # Update the referrer's wallet and add to the user's wallet if referrer exists
                     if referrer:
                         referrer_wallet = Wallet.objects.get(user=referrer.user)
                         referrer_wallet.balance += 250
                         referrer_wallet.save()
 
-                        # Add 250 to the new user's wallet
+                        # Save wallet history for referrer
+                        WalletHistory.objects.create(
+                            wallet=referrer_wallet,
+                            transaction_type="Credit",
+                            amount=250,
+                            reason="Referral bonus for referring a new user"
+                        )
+
+                    # Add 250 to the new user's wallet
                         user_wallet = Wallet.objects.get(user=user)
                         user_wallet.balance += 250
                         user_wallet.save()
 
+                        WalletHistory.objects.create(
+                            wallet=user_wallet,
+                            transaction_type="Credit",
+                            amount=250,
+                            reason="Referral bonus for signing up using a referral code"
+                        )
+                    else:
+                        sweetify.toast(request, "User already has a wallet", icon='error', timer=3000)
+
             except IntegrityError as e:
-                if 'referral_code' in str(e):
-                    sweetify.toast(request, "Duplicate referral code detected, please retry", icon='error', timer=3000)
-                else:
-                    sweetify.toast(request, "An error occurred during signup", icon='error', timer=3000)
+                print(f"Error during signup: {str(e)}")  # Log the error to the console
+                sweetify.toast(request, "An error occurred during signup: " + str(e), icon='error', timer=3000)
                 return redirect("accounts:perform_signup")
 
             # Store the username in session and send OTP for verification
