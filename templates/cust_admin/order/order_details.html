@@ -89,6 +89,7 @@
                                             <th width="40%">Product</th>
                                             <th width="20%">Unit Price</th>
                                             <th width="20%">Quantity</th>
+                                            <th width="20%">Size</th>
                                             <th width="20%" class="text-end">Total</th>
                                         </tr>
                                     </thead>
@@ -105,6 +106,7 @@
                                             </td>
                                             <td> ₹{{ item.product_price }} </td>
                                             <td> {{ item.quantity }} </td>
+                                            <td> {{ item.size }} </td>
                                             <td class="text-end">{{ item.sub }}</td>
                                         </tr>
                                         {% endfor %}

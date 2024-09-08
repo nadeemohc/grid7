@@ -1,5 +1,3 @@
-<!-- cust_admin/product/product_add.html -->
-
 {% extends 'cust_admin/base.html' %}
 {% load static %}
 
@@ -42,11 +40,17 @@
                 <div class="card-body">
                     <div class="input-upload">
                         <label for="image" class="form-label">Main Product Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/*" required>
+                        <input type="file" name="image" id="mainImage" class="form-control" accept="image/*" required>
+                        <div id="mainImagePreview" style="margin-top: 10px;">
+                            <!-- Preview of main image will be displayed here -->
+                        </div>
                     </div>
                     <div class="input-upload">
                         <label for="images" class="form-label">Additional Product Images</label>
-                        <input type="file" name="images" class="form-control" accept="image/*" multiple required>
+                        <input type="file" name="images" id="additionalImages" class="form-control" accept="image/*" multiple required>
+                        <div id="additionalImagesPreview" style="margin-top: 10px;">
+                            <!-- Preview of additional images will be displayed here -->
+                        </div>
                     </div>
                 </div>
                 <div class="card-header">
@@ -94,9 +98,44 @@
         </div>
         <div>
             <button type="submit" class="btn btn-md rounded font-sm hover-up">Add Product</button> &nbsp;
-            <a href="{% url 'cust_admin:prod_list' %}"class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</a>
+            <a href="{% url 'cust_admin:prod_list' %}" class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</a>
         </div>
     </form>
     </div>
 </section> <!-- content-main end// -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mainImageInput = document.getElementById('mainImage');
+        var additionalImagesInput = document.getElementById('additionalImages');
+        var mainImagePreview = document.getElementById('mainImagePreview');
+        var additionalImagesPreview = document.getElementById('additionalImagesPreview');
+
+        // Function to display image preview
+        function displayImagePreview(input, previewContainer) {
+            previewContainer.innerHTML = ''; // Clear previous previews
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '100px';
+                        img.style.marginRight = '10px';
+                        previewContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        // Event listeners for previewing images
+        mainImageInput.addEventListener('change', function() {
+            displayImagePreview(mainImageInput, mainImagePreview);
+        });
+
+        additionalImagesInput.addEventListener('change', function() {
+            displayImagePreview(additionalImagesInput, additionalImagesPreview);
+        });
+    });
+</script>
 {% endblock content %}

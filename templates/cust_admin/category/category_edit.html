@@ -1,11 +1,10 @@
 {% extends "cust_admin/base.html" %}
-{% load static%}
+{% load static %}
 {% block content %}
 <section class="content-main">
     <div class="content-header">
         <div>
-            <h2 class="content-title card-title">Edit Categories </h2>
-            <!-- <p>Add, edit or delete a category</p> -->
+            <h2 class="content-title card-title">Edit Category</h2>
         </div>
         <div>
             <input type="text" placeholder="Search Categories" class="form-control bg-white">
@@ -15,27 +14,29 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <form method='post' enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-4">
                             <label for="cname" class="form-label">Name</label>
-                            <input type="text" placeholder="Type here" class="form-control" name="cname" />
+                            <!-- Pre-fill the input field with the category name -->
+                            <input type="text" placeholder="Type here" class="form-control" name="cname" value="{{ category.c_name }}" />
                         </div>
                         <div class="mb-4">
                             <label for="image" class="form-label">Image</label>
+                            <!-- Display the current category image if it exists -->
+                            {% if category.c_image %}
+                                <div class="mb-3">
+                                    <img src="{{ category.c_image.url }}" alt="{{ category.c_name }}" class="img-thumbnail" width="150">
+                                </div>
+                            {% endif %}
                             <input type="file" class="form-control" name="image" accept="image/*">
                         </div>
-                        <!-- <div class="mb-4">
-                            <input type="checkbox" name="blocked">
-                            <label class="form-label" for="blocked">Blocked</label>
-                        </div> -->
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Create category</button>
+                            <button type="submit" class="btn btn-primary">Update Category</button>
                         </div>
                     </form>
-                    
                 </div>
-                
+            </div>
         </div> <!-- card body .// -->
     </div> <!-- card .// -->
 </section> <!-- content-main end// -->

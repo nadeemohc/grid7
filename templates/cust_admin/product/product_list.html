@@ -96,11 +96,12 @@
                                         </td> -->
                                         <td>
                                             {% if product.is_blocked %}
-                                            <a href="{% url 'cust_admin:product_unlist' product.p_id%}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
+                                                <a href="{% url 'cust_admin:product_unlist' product.id %}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
                                             {% else %}
-                                            <a href="{% url 'cust_admin:product_unlist' product.p_id%}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
+                                                <a href="{% url 'cust_admin:product_unlist' product.p_id %}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
                                             {% endif %}
-                                            <a href="{% url 'cust_admin:product_edit' product.p_id %}"class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
+                                            <a href="{% url 'cust_admin:edit_product' product.p_id %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
+
                                         </td>
                                         <!-- <td class="text-center align-middle col-md-3">
                                             <div class="d-flex gap-2">

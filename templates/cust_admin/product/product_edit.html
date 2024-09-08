@@ -1,7 +1,7 @@
 {% extends 'cust_admin/base.html' %}
 {% load static %}
-{% block content %}
 
+{% block content %}
 <section class="content-main">
     <div class="row">
         <div class="col-9">
@@ -15,11 +15,11 @@
                     <h4>Basic</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="{% url 'cust_admin:product_edit' product.p_id %}" enctype="multipart/form-data">
+                    <form method="post" action="{% url 'cust_admin:edit_product' product.p_id %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-4">
                             <label for="title" class="form-label">Product Title</label>
-                            <input type="text" name="title" placeholder="Enter product title" class="form-control" required value="{{ product.title }}">
+                            <input type="text" name="title" value="{{ product.title }}" placeholder="Enter product title" class="form-control" required>
                         </div>
                         <div class="mb-4">
                             <label for="description" class="form-label">Full Description</label>
@@ -31,6 +31,49 @@
                         </div>
                 </div>
             </div> <!-- card end// -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Organization</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row gx-2">
+                        <div class="col-sm-6 mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select id="category" name="category" class="form-select" required>
+                                <option value="" disabled>Select Category</option>
+                                {% for category in categories %}
+                                  <option value="{{ category.c_id }}" {% if category.c_id == product.category.id %}selected{% endif %}>{{ category.c_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label for="subcategory" class="form-label">Sub-category</label>
+                            <select id="subcategory" name="subcategory" class="form-select" required>
+                                <option value="" disabled>Select Subcategory</option>
+                                {% for subcategory in subcategories %}
+                                  <option value="{{ subcategory.sid }}" {% if subcategory.sid == product.sub_category.id %}selected{% endif %}>{{ subcategory.sub_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-1">
+                            <input type="checkbox" name="availability" class="form-check-input" {% if product.availability %}checked{% endif %}>
+                            <label for="availability" class="form-check-label">Available</label>
+                        </div>
+                        <div class="col-sm-6 mb-1">
+                            <input type="checkbox" name="featured" class="form-check-input" {% if product.featured %}checked{% endif %}>
+                            <label for="featured" class="form-check-label">Featured</label>
+                        </div>
+                        <div class="col-sm-6 mb-1">
+                            <input type="checkbox" name="popular" class="form-check-input" {% if product.popular %}checked{% endif %}>
+                            <label for="popular" class="form-check-label">Popular</label>
+                        </div>
+                        <div class="col-sm-6 mb-1">
+                            <input type="checkbox" name="latest" class="form-check-input" {% if product.latest %}checked{% endif %}>
+                            <label for="latest" class="form-check-label">Latest</label>
+                        </div>
+                    </div> <!-- row.// -->
+                </div>
+            </div>
         </div>
         <div class="col-lg-4">
             <div class="card mb-4">
@@ -40,49 +83,68 @@
                 <div class="card-body">
                     <div class="input-upload">
                         <label for="image" class="form-label">Main Product Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/*" required>
+                        <input type="file" name="image" id="mainImage" class="form-control" accept="image/*">
+                        {% if product.image %}
+                        <div id="mainImagePreview" style="margin-top: 10px;">
+                            <img src="{{ product.image.url }}" style="max-width: 200px;" alt="Main Product Image">
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="input-upload">
                         <label for="images" class="form-label">Additional Product Images</label>
-                        <input type="file" name="images" class="form-control" accept="image/*" multiple required>
+                        <input type="file" name="images" id="additionalImages" class="form-control" accept="image/*" multiple>
+                        <div id="additionalImagesPreview" style="margin-top: 10px;">
+                            {% for img in additional_images %}
+                            <div class="existing-image">
+                                <img src="{{ img.images.url }}" style="max-width: 100px; margin-right: 10px;" alt="Additional Image">
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
-                <div class="card-header">
-                    <h4>Organization</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row gx-2">
-                        <div class="col-sm-6 mb-3">
-                            <label for="category" class="form-label">Category</label>
-                            <select id="category" name="category" class="form-select" required>
-                                <option value="" disabled selected>Select Category</option>
-                                {% for category in categories %}
-                                  <option value="{{ category.c_id }}">{{ category.c_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-sm-6 mb-3">
-                            <label for="subcategory" class="form-label">Sub-category</label>
-                            <select id="subcategory" name="subcategory" class="form-select" required>
-                                <option value="" disabled selected>Select Subcategory</option>
-                                {% for subcategory in subcategories %}
-                                  <option value="{{ subcategory.sid }}">{{ subcategory.sub_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-sm-6 mb-1">
-                            <input type="checkbox" name="availability" class="form-check-input">
-                            <label for="availability" class="form-check-label">Available</label>
-                        </div>
-                    </div> <!-- row.// -->
-                </div>
+                
             </div> <!-- card end// -->
         </div>
         <div>
-            <button type="submit" class="btn btn-md rounded font-sm hover-up">Add Product</button> &nbsp;
-            <a href="{% url 'cust_admin:prod_list' %}"class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</a>
+            <button type="submit" class="btn btn-md rounded font-sm hover-up">Update Product</button> &nbsp;
+            <a href="{% url 'cust_admin:prod_list' %}" class="btn btn-light rounded font-sm mr-5 text-body hover-up">Cancel</a>
         </div>
     </form>
     </div>
 </section> <!-- content-main end// -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mainImageInput = document.getElementById('mainImage');
+        var additionalImagesInput = document.getElementById('additionalImages');
+        var mainImagePreview = document.getElementById('mainImagePreview');
+        var additionalImagesPreview = document.getElementById('additionalImagesPreview');
+
+        // Function to display image preview
+        function displayImagePreview(input, previewContainer) {
+            previewContainer.innerHTML = ''; // Clear previous previews
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '100px';
+                        img.style.marginRight = '10px';
+                        previewContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        // Event listeners for previewing images
+        mainImageInput.addEventListener('change', function() {
+            displayImagePreview(mainImageInput, mainImagePreview);
+        });
+
+        additionalImagesInput.addEventListener('change', function() {
+            displayImagePreview(additionalImagesInput, additionalImagesPreview);
+        });
+    });
+</script>
 {% endblock content %}

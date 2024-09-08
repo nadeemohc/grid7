@@ -4,6 +4,7 @@ from django.contrib.auth import views as auth_views
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts import views
 
 handler404 = 'store.views.handler404'
 
@@ -19,8 +20,11 @@ urlpatterns = [
     path('', include('user_cart.urls')),
 
     # allauth
-    path('accounts/', include('allauth.urls', )),
-    path('accounts/', include('allauth.socialaccount.urls')),
+    # path('accounts/', include('allauth.urls', )),
+    # path('accounts/', include('allauth.socialaccount.urls')),
+    path('login/', views.perform_login, name='login'),
+    path('logout/', views.perform_logout, name='logout'),
+    path('social-auth/', include('social_django.urls', namespace='social')),
     path('home', TemplateView.as_view(template_name='dashboard/home.html'), name='home'),
     
     # Password Reset

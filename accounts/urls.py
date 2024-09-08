@@ -11,6 +11,7 @@ urlpatterns = [
 
     #  Otp functionalities
     path('otp_verification/', views.otp_verification, name='otp_verification'),
+    path('otp_verification_login/', views.otp_verification_login, name='otp_verification_login'),
     path('resend_otp/', views.resend_otp, name='resend_otp'),
     
 ]

@@ -19,6 +19,7 @@ import sweetify
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import F, ExpressionWrapper, DecimalField
+from store.decorators import blocked_user_required
 
 
 def get_common_context():
@@ -30,6 +31,7 @@ def get_common_context():
 #=============================================================================== Home =============================================================================================
 
 
+@blocked_user_required
 @never_cache
 def home(request):
     categories = Category.objects.all()
@@ -71,6 +73,7 @@ def handler404(request, exception):
 #========================================================================== views related to product =========================================================================================
 
 
+@blocked_user_required
 def list_prod(request):
     categories = Category.objects.all()
     products = Product.objects.all()
@@ -97,6 +100,7 @@ def list_prod(request):
     return render(request, 'dashboard/shop.html', context)
 
 
+@blocked_user_required
 def product_list_by_category(request, category_cid):
     category = get_object_or_404(Category, c_id=category_cid)
     search_field = request.GET.get('search_field', '')
@@ -161,11 +165,14 @@ def product_list_by_category(request, category_cid):
     return render(request, 'dashboard/product_list.html', context)
 
 
+@blocked_user_required
 def product_detailed_view(request, product_pid):
     product = get_object_or_404(Product, p_id=product_pid)
     specifications_lines = product.specifications.split('\n')
     product_images = ProductImages.objects.filter(product=product).order_by('images')
-    product_attributes = ProductAttribute.objects.filter(product=product)
+    
+    # Filter product attributes where stock is greater than 0
+    product_attributes = ProductAttribute.objects.filter(product=product, stock__gt=0)
     title = product.title
 
     # Apply offers to the product
@@ -184,6 +191,8 @@ def product_detailed_view(request, product_pid):
     return render(request, 'dashboard/product_detailed_view.html', context)
 
 
+
+@blocked_user_required
 def get_price(request, size_id):
     try:
         product_attribute = ProductAttribute.objects.get(pk=size_id)
@@ -196,6 +205,7 @@ def get_price(request, size_id):
 #=========================================== views related to user profile =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def user_profile(request):
     user = request.user
@@ -206,6 +216,7 @@ def user_profile(request):
     item = ProductOrder.objects.filter(user=user)
     referral_code = user.referral_code  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
+    print(user.phone_number)
     
     context = {
         'user': user,
@@ -222,6 +233,7 @@ def user_profile(request):
     return render(request, 'dashboard/user_profile.html', context)
 
 
+@blocked_user_required
 @login_required
 def add_address(request):
     source = request.GET.get('source', None)
@@ -252,6 +264,7 @@ def add_address(request):
     return render(request, 'dashboard/user_profil.html',{'address': address})
 
 
+@blocked_user_required
 @login_required
 def edit_address(request, address_id):
     address = get_object_or_404(Address, id=address_id)
@@ -270,6 +283,7 @@ def edit_address(request, address_id):
     return render(request, 'dashboard/user_profile.html', {'address': address})
 
 
+@blocked_user_required
 @login_required
 def delete_address(request, pk):
     address = get_object_or_404(Address, pk=pk)
@@ -279,6 +293,7 @@ def delete_address(request, pk):
     return redirect('store:user_profile')
 
 
+@blocked_user_required
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
@@ -286,7 +301,6 @@ def edit_profile(request):
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         username = request.POST.get('username')
-        email = request.POST.get('email')
         phone_number = request.POST.get('phone_number')
         user = request.user
 
@@ -294,7 +308,6 @@ def edit_profile(request):
         user.first_name = first_name
         user.last_name = last_name
         user.username = username
-        user.email = email
         user.phone_number = phone_number
         user.save()
 
@@ -304,7 +317,7 @@ def edit_profile(request):
         send_mail(subject, message, None, [user.email])
 
         # Redirect to user profile page
-        messages.success(request, "Profile Updated Successfully")
+        sweetify.toast(request, "Profile Updated Successfully", icon='success', timer=4000)
         return redirect('store:user_profile')
 
     return render(request, 'dashboard/user_profile.html', {'title':'User Profile','user':request.user})
@@ -315,20 +328,21 @@ def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save()  # Save the form and get the user
             update_session_auth_hash(request, user)
-            messages.success(request, 'Your password was successfully updated!')
-            # Send email verification
-            send_email_verification(request.user.email)
+            sweetify.toast(request, 'Your password was successfully updated!', icon='success', timer=3000)
+            # Send email verification using the saved `user` object, not `request.user`
+            send_email_verification(user.email)
             return redirect('accounts:logout')  # Redirect to a success page
         else:
-            messages.error(request, 'Please correct the error below.')
+            sweetify.toast(request, 'Please correct the error below.', icon='error', timer=3000)
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'dashboard/change_password.html', {'form': form})
 
 
 def send_email_verification(email):
+    print(f"Sending email verification to: {email}")
     subject = 'Password Change Verification'
     message = 'Your password has been successfully changed. If you did not make this change, please contact us immediately.'
     from_email = 'mn8697865@gmail.com'  # Use your email
@@ -336,6 +350,7 @@ def send_email_verification(email):
     send_mail(subject, message, from_email, recipient_list)
 
 
+@blocked_user_required
 @login_required
 def user_order_detail(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
@@ -345,11 +360,12 @@ def user_order_detail(request, order_id):
     return render(request, 'dashboard/user_order_detail.html', context)
 
 
+@blocked_user_required
 @login_required
 def order_cancel(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
     if order.status != 'Cancelled':
-        if order.payment_method == 'Razorpay':
+        if order.payment_method == 'Razorpay' or order.payment_method == 'Wallet' or order.payment_method == 'Wallet-Razorpay':
             # Logic for Razorpay refund to wallet
             wallet, created = Wallet.objects.get_or_create(user=request.user)
             wallet.balance += Decimal(order.order_total)
@@ -368,6 +384,7 @@ def order_cancel(request, order_id):
     return redirect('store:user_order_detail', order_id=order.id)
 
 
+@blocked_user_required
 @login_required
 def order_return(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id, user=request.user)
@@ -420,6 +437,7 @@ def apply_offers(product):
     if product_offer and product_offer.is_active():
         discount = product_offer.discount_percentage
         product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
+        print(product.title,product.final_price)
     elif category_offer and category_offer.is_active():
         discount = category_offer.discount_percentage
         product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
@@ -429,6 +447,7 @@ def apply_offers(product):
     return product
 
 
+@blocked_user_required
 def list_coupon(request):
     print("inside coupons")
     today = timezone.now().date()
@@ -437,6 +456,7 @@ def list_coupon(request):
     return render(request, 'dashboard/user_profile.html', {'coupons': coupons})
     
 
+@blocked_user_required
 def filter_product(request):
     try:
         # Get the min and max price from the GET parameters
@@ -468,6 +488,7 @@ def filter_product(request):
         return JsonResponse({"error": str(e)})
 
 
+@blocked_user_required
 def search_and_filter(request):
     search_field = request.GET.get('search_field', '')
     category_id = request.GET.get('category_id')
@@ -544,8 +565,12 @@ def search_and_filter(request):
 #=========================================== views related to shop =================================================================================================================================
 
 
+
+@blocked_user_required
 def shop(request, category_id=None):
+    # Fetch categories that are not blocked
     categories = Category.objects.filter(is_blocked=False)
+
     selected_category = None
     if category_id:
         selected_category = get_object_or_404(Category, c_id=category_id)
@@ -554,63 +579,75 @@ def shop(request, category_id=None):
         if category_id:
             selected_category = get_object_or_404(Category, c_id=category_id)
 
-    products = Product.objects.filter(is_blocked=False)
+    # Base product query: Only products from unblocked categories
+    products = Product.objects.filter(
+        is_blocked=False,
+        category__is_blocked=False,
+        product_attributes__size__isnull=False,  # Ensure the size is present
+        product_attributes__stock__gt=0  # Ensure stock is greater than 0
+    ).distinct()  # Ensure distinct products
+
+    # Filter by selected category if provided
     if selected_category:
         products = products.filter(category=selected_category)
 
-    products = [apply_offers(p) for p in products]
-
-    price_filter = request.GET.get('price_filter')
+    # Price filter logic
+    price_filter = request.GET.get('price_filter', None)
     if price_filter:
         if price_filter == 'below_500':
-            products = [p for p in products if p.final_price < 500]
+            products = products.filter(product_attributes__price__lt=500)
         elif price_filter == '500_1000':
-            products = [p for p in products if 500 <= p.final_price < 1000]
+            products = products.filter(product_attributes__price__gte=500, product_attributes__price__lte=1000)
         elif price_filter == '1000_1500':
-            products = [p for p in products if 1000 <= p.final_price < 1500]
+            products = products.filter(product_attributes__price__gte=1000, product_attributes__price__lte=1500)
         elif price_filter == '1500_2000':
-            products = [p for p in products if 1500 <= p.final_price < 2000]
+            products = products.filter(product_attributes__price__gte=1500, product_attributes__price__lte=2000)
         elif price_filter == 'above_2000':
-            products = [p for p in products if p.final_price >= 2000]
+            products = products.filter(product_attributes__price__gt=2000)
 
-    sort_by = request.GET.get('sort_by', 'title_asc')
-    if sort_by == 'title_asc':
-        products = sorted(products, key=lambda x: x.title)
-    elif sort_by == 'title_desc':
-        products = sorted(products, key=lambda x: x.title, reverse=True)
-    elif sort_by == 'price_asc':
-        products = sorted(products, key=lambda x: x.final_price)
+    # Annotate products with min and max price for sorting
+    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
+
+    # Sorting logic
+    sort_by = request.GET.get('sort_by', None)
+    if sort_by == 'price_asc':
+        products = products.order_by('min_price')
     elif sort_by == 'price_desc':
-        products = sorted(products, key=lambda x: x.final_price, reverse=True)
+        products = products.order_by('-min_price')
+    elif sort_by == 'title_asc':
+        products = products.order_by('title')
+    elif sort_by == 'title_desc':
+        products = products.order_by('-title')
 
-    total_products = len(products)  # Get the total number of products
+    # Pagination logic
+    items_per_page = request.GET.get('items_per_page', '10')  # Default to 10 items per page
+    if items_per_page != 'all':
+        paginator = Paginator(products, int(items_per_page))
+        page_number = request.GET.get('page')
+        products = paginator.get_page(page_number)
 
-    items_per_page = request.GET.get('items_per_page', 10)
-    paginator = Paginator(products, items_per_page)
-    page = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    # Total product count
+    total_products = products.paginator.count  # Get total product count
 
     context = {
         'categories': categories,
         'selected_category': selected_category,
-        'products': page_obj,
-        'total_products': total_products,  # Pass total product count to context
+        'products': products,
+        'total_products': total_products,
         'items_per_page': items_per_page,
         'price_filter': price_filter,
         'sort_by': sort_by,
-        'page_obj': page_obj,
     }
+
     return render(request, 'dashboard/shop.html', context)
+
+
 
 
 #=========================================== views related to wishlist =================================================================================================================================
 
 
+@blocked_user_required
 @login_required
 def get_wishlist_count(request):
     user = request.user
@@ -618,6 +655,7 @@ def get_wishlist_count(request):
     return JsonResponse({'wishlist_count': wishlist_count})
 
 
+@blocked_user_required
 @login_required
 def wishlist(request):
     context = {}
@@ -631,6 +669,7 @@ def wishlist(request):
     return render(request, 'dashboard/wishlist.html', context)
 
 
+@blocked_user_required
 @login_required
 def add_wishlist(request, product_pid):
     if not request.user.is_authenticated:
@@ -647,6 +686,7 @@ def add_wishlist(request, product_pid):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
+@blocked_user_required
 @login_required
 def delete_wishlist(request, pk):
     wishlist = get_object_or_404(Wishlist, id=pk, user=request.user)

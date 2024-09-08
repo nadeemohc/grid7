@@ -4,63 +4,64 @@ from django.utils import timezone
 import random
 import string
 
+from django.contrib.auth.models import BaseUserManager
+import random
+import string
+
 class UserManager(BaseUserManager):
-    def create_user(self, first_name, last_name, username, email, password=None, referral_code=None):
+    def create_user(self, email, first_name=None, last_name=None, username=None, password=None, phone_number=None, referral_code=None, **extra_fields):
         if not email:
-            raise ValueError('User must have an email address')
+            raise ValueError('The Email field must be set')
         if not username:
             raise ValueError('User must have a username')
-        
-        # Generate unique referral code if not provided
+
+        # Generate a unique referral code if not provided
         if not referral_code:
             referral_code = self.generate_unique_referral_code()
-        
+
+        # Create the user model instance
         user = self.model(
             email=self.normalize_email(email),
+            first_name=first_name or '',  # Ensure first_name defaults to an empty string
+            last_name=last_name or '',    # Ensure last_name defaults to an empty string
             username=username,
-            first_name=first_name,
-            last_name=last_name,
-            referral_code=referral_code
+            phone_number=phone_number,  # Include phone_number
+            referral_code=referral_code,
+            **extra_fields
         )
         user.set_password(password)
         user.save(using=self._db)
-        
-        # Create an empty wallet for the user
+
+        # Create an empty wallet for the user (assuming a Wallet model exists)
         Wallet.objects.create(user=user)
-        
+
         return user
-    
-    def generate_unique_referral_code(self):
-        length = 8
-        while True:
-            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-            print(f"Generated referral code: {code}")  # Debugging line
-            if not User.objects.filter(referral_code=code).exists():
-                return code
 
-
-    
-    def create_superuser(self, first_name, last_name, username, email, password=None):
+    def create_superuser(self, email, first_name=None, last_name=None, username=None, password=None, phone_number=None, **extra_fields):
         user = self.create_user(
             email=self.normalize_email(email),
-            username=username,
-            password=password,
             first_name=first_name,
             last_name=last_name,
+            username=username,
+            password=password,
+            phone_number=phone_number,
+            **extra_fields
         )
         user.is_admin = True
-        user.is_active = True
         user.is_staff = True
         user.is_superadmin = True
+        user.is_active = True
         user.save(using=self._db)
         return user
-    
+
     def generate_unique_referral_code(self):
         length = 8
         while True:
             code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
             if not User.objects.filter(referral_code=code).exists():
                 return code
+
+
 
 
 class User(AbstractBaseUser, PermissionsMixin):

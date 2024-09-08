@@ -1,0 +1,111 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .card-login {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .card-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-control {
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            background-color: #046963;
+            border: none;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #046963;
+        }
+        .btn-light {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            color: #495057;
+            width: 100%;
+            text-align: left;
+        }
+        .btn-light:hover {
+            background-color: #e9ecef;
+        }
+        #timer {
+            text-align: center;
+            margin-top: 10px;
+            color: #6c757d;
+        }
+    </style>
+<div class="card mx-auto card-login">
+    <div class="card-body">
+        <h4 class="card-title mb-4">OTP Verification</h4>
+        <b><p>Please enter the OTP sent to {{ email }}</p></b>
+        <!-- OTP verification form -->
+        <form method="POST" action="{% url 'accounts:otp_verification_login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input class="form-control" placeholder="Enter the OTP" type="text" name="otp" required>
+            </div>
+            <div class="mb-2">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+
+        <!-- Resend OTP form -->
+        <form method="POST" action="{% url 'accounts:resend_otp' %}">
+            {% csrf_token %}
+            <input type="hidden" name="email" value="{{ email }}">
+            <div class="mb-4">
+                <button type="submit" class="btn btn-primary" id="resendBtn" disabled>Resend OTP</button>
+            </div>
+        </form>
+
+        <!-- Timer for Resend OTP -->
+        <div id="timer" class="text-center text-muted"></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var resendBtn = document.getElementById("resendBtn");
+        var timerDiv = document.getElementById("timer");
+        var timer = 60;
+
+        // Function to start the countdown timer
+        function startCountdown() {
+            resendBtn.disabled = true;
+            timerDiv.innerText = "Resend OTP in " + timer + " seconds";
+
+            var countdown = setInterval(function () {
+                timer--;
+                if (timer <= 0) {
+                    clearInterval(countdown);
+                    resendBtn.disabled = false;
+                    timerDiv.innerText = "";
+                } else {
+                    timerDiv.innerText = "Resend OTP in " + timer + " seconds";
+                }
+            }, 1000);
+        }
+
+        // Start the countdown timer on page load
+        startCountdown();
+
+        // Prevent form submission if the button is disabled
+        resendBtn.closest('form').addEventListener('submit', function(event) {
+            if (resendBtn.disabled) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock content %}
