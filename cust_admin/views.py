@@ -859,6 +859,63 @@ def delete_product_offer(request, offer_id):
 #=========================================== sales, weekly, daily, monthly reports =========================================================================================================
 
 
+# @admin_required
+# def sales_report(request):
+#     start_date_value = ""
+#     end_date_value = ""
+#     orders = CartOrder.objects.filter(status='Delivered')
+
+#     if request.method == 'POST':
+#         start_date = request.POST.get('start_date')
+#         end_date = request.POST.get('end_date')
+#         start_date_value = start_date
+#         end_date_value = end_date
+
+#         print(f"Received Start Date: {start_date}")
+#         print(f"Received End Date: {end_date}")
+
+#         if start_date and end_date:
+#             try:
+#                 start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+#                 end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'))
+
+#                 print(f"Processed Start Date: {start_date}")
+#                 print(f"Processed End Date: {end_date}")
+
+#                 orders = CartOrder.objects.filter(
+#                     created_at__range=(start_date, end_date),
+#                     status='Delivered'
+#                 ).order_by('created_at')
+
+#             except ValueError as e:
+#                 print(f"Date parsing error: {e}")
+
+#         if 'export_pdf' in request.POST:
+#             request.session['filtered_orders'] = list(orders.values())
+#             request.session['start_date'] = start_date.strftime('%Y-%m-%d')
+#             request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+#             return redirect('export_pdf', report_type='custom')
+#         elif 'export_excel' in request.POST:
+#             request.session['filtered_orders'] = list(orders.values())
+#             request.session['start_date'] = start_date.strftime('%Y-%m-%d')
+#             request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+#             return redirect('export_excel', report_type='custom')
+
+#     # Calculate total orders and total sum
+#     total_count = orders.count()
+#     total_sum = orders.aggregate(total_sum=Sum('order_total'))['total_sum']
+
+#     context = {
+#         'orders': orders,
+#         'start_date_value': start_date_value,
+#         'end_date_value': end_date_value,
+#         'current_date': timezone.now().date(),
+#         'total_count': total_count,
+#         'total_sum': total_sum,
+#     }
+
+#     return render(request, 'cust_admin/statistics/sales_report.html', context)
+
 @admin_required
 def sales_report(request):
     start_date_value = ""
@@ -871,20 +928,18 @@ def sales_report(request):
         start_date_value = start_date
         end_date_value = end_date
 
-        print(f"Received Start Date: {start_date}")
-        print(f"Received End Date: {end_date}")
-
         if start_date and end_date:
             try:
+                # Convert strings to datetime objects
                 start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
                 end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'))
 
-                print(f"Processed Start Date: {start_date}")
-                print(f"Processed End Date: {end_date}")
+                # Adjust the end date to include the entire end date day
+                end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-                orders = CartOrder.objects.filter(
-                    created_at__range=(start_date, end_date),
-                    status='Delivered'
+                # Filter orders based on the date range
+                orders = orders.filter(
+                    created_at__range=(start_date, end_date)
                 ).order_by('created_at')
 
             except ValueError as e:
@@ -892,13 +947,13 @@ def sales_report(request):
 
         if 'export_pdf' in request.POST:
             request.session['filtered_orders'] = list(orders.values())
-            request.session['start_date'] = start_date.strftime('%Y-%m-%d')
-            request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+            request.session['start_date'] = start_date_value
+            request.session['end_date'] = end_date_value
             return redirect('export_pdf', report_type='custom')
         elif 'export_excel' in request.POST:
             request.session['filtered_orders'] = list(orders.values())
-            request.session['start_date'] = start_date.strftime('%Y-%m-%d')
-            request.session['end_date'] = end_date.strftime('%Y-%m-%d')
+            request.session['start_date'] = start_date_value
+            request.session['end_date'] = end_date_value
             return redirect('export_excel', report_type='custom')
 
     # Calculate total orders and total sum
@@ -915,7 +970,6 @@ def sales_report(request):
     }
 
     return render(request, 'cust_admin/statistics/sales_report.html', context)
-
 
 @admin_required
 def export_to_pdf(request, report_type, orders=None, start_date=None, end_date=None):
