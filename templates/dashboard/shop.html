@@ -35,24 +35,25 @@
                                         </div>
                                     </div>
                                 </div>&nbsp;&nbsp;&nbsp;
-                                <div class="sort-by-cover">
-                                    <div class="sort-by-product-wrap">
-                                        <div class="sort-by">
-                                            <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
-                                        </div>
-                                        <div class="sort-by-dropdown-wrap">
-                                            <select name="sort_by" onchange="document.getElementById('filter-form').submit();">
-                                                <option value="featured" {% if sort_by == 'featured' %}selected{% endif %}>Featured</option>
-                                                <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
-                                                <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
-                                                <option value="new_arrivals" {% if sort_by == 'new_arrivals' %}selected{% endif %}>New Arrivals</option>
-                                                <!-- <option value="avg_rating" {% if sort_by == 'avg_rating' %}selected{% endif %}>Avg. Rating</option> -->
-                                                <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: Aa-Zz</option>
-                                                <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name: Zz-Aa</option>
-                                            </select>
+                                <form id="filter-form" method="GET" action="">
+                                    <div class="sort-by-cover">
+                                        <div class="sort-by-product-wrap">
+                                            <div class="sort-by">
+                                                <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
+                                            </div>
+                                            <div class="sort-by-dropdown-wrap">
+                                                <select name="sort_by" onchange="document.getElementById('filter-form').submit();">
+                                                    <option value="featured" {% if sort_by == 'featured' %}selected{% endif %}>Featured</option>
+                                                    <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                                                    <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                                                    <option value="title_asc" {% if sort_by == 'title_asc' %}selected{% endif %}>Name: Aa-Zz</option>
+                                                    <option value="title_desc" {% if sort_by == 'title_desc' %}selected{% endif %}>Name: Zz-Aa</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </form>
+                                
                             </form>
                     </div>
                     <div class="row product-grid-3" id="product-list">
