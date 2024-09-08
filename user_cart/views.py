@@ -302,7 +302,7 @@ def checkout(request):
                     selected_address=selected_address,
                     discounts=discounts,
                     order_address=selected_address,
-                    status='New'
+                    status='in lobby'
                 )
 
                 # Create ProductOrder entries without reducing stock
@@ -315,6 +315,7 @@ def checkout(request):
                         quantity=item.quantity,
                         product_price=item.product.price,
                         ordered=True,
+                        size=product_attribute.size,
                         variations=item.product
                     )
 

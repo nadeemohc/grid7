@@ -19,19 +19,55 @@
                             <small class="text-muted">Order ID: {{ order.order_number }}</small>
                         </div>
                         <div class="col-lg-6 col-md-6 ms-auto text-md-end">
-                        <form method="post" action="{% url 'cust_admin:order_update_status' order.id %}">
-                            {% csrf_token %}
-                                    <select class="form-select d-inline-block mb-10 mt-10 mw-200" id="status" name="status">
-                                        <option value="New" {% if order.status == 'New' %}selected{% endif %}>New</option>
-                                        <option value="Paid" {% if order.status == 'Paid' %}selected{% endif %}>Paid</option>
-                                        <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
-                                        <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                                        <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                                        <option value="Return" {% if order.status == 'Return' %}selected{% endif %}>Return</option>
-                                    </select>&nbsp;&nbsp;&nbsp;&nbsp;
-                                    <button class="btn btn-primary" type="submit">Save</button>
-                                    <!-- <a class="btn btn-primary mw-200" type="submit"  href="#">Save</a> -->
-                        </form>
+                            
+                            {% if order.status == 'Cancelled' or order.status == 'Return Approved' %}
+                                
+                            {% else %}
+                            <form id="order-status-form" method="post" action="{% url 'cust_admin:order_update_status' order.id %}">
+                                {% csrf_token %}
+                                <select class="form-select d-inline-block mb-10 mt-10 mw-200" id="status" name="status">
+                                    <option value="New" {% if order.status == 'New' %}selected{% endif %}>New</option>
+                                    <option value="Paid" {% if order.status == 'Paid' %}selected{% endif %}>Paid</option>
+                                    <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                    <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                    <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                    <option value="Completed" {% if order.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Return Requested" {% if order.status == 'Return Requested' %}selected{% endif %}>Return Requested</option>
+                                    <option value="Return Approved" {% if order.status == 'Return Approved' %}selected{% endif %}>Return Approved</option>
+                                    <option value="Return Rejected" {% if order.status == 'Return Rejected' %}selected{% endif %}>Return Rejected</option>
+                                </select>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <button class="btn btn-primary" type="submit">Save</button>
+                            </form>
+                            
+                            {% endif %}    
+                            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                            <script>
+                                $(document).ready(function() {
+                                    $('#order-status-form').on('submit', function(e) {
+                                        e.preventDefault(); // Prevent default form submission
+                                        
+                                        var form = $(this);
+                                        var url = form.attr('action');
+                                        var data = form.serialize();
+                                        
+                                        $.ajax({
+                                            type: 'POST',
+                                            url: url,
+                                            data: data,
+                                            success: function(response) {
+                                                // Handle success
+                                                alert('Order status updated successfully!');
+                                                // Optionally, reload the page or update a part of the page
+                                            },
+                                            error: function(xhr, errmsg, err) {
+                                                // Handle error
+                                                alert('Error updating order status.');
+                                            }
+                                        });
+                                    });
+                                });
+                            </script>
+                            
                     </div>
                     </div>
                 </header> <!-- card-header end// -->
@@ -72,9 +108,7 @@
                                 <div class="text">
                                     <h6 class="mb-1">Deliver to</h6>
                                     <p class="mb-1">
-                                        Address: {{ order.selected_address.city }}, {{ order.selected_address.state }}<br>
-                                        {{ order.selected_address.street_address }}, {{ order.selected_address.postal_code }}, <br>
-                                        {{ order.selected_address.country }}
+                                        Address: {{ order.order_address }}
                                     </p>
                                 </div>
                             </article>

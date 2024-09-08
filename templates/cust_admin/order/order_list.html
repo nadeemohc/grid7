@@ -44,17 +44,21 @@
                             <th>User</th>
                             <th>Total</th>
                             <th>Status</th>
+                            <th>Payment Method</th>
                             <th class="col-md-1">View</th>
                             <!-- <th class="col-md-1">Action</th> -->
                         </tr>
                     </thead>
                     <tbody>
                         {% for order in orders %}
+                           
+                            {% if order.status != 'in lobby' %}
                             <tr>
                                 <td>{{ order.id }}</td>
                                 <td>{{ order.user.username }}</td>
                                 <td>{{ order.order_total }}</td>
                                 <td>{{ order.status }}</td>
+                                <td>{{ order.payment_method }}</td>
                                 <td class="text-end">
                                     <a href="{% url 'cust_admin:order_detail' order.id %}" class="btn btn-primary rounded btn-sm font-sm">View</a>
                                 </td>
@@ -62,6 +66,7 @@
                                     <a href="{% url 'cust_admin:order_update_status' order.id %}" class="btn btn-primary rounded btn-sm font-sm">Update</a>
                                 </td> -->
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>

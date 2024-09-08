@@ -41,7 +41,8 @@ urlpatterns = [
     # Order functionalities
     path('orders/', views.list_order, name='list_order'),
     path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
-    path('orders/<int:order_id>/update_status/', views.order_update_status, name='order_update_status'),
+    # path('orders/<int:order_id>/update_status/', views.order_update_status, name='order_update_status'),
+    path('order/update_status/<int:order_id>/', views.order_update_status, name='order_update_status'),
     path('returned_orders/return-requests/', views.manage_return_requests, name='returned_orders'),
 
     # coupon functionalities

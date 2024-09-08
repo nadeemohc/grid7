@@ -7,12 +7,8 @@
             <h2 class="content-title card-title">Sales Report</h2>
         </div>
         <div>
-            <button type="button" class="btn btn-primary" onclick="exportToPDF()">
-                <i class="fas fa-file-pdf"></i> Export to PDF
-            </button>
-            <button type="button" class="btn btn-primary" onclick="exportToExcel()">
-                <i class="fas fa-file-excel"></i> Export to Excel
-            </button>
+            <button type="button" class="btn btn-primary" onclick="exportToPDF()">Export to PDF</button>
+            <button type="button" class="btn btn-primary" onclick="exportToExcel()">Export to Excel</button>
         </div>
     </div>
     <div class="card mb-4">
@@ -64,8 +60,35 @@
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
+    function exportToExcel() {
+    // Select the table element
+    const table = document.getElementById('sales-report-table');
+
+    // Create a new workbook and worksheets
+    const wb = XLSX.utils.book_new();
+    
+    // Create a worksheet from the table
+    const ws = XLSX.utils.table_to_sheet(table);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+
+    // Create a summary worksheet
+    const summaryData = [
+        ["Total Orders", "{{ total_count }}"],
+        ["Total Sum", "{{ total_sum }}"]
+    ];
+
+    // Convert summary data to worksheet
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+
+    // Write workbook to Excel file and trigger download
+    XLSX.writeFile(wb, 'sales_report.xlsx');
+}
+
+
     function exportToPDF() {
         const tableElement = document.createElement('div');
         tableElement.innerHTML = `
@@ -100,8 +123,7 @@
                     <td colspan="3" style="border: 1px solid black; padding: 8px; text-align: left;">Total Sum</td>
                     <td colspan="2" style="border: 1px solid black; padding: 8px; text-align: left;">{{ total_sum }}</td>
                 </tr>
-            </tfoot>
-
+                </tfoot>
             </table>
         `;
 
@@ -114,6 +136,21 @@
         };
 
         html2pdf().from(tableElement).set(opt).save();
+    }
+
+    function exportToExcel() {
+        // Select the table element
+        const table = document.getElementById('sales-report-table');
+        
+        // Create a new workbook and worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.table_to_sheet(table);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+
+        // Write workbook to Excel file and trigger download
+        XLSX.writeFile(wb, 'sales_report.xlsx');
     }
 </script>
 
