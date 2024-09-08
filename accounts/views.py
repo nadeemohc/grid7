@@ -11,15 +11,21 @@ from django.contrib.auth import get_user_model
 from .models import Wallet, Referral, UserManager
 import sweetify
 from django.db import IntegrityError
+from django.core.mail import get_connection
+from django.core.mail import EmailMessage
+
 
 
 # accounts/views.py
 User = get_user_model()
 #=========================================== User Signin, login, logout =========================================================================================================
 
+from django.db import transaction, IntegrityError
+
 def perform_signup(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
+        print('sgds')
         if form.is_valid():
             username = form.cleaned_data.get("username")
             email = form.cleaned_data.get("email")
@@ -29,9 +35,8 @@ def perform_signup(request):
             first_name = form.cleaned_data.get("first_name")
             last_name = form.cleaned_data.get("last_name")
             entered_referral_code = form.cleaned_data.get("referral_code", "")
-            
-            # Manually generate a unique referral code for the new user
-            referral_code = User.objects.generate_unique_referral_code()
+            print('referal', entered_referral_code)
+            print('hello')
 
             if password1 != password2:
                 sweetify.toast(request, "Entered passwords don't match", icon='info', timer=3000)
@@ -44,43 +49,39 @@ def perform_signup(request):
             referrer = None
             if entered_referral_code:
                 try:
-                    referrer = User.objects.get(referral_code=entered_referral_code)
-                except User.DoesNotExist:
+                    referrer = Referral.objects.get(my_referral=entered_referral_code)
+                except Referral.DoesNotExist:
                     sweetify.toast(request, "Invalid referral code", icon='error', timer=3000)
                     return redirect("accounts:perform_signup")
 
-            # Create the user with the generated unique referral code
             try:
-                user = User.objects.create_user(
-                    first_name=first_name,
-                    last_name=last_name,
-                    username=username,
-                    phone_number=phone_number,
-                    email=email,
-                    password=password1,
-                    referral_code=referral_code  # Pass the generated unique referral code
-                )
+                with transaction.atomic():
+                    user = User.objects.create_user(
+                        first_name=first_name,
+                        last_name=last_name,
+                        username=username,
+                        phone_number=phone_number,
+                        email=email,
+                        password=password1,
+                    )
+
+                    # Update the referrer's wallet and add to user's wallet if referrer exists
+                    if referrer:
+                        referrer_wallet = Wallet.objects.get(user=referrer.user)
+                        referrer_wallet.balance += 250
+                        referrer_wallet.save()
+
+                        # Add 250 to the new user's wallet
+                        user_wallet = Wallet.objects.get(user=user)
+                        user_wallet.balance += 250
+                        user_wallet.save()
+
             except IntegrityError as e:
                 if 'referral_code' in str(e):
                     sweetify.toast(request, "Duplicate referral code detected, please retry", icon='error', timer=3000)
                 else:
                     sweetify.toast(request, "An error occurred during signup", icon='error', timer=3000)
                 return redirect("accounts:perform_signup")
-
-            # Update the referrer's wallet and create a referral record
-            if referrer:
-                referrer.wallet.points += 5
-                if referrer.wallet.points >= 10:
-                    referrer.wallet.balance += 250
-                    referrer.wallet.points -= 10  # Deduct 10 points when balance is credited
-                referrer.wallet.save()
-
-                # Add 250 to the new user's wallet
-                user.wallet.balance += 250
-                user.wallet.save()
-
-                # Create referral record for tracking
-                Referral.objects.create(referrer=referrer, referred=user)
 
             # Store the username in session and send OTP for verification
             request.session["user_id"] = user.username
@@ -95,6 +96,7 @@ def perform_signup(request):
         "form": form,
     }
     return render(request, "account/signup.html", context)
+
 
 
 @never_cache
