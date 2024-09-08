@@ -357,45 +357,73 @@ def add_product(request):
     return render(request, 'cust_admin/product/product_add.html', context)
 
 
-@admin_required
-def prod_edit(request, p_id):
-    product = get_object_or_404(Product, p_id=p_id)
-    product_images = ProductImages.objects.filter(product=product)
 
+@login_required
+def edit_product(request, product_id):
+    product = get_object_or_404(Product, p_id=product_id)
+    additional_images = ProductImages.objects.filter(product=product)
+    
     if request.method == 'POST':
-        # Update product details
-        product.title = request.POST.get('title', product.title)
-        product.description = request.POST.get('description', product.description)
-        specifications = request.POST.get('specifications', product.specifications)
-        product.category_id = request.POST.get('category', product.category)
-        # Handle image update
-        new_image = request.FILES.get('image')
-        print(new_image)
-        if new_image:
-            product.image = new_image
-        product.save()
+        max_file_size = 2097152
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        specifications = request.POST.get('specifications')
+        category_id = request.POST.get('category')
+        subcategory_id = request.POST.get('subcategory')
+        featured = request.POST.get('featured') == 'on'
+        popular = request.POST.get('popular') == 'on'
+        latest = request.POST.get('latest') == 'on'
+        availability = request.POST.get('availability') == 'on'
 
+        main_image = request.FILES.get('image')
+        if main_image and main_image.size > max_file_size:
+            sweetify.error(request, 'Main product image exceeds the 2MB size limit.')
+            return redirect('cust_admin:edit_product', product_id=product_id)
 
-        return redirect('cust_admin:prod_list')
+        additional_images_files = request.FILES.getlist('images')
+        for img in additional_images_files:
+            if img.size > max_file_size:
+                sweetify.error(request, 'One or more additional images exceed the 2MB size limit.')
+                return redirect('cust_admin:edit_product', product_id=product_id)
+
+        product.title = title
+        product.description = description
+        product.specifications = specifications
+        product.featured = featured
+        product.popular = popular
+        product.latest = latest
+        product.availability = availability
+
+        product.category = get_object_or_404(Category, c_id=category_id)
+        product.sub_category = get_object_or_404(Subcategory, sid=subcategory_id)
         
+        if main_image:
+            product.image = main_image
 
-    categories = Category.objects.all()
-    subcategories = Subcategory.objects.all()
-    context = {'title':'Edit Product',
-                    'product':product,
-                    'categories':categories,
-                    'subcategories':subcategories,
-                    'product_images':product_images}
-    return render (request, 'cust_admin/product/product_edit.html',context)
+        product.save()
+        ProductImages.objects.filter(product=product).delete()
+        for img in additional_images_files:
+            ProductImages.objects.create(product=product, images=img)
+
+        sweetify.toast(request, 'Product updated successfully!', icon='success', timer=3000)
+        return redirect('cust_admin:prod_list')
+
+    context = {
+        'product': product,
+        'additional_images': additional_images,
+        'categories': Category.objects.all(),
+        'subcategories': Subcategory.objects.all(),
+    }
+    return render(request, 'cust_admin/product/product_edit.html', context)
 
 
 @admin_required
-def product_list_unlist(request, p_id):
-    product = get_object_or_404(Product, pk = p_id)
+def product_list_unlist(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)  # Use product_id here
     product.is_blocked = not product.is_blocked
     product.save()
     action = 'unblocked' if not product.is_blocked else 'blocked'
-    sweetify.toast(request, f"The category with ID {product.p_id} has been {action} successfully.", icon='success', timer=3000)
+    sweetify.toast(request, f"The product with ID {product_id} has been {action} successfully.", icon='success', timer=3000)
     return redirect('cust_admin:prod_list')
 
 
@@ -481,7 +509,7 @@ def prod_variant_edit(request, pk):
             product_attribute.in_stock = form.cleaned_data['in_stock']
             product_attribute.status = form.cleaned_data['status']
             product_attribute.save()
-
+            
             sweetify.toast(request, 'Product attribute details updated successfully!', icon='success', timer=3000)
             return redirect('cust_admin:prod_catalogue')
     else:
@@ -494,7 +522,7 @@ def prod_variant_edit(request, pk):
             'in_stock': product_attribute.in_stock,
             'status': product_attribute.status
         }
-        form = ProductVariantAssignForm(initial=initial_data)
+        form = ProductVariantAssignForm(initial_data=initial_data)
 
     context = {
         'form': form,
