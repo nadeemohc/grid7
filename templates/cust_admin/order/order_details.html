@@ -31,12 +31,14 @@
                                     <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
                                     <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
                                     <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                    <option value="Completed" {% if order.status == 'Completed' %}selected{% endif %}>Completed</option>
                                     <option value="Return Requested" {% if order.status == 'Return Requested' %}selected{% endif %}>Return Requested</option>
                                     <option value="Return Approved" {% if order.status == 'Return Approved' %}selected{% endif %}>Return Approved</option>
                                     <option value="Return Rejected" {% if order.status == 'Return Rejected' %}selected{% endif %}>Return Rejected</option>
                                 </select>&nbsp;&nbsp;&nbsp;&nbsp;
                                 <button class="btn btn-primary" type="submit">Save</button>
                             </form>
+                            
                             {% endif %}    
                             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
                             <script>
