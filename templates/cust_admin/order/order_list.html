@@ -50,6 +50,8 @@
                     </thead>
                     <tbody>
                         {% for order in orders %}
+                           
+                            `{% if order.status != 'in lobby' %}
                             <tr>
                                 <td>{{ order.id }}</td>
                                 <td>{{ order.user.username }}</td>
@@ -62,6 +64,7 @@
                                     <a href="{% url 'cust_admin:order_update_status' order.id %}" class="btn btn-primary rounded btn-sm font-sm">Update</a>
                                 </td> -->
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>

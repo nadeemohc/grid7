@@ -25,6 +25,9 @@ from .utils import paginate_queryset
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.decorators.cache import never_cache
 from django.utils.timezone import localdate, make_aware
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 
 #=========================================== admin dashboard ===========================================================================================================================
@@ -579,27 +582,22 @@ def order_detail(request, order_id):
     return render(request, 'cust_admin/order/order_details.html', context)
 
 
-@admin_required
+@require_POST
+@csrf_exempt
 def order_update_status(request, order_id):
     order = get_object_or_404(CartOrder, id=order_id)
-    if request.method == 'POST':
-        status = request.POST.get('status')
-        order.status = status
-        order.save()
-        sweetify.toast(request, 'Order status updated successfully.', icon='success', timer=3000)
-        return redirect('cust_admin:list_order')
-    context = {
-        'title': 'Update Order Status',
-        'order': order,
-    }
-    return render(request, 'cust_admin/order/order_update_status.html', context)
+    status = request.POST.get('status')
+    order.status = status
+    order.save()
+
+    # Return a JSON response
+    return JsonResponse({'success': True, 'message': 'Order status updated successfully.'})
 
 
 @admin_required
 def manage_return_requests(request):
     # Fetch orders with the 'Return Requested' status
     return_requests = CartOrder.objects.filter(status='Return Requested')
-    print('requests = ', return_requests)
     if request.method == 'POST':
         order_id = request.POST.get('order_id')
         action = request.POST.get('action')
@@ -639,6 +637,7 @@ def manage_return_requests(request):
         return redirect('cust_admin:returned_orders')
 
     return render(request, 'cust_admin/order/manage_return_requests.html', {'return_requests': return_requests})
+
 
 
 #=========================================== admin add, list, edit, delete coupons =========================================================================================================
