@@ -160,19 +160,23 @@ def category_list_unlist(request, c_id):
 @admin_required
 def edit_category(request, c_id):
     category = get_object_or_404(Category, c_id=c_id)
+    
     if request.method == 'POST':
         category.c_name = request.POST.get('cname')
-        category.c_image = request.FILES.get('image')
-        # is_blocked = request.POST.get('blocked')
-
-        
+        if request.FILES.get('image'):  # Only update the image if a new one is uploaded
+            category.c_image = request.FILES.get('image')
+        # Save the updated category
         category.save()
-        context = {
-            'title':'Add Category'
-            }
         return redirect('cust_admin:category_list')
+
+    # Pass the category data to the template to prefill the form
+    context = {
+        'title': 'Edit Category',
+        'category': category,
+    }
           
     return render(request, 'cust_admin/category/category_edit.html', context)
+
 
 
 #=========================================== admin add, list subcategory =========================================================================================================
@@ -275,7 +279,7 @@ def edit_variant(request, id):
 
 @admin_required
 def prod_list(request):
-    products = Product.objects.all().order_by('p_id')
+    products = Product.objects.all().order_by('-p_id')
     page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
     
     context = {
@@ -290,6 +294,9 @@ def prod_list(request):
 @admin_required
 def add_product(request):
     if request.method == 'POST':
+        # Maximum file size in bytes (2MB = 2097152 bytes)
+        max_file_size = 2097152
+
         # Extract data from the form
         title = request.POST.get('title')
         description = request.POST.get('description')
@@ -300,8 +307,19 @@ def add_product(request):
         popular = request.POST.get('popular') == 'on'
         latest = request.POST.get('latest') == 'on'
         availability = request.POST.get('availability') == 'on'
-        # Main product image
+
+        # Main product image validation
         image = request.FILES.get('image')
+        if image and image.size > max_file_size:
+            sweetify.error(request, 'Main product image exceeds the 2MB size limit.')
+            return redirect('cust_admin:add_product')
+
+        # Validate additional images size
+        images = request.FILES.getlist('images')
+        for img in images:
+            if img.size > max_file_size:
+                sweetify.error(request, 'One or more additional images exceed the 2MB size limit.')
+                return redirect('cust_admin:add_product')
 
         # Get the category and subcategory objects
         category = Category.objects.get(c_id=category_id)
@@ -322,13 +340,12 @@ def add_product(request):
         )
 
         # Save additional images
-        images = request.FILES.getlist('images')  # Additional product images
         for img in images:
             ProductImages.objects.create(product=product, images=img)
 
         sweetify.toast(request, 'Product added successfully!', icon='success', timer=3000)
         return redirect('cust_admin:prod_list')
-    
+
     # If request method is GET, render the form
     categories = Category.objects.all()
     subcategories = Subcategory.objects.all()
@@ -336,7 +353,7 @@ def add_product(request):
         'categories': categories,
         'subcategories': subcategories,
     }
-    
+
     return render(request, 'cust_admin/product/product_add.html', context)
 
 
@@ -384,7 +401,7 @@ def product_list_unlist(request, p_id):
 
 @admin_required
 def prod_catalogue_list(request):    
-    products = ProductAttribute.objects.all().order_by('product')
+    products = ProductAttribute.objects.all().order_by('-id')
     page_obj, paginator = paginate_queryset(request, products, items_per_page=20)
     prods = Product.objects.all()
     

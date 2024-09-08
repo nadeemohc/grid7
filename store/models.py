@@ -263,6 +263,7 @@ class ProductOrder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
+    size = models.CharField(max_length=3, null=False, blank=False)
     product_price = models.FloatField(default=0)
     ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
