@@ -1221,29 +1221,54 @@ def format_quantities(product_quantities):
     return formatted_quantities
 
 
+# @admin_required
+# def best_selling_products(request):
+#     # Get the top 10 best-selling products with status 'delivered'
+#     best_selling_products = ProductOrder.objects.filter(order__status='Delivered').values('product').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+    
+#     # Extract product IDs and corresponding quantities
+#     product_ids = [item['product'] for item in best_selling_products]
+#     product_quantities = {item['product']: item['total_quantity'] for item in best_selling_products}
+    
+#     # Get the actual product objects
+#     top_products = Product.objects.filter(p_id__in=product_ids)
+    
+#     # Pass the data to the template
+#     context = {
+#         'title': 'Top 10 Best Selling Products',
+#         'top_products': top_products,
+#         'product_quantities': product_quantities,
+#     }
+    
+#     return render(request, 'cust_admin/best_selling_products.html', context)
+
+# from django.db.models import Sum
+
 @admin_required
 def best_selling_products(request):
-    # Get top-selling products based on quantity
-    best_selling_products = ProductOrder.objects.values('product').annotate(total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
-    product_ids = [item['product'] for item in best_selling_products]
+    # Get top-selling products based on quantity where ordered is True
+    best_selling_products = ProductOrder.objects.filter(ordered=True) \
+        .values('product') \
+        .annotate(total_quantity=Sum('quantity')) \
+        .order_by('-total_quantity')[:10]
+    
+    # Create a dictionary for product quantities
+    product_quantities_dict = {item['product']: item['total_quantity'] for item in best_selling_products}
+    
+    # Convert dictionary to list of dictionaries for easier template handling
+    product_quantities_list = [
+        {'product_id': product_id, 'quantity': quantity}
+        for product_id, quantity in product_quantities_dict.items()
+    ]
+    
+    # Get the product IDs and filter the products
+    product_ids = [item['product_id'] for item in product_quantities_list]
     top_products = Product.objects.filter(p_id__in=product_ids)
-
-    # Map product IDs to their quantities
-    product_quantities = {item['product']: item['total_quantity'] for item in best_selling_products}
-
-    # Format quantities into a human-readable form
-    formatted_quantities = format_quantities(product_quantities)
-
-    # Count of top products
-    product_count = top_products.count()
-
+    
     context = {
-        'title': 'Top Best  Selling',
+        'title': 'Top Best Selling',
         'top_products': top_products,
-        'product_quantities': formatted_quantities,
-        'product_count': product_count,  # Pass product count to the context
+        'product_quantities': product_quantities_list,  # Pass the list to the context
     }
+    
     return render(request, 'cust_admin/best_selling_products.html', context)
-
-
-
