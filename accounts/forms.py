@@ -1,4 +1,5 @@
 from django import forms
+from accounts.models import *
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -51,7 +52,7 @@ class SignUpForm(UserCreationForm):
         help_text='Required. Enter a valid phone number.'
     )
     referral_code = forms.CharField(
-        max_length=50,
+        max_length=200,
         widget=forms.TextInput(attrs={"placeholder": "Referral Code (optional)"}),
         required=False,
         help_text='Optional. Enter referral code if you have one.'
@@ -95,7 +96,7 @@ class SignUpForm(UserCreationForm):
 
     def clean_referral_code(self):
         referral_code = self.cleaned_data.get('referral_code')
-        if referral_code and not User.objects.filter(referral_code=referral_code).exists():
+        if referral_code and not Referral.objects.filter(my_referral=referral_code).exists():
             raise ValidationError(_('Invalid referral code.'))
         return referral_code
 

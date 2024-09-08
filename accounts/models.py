@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.utils import timezone
-import random
+import random, uuid
 import string
 
 from django.contrib.auth.models import BaseUserManager
@@ -15,11 +15,6 @@ class UserManager(BaseUserManager):
         if not username:
             raise ValueError('User must have a username')
 
-        # Generate a unique referral code if not provided
-        if not referral_code:
-            referral_code = self.generate_unique_referral_code()
-
-        # Create the user model instance
         user = self.model(
             email=self.normalize_email(email),
             first_name=first_name or '',  # Ensure first_name defaults to an empty string
@@ -34,6 +29,7 @@ class UserManager(BaseUserManager):
 
         # Create an empty wallet for the user (assuming a Wallet model exists)
         Wallet.objects.create(user=user)
+        Referral.objects.create(user=user)
 
         return user
 
@@ -54,15 +50,6 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def generate_unique_referral_code(self):
-        length = 8
-        while True:
-            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-            if not User.objects.filter(referral_code=code).exists():
-                return code
-
-
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50)
@@ -73,7 +60,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     verified = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)
     referral_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
 
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
@@ -140,9 +126,9 @@ class WalletHistory(models.Model):
 
 
 class Referral(models.Model):
-    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_referrals')
-    referred = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_referrals')
-    date_created = models.DateTimeField(auto_now_add=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='sent_referrals', default='')
+    my_referral = models.TextField(default=uuid.uuid4, blank=True)
+    reffered_code = models.CharField(max_length=200, null=True, blank=True, default='')
 
     def __str__(self):
-        return f"{self.referrer.username} referred {self.referred.username}"
+        return f"{self.user.username}"

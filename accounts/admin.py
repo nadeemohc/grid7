@@ -24,7 +24,7 @@ class WalletAdmin(admin.ModelAdmin):
 
 @admin.register(Referral)
 class ReferralAdmin(admin.ModelAdmin):
-    list_display = ('referrer', 'referred', 'date_created')
+    list_display = ('user', 'my_referral', 'reffered_code')
 @admin.register(WalletHistory)
 class ReferralAdmin(admin.ModelAdmin):
     list_display = ('wallet', 'transaction_type', 'created_at', 'amount', 'reason')

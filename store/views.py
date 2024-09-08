@@ -214,7 +214,7 @@ def user_profile(request):
     wallet = Wallet.objects.filter(user=user).first()  # Get the user's wallet
     wal_history = WalletHistory.objects.filter(wallet=wallet) if wallet else []  # Filter wallet history based on the user's wallet
     item = ProductOrder.objects.filter(user=user)
-    referral_code = user.referral_code  # Assuming referral_code is in the User model
+    referral_code = user.sent_referrals.my_referral  # Assuming referral_code is in the User model
     coupons = Coupon.objects.all()
     print(user.phone_number)
     
