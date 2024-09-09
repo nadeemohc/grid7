@@ -271,7 +271,13 @@
                                                           <p class="text-muted mb-0">Phone</p>
                                                         </div>
                                                         <div class="col-sm-9">
-                                                          <p class="mb-0">{{user.phone_number}}</p>
+                                                            
+                                                            {% if user.phone_number %}
+                                                            <p class="mb-0">{{user.phone_number}}</p>
+                                                            {% else %}
+                                                            <p class="mb-0">Empty </p>
+                                                            {% endif %}
+                                                                
                                                         </div>
                                                       </div>
                                                       <hr>
