@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'user_cart',
     'sweetify',
     'social_django',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
 ]
 
 SWEETIFY_SWEETALERT_LIBRARY = 'sweetalert2'
@@ -51,7 +54,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Ensure this is included
 ]
+
 
 ROOT_URLCONF = 'grid_7.urls'
 
@@ -69,11 +74,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'user_cart.context_processors.cart_item_count',
                 'user_cart.context_processors.wishlist_item_count',
-                'social_django.context_processors.backends'
+                'social_django.context_processors.backends',
+                # 'allauth.socialaccount.context_processors.socialaccount',  # Remove this line
             ],
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'grid_7.wsgi.application'
 
