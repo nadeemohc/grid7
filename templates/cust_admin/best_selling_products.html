@@ -1,4 +1,5 @@
 {% extends 'cust_admin/base.html' %}
+{% load admin_filters %}
 {% load static %}
 {% block content %}
 <section class="content-main">
@@ -17,7 +18,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th style="width: 5%;">ID</th>
+                            <th style="width: 5%;">#</th> <!-- Changed from ID to # for consecutive numbering -->
                             <th style="width: 30%;">Product Name</th>
                             <th style="width: 20%;">Quantity Sold</th>
                             <th style="width: 15%;">Image</th>
@@ -28,26 +29,20 @@
                     <tbody>
                         {% for product in top_products %}
                             <tr>
-                                <td style="width: 5%;">{{ product.p_id }}</td>
-                                <td style="width: 30%;"><b>{{ product.title }}</b></td>
-                                <td style="width: 20%;">
-                                    {% for pq in product_quantities %}
-                                        {% if pq.product_id == product.p_id %}
-                                            {{ pq.quantity }}
-                                        {% endif %}
-                                    {% empty %}
-                                        0
-                                    {% endfor %}
+                                <td>{{ forloop.counter }}</td> <!-- Displays consecutive numbers -->
+                                <td><b>{{ product.title }}</b></td>
+                                <td>
+                                    {{ product_quantities|get_item:product.p_id }}  <!-- Display the quantity sold -->
                                 </td>
-                                <td style="width: 15%;">
+                                <td>
                                     {% if product.image %}
                                         <img src="{{ product.image.url }}" alt="{{ product.title }}" class="img-sm img-thumbnail">
                                     {% else %}
                                         <p>No image available</p>
                                     {% endif %}
                                 </td>
-                                <td style="width: 20%;">{{ product.category }}</td>
-                                <td style="width: 20%;">{{ product.sub_category.sub_name }}</td>
+                                <td>{{ product.category }}</td>
+                                <td>{{ product.sub_category.sub_name }}</td>
                             </tr>
                         {% empty %}
                             <tr>
@@ -55,6 +50,7 @@
                             </tr>
                         {% endfor %}
                     </tbody>
+                    
                 </table>
             </div> <!-- table-responsive //end -->
         </div> <!-- card-body end// -->

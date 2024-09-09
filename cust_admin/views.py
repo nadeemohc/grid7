@@ -1250,25 +1250,24 @@ def best_selling_products(request):
     best_selling_products = ProductOrder.objects.filter(ordered=True) \
         .values('product') \
         .annotate(total_quantity=Sum('quantity')) \
-        .order_by('-total_quantity')[:10]
+        .order_by('-total_quantity')[:10]  # Order by total_quantity in descending order
     
     # Create a dictionary for product quantities
     product_quantities_dict = {item['product']: item['total_quantity'] for item in best_selling_products}
     
-    # Convert dictionary to list of dictionaries for easier template handling
-    product_quantities_list = [
-        {'product_id': product_id, 'quantity': quantity}
-        for product_id, quantity in product_quantities_dict.items()
-    ]
-    
-    # Get the product IDs and filter the products
-    product_ids = [item['product_id'] for item in product_quantities_list]
+    # Get the product IDs in the correct order (by quantity)
+    product_ids = [item['product'] for item in best_selling_products]
+
+    # Filter the top products and maintain the order of product IDs
     top_products = Product.objects.filter(p_id__in=product_ids)
+    
+    # Sort the top_products list to maintain the order of product_ids
+    top_products_ordered = sorted(top_products, key=lambda p: product_ids.index(p.p_id))
     
     context = {
         'title': 'Top Best Selling',
-        'top_products': top_products,
-        'product_quantities': product_quantities_list,  # Pass the list to the context
+        'top_products': top_products_ordered,  # Pass the ordered products
+        'product_quantities': product_quantities_dict,  # Pass the dictionary to the context
     }
     
     return render(request, 'cust_admin/best_selling_products.html', context)
