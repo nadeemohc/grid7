@@ -41,19 +41,13 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>id</th>
-                                    <th>Name</th>
-                                    <th>Image</th>
-                                    <!-- <th>Size</th> -->
-                                    <!-- <th>Price</th>
-                                    <th>Old Price</th> -->
-                                    <th>Category</th>
-                                    <th>Sub Category</th>
-                                    <th>Is Available</th>
-                                    <!-- <th>Latest</th>
-                                    <th>Status</th>
-                                    <th>Stock</th> -->
-                                    <th class="col-md-1">Action</th>
+                                    <th scope="col">id</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Image</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Sub Category</th>
+                                    <th scope="col">Is Available</th>
+                                    <th scope="col" class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -70,35 +64,14 @@
                                             {% endif %}
                                         
                                         </td>
-                                        <!-- <td>
-                                            {% if product.size.exists %}
-                                                {% for product_size in product.size.all %}
-                                                    {{ product_size.size }}
-                                                    {% if not forloop.last %}, {% endif %}
-                                                {% endfor %}
-                                            {% else %}
-                                                No sizes available
-                                            {% endif %}
-                                        </td> -->
-                                                                        
-                                        <!-- <td>{{ product.price }}</td>
-                                        <td>{{ product.old_price }}</td> -->
                                         <td>{{ product.category }}</td>
                                         <td>{{ product.sub_category.sub_name }}</td>
                                         <td>{{ product.availability }}</td>
-                                        <!-- <td>{{ product.latest }}</td>
-                                        <td>{{product.status}}</td>
-                                        <td>{% if product.stock != 0 %}
-                                            {{ product.stock }}
-                                            {% else %}
-                                            out of stock
-                                            {% endif %}
-                                        </td> -->
-                                        <td>
+                                        <td class="text-end">
                                             {% if product.is_blocked %}
-                                                <a href="{% url 'cust_admin:product_unlist' product.id %}" class="btn btn-md rounded font-sm text-end">Blocked</a>&nbsp;&nbsp;
+                                                <a href="{% url 'cust_admin:product_unlist' product.id %}" class="btn btn-md rounded font-sm text-end">Unblocked</a>&nbsp;&nbsp;
                                             {% else %}
-                                                <a href="{% url 'cust_admin:product_unlist' product.p_id %}" class="btn btn-md rounded font-sm">Unblocked</a>&nbsp;&nbsp;
+                                                <a href="{% url 'cust_admin:product_unlist' product.p_id %}" class="btn btn-md rounded font-sm">Block</a>&nbsp;&nbsp;
                                             {% endif %}
                                             <a href="{% url 'cust_admin:edit_product' product.p_id %}" class="btn btn-light rounded btn-sm font-sm" role="button">Edit </a>
 

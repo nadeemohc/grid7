@@ -437,7 +437,6 @@ def apply_offers(product):
     if product_offer and product_offer.is_active():
         discount = product_offer.discount_percentage
         product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
-        print(product.title,product.final_price)
     elif category_offer and category_offer.is_active():
         discount = category_offer.discount_percentage
         product.final_price = product_attribute.price - (product_attribute.price * discount / 100)
@@ -574,10 +573,6 @@ def shop(request, category_id=None):
     selected_category = None
     if category_id:
         selected_category = get_object_or_404(Category, c_id=category_id)
-    elif request.method == 'POST':
-        category_id = request.POST.get('category_id')
-        if category_id:
-            selected_category = get_object_or_404(Category, c_id=category_id)
 
     # Base product query: Only products from unblocked categories
     products = Product.objects.filter(
@@ -585,31 +580,31 @@ def shop(request, category_id=None):
         category__is_blocked=False,
         product_attributes__size__isnull=False,  # Ensure the size is present
         product_attributes__stock__gt=0  # Ensure stock is greater than 0
-    ).distinct()  # Ensure distinct products
+    ).distinct()
 
     # Filter by selected category if provided
     if selected_category:
         products = products.filter(category=selected_category)
 
+    # Annotate the products with the minimum price of their variants
+    products = products.annotate(min_price=Min('product_attributes__price'))
+
     # Price filter logic
     price_filter = request.GET.get('price_filter', None)
     if price_filter:
         if price_filter == 'below_500':
-            products = products.filter(product_attributes__price__lt=500)
+            products = products.filter(min_price__lt=500)
         elif price_filter == '500_1000':
-            products = products.filter(product_attributes__price__gte=500, product_attributes__price__lte=1000)
+            products = products.filter(min_price__gte=500, min_price__lte=1000)
         elif price_filter == '1000_1500':
-            products = products.filter(product_attributes__price__gte=1000, product_attributes__price__lte=1500)
+            products = products.filter(min_price__gte=1000, min_price__lte=1500)
         elif price_filter == '1500_2000':
-            products = products.filter(product_attributes__price__gte=1500, product_attributes__price__lte=2000)
+            products = products.filter(min_price__gte=1500, min_price__lte=2000)
         elif price_filter == 'above_2000':
-            products = products.filter(product_attributes__price__gt=2000)
+            products = products.filter(min_price__gt=2000)
 
-    # Annotate products with min and max price for sorting
-    products = products.annotate(min_price=Min('product_attributes__price'), max_price=Max('product_attributes__price'))
-
-    # Sorting logic
-    sort_by = request.GET.get('sort_by', None)
+    # Sort products by price or other criteria
+    sort_by = request.GET.get('sort_by', 'featured')
     if sort_by == 'price_asc':
         products = products.order_by('min_price')
     elif sort_by == 'price_desc':
@@ -619,27 +614,29 @@ def shop(request, category_id=None):
     elif sort_by == 'title_desc':
         products = products.order_by('-title')
 
-    # Pagination logic
-    items_per_page = request.GET.get('items_per_page', '10')  # Default to 10 items per page
-    if items_per_page != 'all':
-        paginator = Paginator(products, int(items_per_page))
-        page_number = request.GET.get('page')
-        products = paginator.get_page(page_number)
+    # Pagination
+    items_per_page = request.GET.get('items_per_page', '9')  # Default 9 items per page
+    if items_per_page == 'all':
+        items_per_page = products.count()
+    paginator = Paginator(products, int(items_per_page))
+    page = request.GET.get('page')
+    page_obj = paginator.get_page(page)
 
-    # Total product count
-    total_products = products.paginator.count  # Get total product count
-
+    # Context for template rendering
     context = {
         'categories': categories,
         'selected_category': selected_category,
-        'products': products,
-        'total_products': total_products,
-        'items_per_page': items_per_page,
+        'products': page_obj,
+        'total_products': products.count(),
         'price_filter': price_filter,
         'sort_by': sort_by,
+        'items_per_page': items_per_page,
+        'page_obj': page_obj,
     }
 
     return render(request, 'dashboard/shop.html', context)
+
+
 
 
 
