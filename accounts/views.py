@@ -14,6 +14,8 @@ import sweetify
 from django.db import IntegrityError
 from django.core.mail import get_connection
 from django.core.mail import EmailMessage
+from dotenv import load_dotenv
+import os
 
 
 
@@ -180,10 +182,10 @@ def sent_otp(request):
 
     # Specify the connection manually
     connection = get_connection(
-        host='smtp.gmail.com',
-        port=587,
-        username='grid7catalougue@gmail.com',
-        password='kjhx kili myhl jtsz',
+        host=os.getenv('EMAIL_HOST'),
+        port=os.getenv('EMAIL_PORT'),
+        username=os.getenv('EMAIL_HOST_USER'),
+        password=os.getenv('EMAIL_HOST_PASSWORD'),
         use_tls=True,
     )
 
