@@ -1,5 +1,5 @@
 
-# Grid7 Django Project
+# Grid7 
 
 ## Overview
 
@@ -94,4 +94,4 @@ If you would like to contribute to the project, please fork the repository and s
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
